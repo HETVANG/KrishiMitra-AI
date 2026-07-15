@@ -1,0 +1,46 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chatbot": "AI Chatbot",
+    "disease": "Disease Detector",
+    "soil": "Soil Analysis",
+    "market": "Mandi Prices",
+    "schemes": "Gov Schemes",
+    "forum": "Community",
+    "expert": "Book Expert",
+    "expense": "Expenses",
+    "reports": "PDF Reports",
+    "admin": "Admin Panel",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "weather": "Today's Weather",
+    "warnings": "Weather Warnings",
+    "map": "Farm Location Map",
+    "mandi": "Nearby Mandi Prices",
+    "ledger": "Expense Statement Summary",
+    "active_crops": "Active Crops Logged",
+    "temp": "Temperature",
+    "humidity": "Humidity",
+    "wind": "Wind Speed",
+    "rain": "Rain Probability",
+    "aqi": "Air Quality (AQI)",
+    "view_all": "View Details"
+  },
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "download": "Download",
+    "print": "Print",
+    "share": "Share",
+    "copy": "Copy",
+    "read_aloud": "Read Aloud",
+    "stop": "Stop",
+    "copied": "Copied to clipboard!",
+    "shared": "Advisory shared successfully!"
+  }
+}

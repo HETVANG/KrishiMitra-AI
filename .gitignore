@@ -1,0 +1,27 @@
+# ===================================================
+# Git Ignore Config - KrishiMitra AI Root Workspace
+# ===================================================
+
+# Dependencies & Caches
+node_modules/
+.cache/
+
+# Production Builds & Coverages
+dist/
+build/
+coverage/
+
+# Environments & Secret Credentials (Crucial!)
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# Logs
+logs/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db

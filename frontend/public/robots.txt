@@ -1,0 +1,20 @@
+# ==========================================
+# robots.txt for KrishiMitra AI Portal
+# ==========================================
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /chat/
+Disallow: /disease/
+Disallow: /soil/
+Disallow: /market/
+Disallow: /schemes/
+Disallow: /forum/
+Disallow: /experts/
+Disallow: /expenses/
+Disallow: /reports/
+Disallow: /pricing/
+
+Sitemap: https://krishimitra-ai.vercel.app/sitemap.xml

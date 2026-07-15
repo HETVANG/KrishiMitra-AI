@@ -1,0 +1,71 @@
+{
+  "disease": {
+    "name": "Tomato Early Blight",
+    "localName": "Early Blight",
+    "scientificName": "Alternaria solani",
+    "confidenceScore": 0.94,
+    "symptoms": [
+      "Dark spots with concentric rings on older leaves",
+      "Yellowing leaf margins around spot spots",
+      "Premature leaf drop leading to foliage decay"
+    ],
+    "causes": [
+      "High ambient humidity above 85%",
+      "Fungal spores overwintering in plant crop debris"
+    ],
+    "chemicalTreatment": [
+      "Spray Chlorothalonil or Mancozeb fungicide immediately"
+    ],
+    "organicTreatment": [
+      "Spray Neem Oil extract (5ml per liter water) weekly",
+      "Apply copper bio-fungicide to soil base"
+    ],
+    "pesticideDetails": {
+      "localName": "Mancozeb",
+      "englishName": "Mancozeb",
+      "brands": ["Dithane M-45", "Indofil M-45", "UPL Avancer"],
+      "dosage": "2 grams per liter of clean water",
+      "mixingMethod": "Dissolve powder in clean water. Spray uniformly on under and upper leaf surfaces in morning.",
+      "precautions": "Wear protective gloves and face mask. Wash hands after use. Avoid spraying during strong winds.",
+      "waitingPeriod": "7 days waiting period before harvesting crops"
+    },
+    "preventiveTips": [
+      "Rotate tomato crops with non-solanaceous crops every 3 years",
+      "Drip irrigate at base of plants to avoid wetting foliage",
+      "Mulch soil to prevent rain splash infection"
+    ]
+  },
+  "cropRecommend": [
+    {
+      "name": "Wheat (Rabi season)",
+      "profitEstimation": 28000,
+      "expectedYield": 1800,
+      "marketDemand": "High",
+      "growingDuration": 120,
+      "riskLevel": "Low",
+      "description": "Excellent crop choice for loam soils during winter. MSP support guarantees sales."
+    },
+    {
+      "name": "Chickpeas (Gram)",
+      "profitEstimation": 32000,
+      "expectedYield": 1200,
+      "marketDemand": "High",
+      "growingDuration": 110,
+      "riskLevel": "Medium",
+      "description": "Fixes nitrogen in the soil. Requires low irrigation and yields good market prices."
+    }
+  ],
+  "soilAnalysis": {
+    "suitability": ["Wheat", "Chickpeas", "Mustard"],
+    "fertilizerPlan": [
+      "Nitrogen is deficient. Apply 50 kg Urea per acre in split doses.",
+      "Phosphorus is moderate. Apply 30 kg DAP during sowing.",
+      "Potassium is optimal. No extra potash fertilizer required."
+    ],
+    "soilImprovementSuggestions": [
+      "Incorporate 5 tons of Farm Yard Manure (FYM) to boost organic carbon.",
+      "Soil is slightly acidic. Apply 100 kg lime per acre to neutralize."
+    ]
+  },
+  "weatherAdvice": "Clear skies with light winds. Ideal day for spraying pesticides and sowing seeds."
+}

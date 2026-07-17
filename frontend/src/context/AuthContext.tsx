@@ -35,8 +35,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (payload: any) => Promise<void>;
-  googleLogin: (payload: any) => Promise<void>;
-  otpLogin: (phone: string, otp: string, name?: string) => Promise<void>;
+
   logout: () => void;
   updateSettings: (language: string, theme: 'light' | 'dark', farmLocation?: any) => Promise<void>;
   setFarmLocationLocally: (loc: any) => void;
@@ -106,27 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const googleLogin = async (payload: any) => {
-    const res = await api.post('/auth/google-login', payload);
-    if (res.data && res.data.success) {
-      const { token: userToken, user: userData } = res.data;
-      localStorage.setItem('token', userToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setToken(userToken);
-      setUser(userData);
-    }
-  };
 
-  const otpLogin = async (phone: string, otp: string, name?: string) => {
-    const res = await api.post('/auth/otp-login', { phone, otp, name });
-    if (res.data && res.data.success) {
-      const { token: userToken, user: userData } = res.data;
-      localStorage.setItem('token', userToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setToken(userToken);
-      setUser(userData);
-    }
-  };
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -168,8 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
-        googleLogin,
-        otpLogin,
+
         logout,
         updateSettings,
         setFarmLocationLocally,

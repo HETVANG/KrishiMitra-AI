@@ -189,10 +189,6 @@ export const Login: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-right">
-                <a href="#" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">Forgot password?</a>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}

@@ -125,6 +125,7 @@ export class GeminiService {
         };
       } catch (error) {
         console.error('[Gemini Live Chat Error]', error);
+        throw error;
       }
     }
 
@@ -256,6 +257,7 @@ export class GeminiService {
         return JSON.parse(jsonString);
       } catch (error) {
         console.error('[Gemini Live Diagnosis Error]', error);
+        throw error;
       }
     }
 
@@ -327,6 +329,7 @@ export class GeminiService {
         return JSON.parse(jsonString);
       } catch (error) {
         console.error('[Gemini Live Recommendation Error]', error);
+        throw error;
       }
     }
 
@@ -389,6 +392,7 @@ export class GeminiService {
         return JSON.parse(jsonString);
       } catch (error) {
         console.error('[Gemini Live Soil Analysis Error]', error);
+        throw error;
       }
     }
 

@@ -104,9 +104,13 @@ export class GeminiService {
 
         If the query is unrelated to farming, agriculture, livestock, weather, or market pricing, politely guide them back to agriculture topics.`;
 
+        // Gemini requires the first message in history to be from 'user'
+        const firstUserIdx = history.findIndex(h => h.role === 'user');
+        const cleanHistory = firstUserIdx !== -1 ? history.slice(firstUserIdx) : [];
+
         const chat = model.startChat({
-          history: history.map(h => ({
-            role: h.role,
+          history: cleanHistory.map(h => ({
+            role: h.role === 'model' ? 'model' : 'user',
             parts: [{ text: h.parts }]
           })),
           generationConfig: {

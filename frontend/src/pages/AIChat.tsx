@@ -66,9 +66,14 @@ export const AIChat: React.FC = () => {
       hi: 'नमस्ते! मैं कृषिमित्र एआई हूं। मैं फसल चयन, मौसम, खाद की गणना, पत्ती रोगों के उपचार और मंडी भाव में आपकी मदद कर सकता हूं। मुझसे कुछ भी पूछें!',
       gu: 'નમસ્તે! હું કૃષિમિત્ર એઆઈ છું. હું તમને પાક પસંદગી, હવામાન, ખાતરનું આયોજન, રોગ નિયંત્રણ અને મંડી ભાવો અંગે મદદ કરી શકું છું. ગમે તે પ્રશ્ન પૂછો!'
     };
-    setMessages([
-      { role: 'model', parts: greetings[i18n.language] || greetings.en }
-    ]);
+    const newGreeting = greetings[i18n.language] || greetings.en;
+
+    setMessages(prev => {
+      if (prev.length <= 1) {
+        return [{ role: 'model', parts: newGreeting }];
+      }
+      return prev;
+    });
     
     // Stop any speech when switching languages
     window.speechSynthesis.cancel();

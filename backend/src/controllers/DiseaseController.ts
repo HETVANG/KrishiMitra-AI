@@ -5,6 +5,8 @@ import { DiseaseHistory } from '../models/DiseaseHistory';
 import { User } from '../models/User';
 import { GeminiService } from '../services/GeminiService';
 
+import { CloudinaryService } from '../services/CloudinaryService';
+
 export class DiseaseController {
   /**
    * Diagnoses crop disease from leaf upload using Gemini Vision
@@ -16,6 +18,15 @@ export class DiseaseController {
       }
 
       const lang = req.query.lang || req.user?.settings?.language || 'en';
+
+      // Upload image to Cloudinary
+      let imageUri = '';
+      try {
+        imageUri = await CloudinaryService.uploadImageBuffer(req.file.buffer, req.file.mimetype);
+        console.log('[Disease Controller] Cloudinary upload success:', imageUri);
+      } catch (uploadErr) {
+        console.warn('[Disease Controller] Cloudinary upload failed, proceeding with empty URI:', uploadErr);
+      }
 
       // Analyze image via Gemini Service
       const diagnosis = await GeminiService.diagnoseCropDisease(
@@ -36,7 +47,7 @@ export class DiseaseController {
           diseaseName: diagnosis.name,
           scientificName: diagnosis.scientificName,
           confidenceScore: diagnosis.confidenceScore,
-          imageUri: '', // Buffer upload
+          imageUri, // Saved Cloudinary image URI
           symptoms: diagnosis.symptoms,
           causes: diagnosis.causes,
           organicTreatment: diagnosis.organicTreatment,
@@ -65,6 +76,7 @@ export class DiseaseController {
       return res.json({
         success: true,
         diagnosis,
+        imageUri,
       });
     } catch (error) {
       next(error);

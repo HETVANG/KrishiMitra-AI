@@ -88,7 +88,7 @@ export class GeminiService {
 
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         
         const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
         Answer the farmer's questions clearly, concisely, and practically.
@@ -135,7 +135,43 @@ export class GeminiService {
     let translated = '';
     let english = '';
 
-    if (lowerPrompt.includes('fertilizer') || lowerPrompt.includes('npk')) {
+    if (lowerPrompt.includes('soybean') && (lowerPrompt.includes('pesticide') || lowerPrompt.includes('recommend'))) {
+      translated = language === 'hi'
+        ? 'सोयाबीन के लिए अनुशंसित कीटनाशक क्लोरैंट्रानिलिप्रोल (कोराजेन) है, जो तना छेदक के लिए 150 मिलीलीटर प्रति हेक्टेयर है।'
+        : language === 'gu'
+        ? 'સોયાબીન માટે ભલામણ કરેલ જંતુનાશક ક્લોરેન્ટ્રાનિલિપ્રોલ (કોરાજેન) છે, જે સ્ટેમ બોરર માટે હેક્ટર દીઠ ૧૫૦ મિલી છે.'
+        : 'The recommended pesticide for soybean is Chlorantraniliprole (Coragen) at 150ml/ha to control stem borers.';
+      english = 'The recommended pesticide for soybean is Chlorantraniliprole (Coragen) at 150ml/ha to control stem borers.';
+    } 
+    
+    else if (lowerPrompt.includes('soybean')) {
+      translated = language === 'hi'
+        ? 'सोयाबीन एक प्रमुख तिलहन फसल है जो प्रोटीन (लगभग 40%) और तेल (लगभग 20%) से भरपूर होती है।'
+        : language === 'gu'
+        ? 'સોયાબીન એ એક મુખ્ય તેલીબિયાં પાક છે જે પ્રોટીન (આશરે ૪૦%) અને તેલ (આશરે 20%) થી ભરપૂર છે.'
+        : 'Soybean is a major oilseed crop rich in protein (about 40%) and oil (about 20%), widely grown in Kharif season.';
+      english = 'Soybean is a major oilseed crop rich in protein (about 40%) and oil (about 20%), widely grown in Kharif season.';
+    } 
+    
+    else if (lowerPrompt.includes('rose') || lowerPrompt.includes('rose plant')) {
+      translated = language === 'hi'
+        ? 'गुलाब उगाने के लिए, 6-8 घंटे की धूप वाली अच्छी जलनिकासी वाली मिट्टी चुनें और जैविक खाद नियमित रूप से डालें।'
+        : language === 'gu'
+        ? 'ગુલાબ ઉગાડવા માટે, ૬-૮ કલાકની સૂર્યપ્રકાશવાળી સારી નિકાસવાળી માટી પસંદ કરો અને નિયમિત સેન્દ્રિય ખાતર આપો.'
+        : 'To grow a rose plant, choose well-drained loamy soil with 6-8 hours of direct sunlight, prune regularly, and apply organic compost.';
+      english = 'To grow a rose plant, choose well-drained loamy soil with 6-8 hours of direct sunlight, prune regularly, and apply organic compost.';
+    } 
+    
+    else if (lowerPrompt.includes('tomato') && (lowerPrompt.includes('fertilizer') || lowerPrompt.includes('npk'))) {
+      translated = language === 'hi'
+        ? 'टमाटर के लिए, रोपण के समय NPK 5-10-10 खाद का उपयोग करें, और फल आने पर कैल्शियम युक्त पूरक दें।'
+        : language === 'gu'
+        ? 'ટમેટા માટે, રોપણી સમયે NPK ૫-૧૦-૧૦ ખાતર વાપરો અને ફળ બેસવા સમયે કેલ્શિયમ પૂરક આપો.'
+        : 'For tomatoes, use balanced NPK 5-10-10 fertilizer during planting and side-dress with calcium nitrate to prevent blossom end rot.';
+      english = 'For tomatoes, use balanced NPK 5-10-10 fertilizer during planting and side-dress with calcium nitrate to prevent blossom end rot.';
+    }
+    
+    else if (lowerPrompt.includes('fertilizer') || lowerPrompt.includes('npk')) {
       translated = mockData.soilAnalysis.fertilizerPlan?.join(' ') || 'Fertilizer advice';
       english = 'For healthy crop growth, apply N-P-K fertilizers based on soil tests. Urea provides nitrogen for leaves, DAP provides phosphorus for roots, and MOP provides potassium for strength.';
     } 
@@ -172,7 +208,7 @@ export class GeminiService {
   static async diagnoseCropDisease(imageBuffer: Buffer, mimeType: string, language: string = 'en'): Promise<any> {
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         
         const prompt = `You are a professional plant pathologist. Analyze the attached plant leaf image.
         Diagnose the crop disease, or state if it is healthy.
@@ -252,7 +288,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         const prompt = `You are a senior agricultural advisor. Recommend 3 suitable crops based on these parameters:
         State: ${inputs.state}
         District: ${inputs.district}
@@ -327,7 +363,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
         const prompt = `You are a soil chemist. Analyze these soil parameters:
         pH: ${inputs.pH}
         Nitrogen (N): ${inputs.N} kg/ha

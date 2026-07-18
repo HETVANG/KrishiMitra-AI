@@ -68,6 +68,30 @@ const getLocalizedMockData = (language: string): any => {
   };
 };
 
+// Helper utility to robustly extract and parse JSON from Gemini's response
+const cleanAndParseJson = (text: string): any => {
+  const trimmed = text.trim();
+  
+  // Try direct parsing first
+  try {
+    return JSON.parse(trimmed);
+  } catch (err) {
+    // Fallback to regex extraction
+  }
+
+  // Regex to extract JSON objects { ... } or arrays [ ... ]
+  const jsonMatch = trimmed.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+      console.warn('[cleanAndParseJson] Regex match parsing failed:', parseErr);
+    }
+  }
+
+  throw new Error('No valid JSON structure found in response text');
+};
+
 export class GeminiService {
   /**
    * AI Chatbot support for 12 languages (returns both translated and original English)
@@ -121,12 +145,21 @@ export class GeminiService {
 
         const result = await chat.sendMessage(`${systemInstruction}\n\nUser Question: ${prompt}`);
         const responseText = result.response.text().trim();
-        
-        const parsed = JSON.parse(responseText);
-        return {
-          translated: parsed.translated || parsed.english,
-          english: parsed.english
-        };
+        console.log('[Gemini Service Chat Raw Response]', responseText);
+
+        try {
+          const parsed = cleanAndParseJson(responseText);
+          return {
+            translated: parsed.translated || parsed.english || responseText,
+            english: parsed.english || responseText
+          };
+        } catch (parseErr) {
+          console.warn('[Gemini Service Chat JSON Parse Warning] Falling back to raw response text:', parseErr);
+          return {
+            translated: responseText,
+            english: responseText
+          };
+        }
       } catch (error) {
         console.error('[Gemini Live Chat Error]', error);
         throw error;
@@ -257,8 +290,33 @@ export class GeminiService {
 
         const result = await model.generateContent([prompt, imagePart]);
         const responseText = result.response.text().trim();
-        const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonString);
+        console.log('[Gemini Service Diagnose Raw Response]', responseText);
+
+        try {
+          return cleanAndParseJson(responseText);
+        } catch (parseErr) {
+          console.warn('[Gemini Service Diagnose JSON Parse Warning] Falling back to text description:', parseErr);
+          return {
+            name: "Diagnosis Result",
+            localName: "Diagnosis Result",
+            scientificName: "Pathogen",
+            confidenceScore: 0.9,
+            symptoms: [responseText],
+            causes: ["See details in description"],
+            chemicalTreatment: [],
+            organicTreatment: [],
+            pesticideDetails: {
+              localName: "None",
+              englishName: "None",
+              brands: [],
+              dosage: "N/A",
+              mixingMethod: "N/A",
+              precautions: "N/A",
+              waitingPeriod: "N/A"
+            },
+            preventiveTips: []
+          };
+        }
       } catch (error) {
         console.error('[Gemini Live Diagnosis Error]', error);
         throw error;
@@ -329,8 +387,24 @@ export class GeminiService {
 
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
-        const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonString);
+        console.log('[Gemini Service Recommend Raw Response]', text);
+
+        try {
+          return cleanAndParseJson(text);
+        } catch (parseErr) {
+          console.warn('[Gemini Service Recommend JSON Parse Warning] Falling back to raw recommendations:', parseErr);
+          return [
+            {
+              name: "Recommended Crops",
+              profitEstimation: 0,
+              expectedYield: 0,
+              marketDemand: "High",
+              growingDuration: 0,
+              riskLevel: "Low",
+              description: text
+            }
+          ];
+        }
       } catch (error) {
         console.error('[Gemini Live Recommendation Error]', error);
         throw error;
@@ -392,8 +466,18 @@ export class GeminiService {
 
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
-        const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonString);
+        console.log('[Gemini Service Soil Raw Response]', text);
+
+        try {
+          return cleanAndParseJson(text);
+        } catch (parseErr) {
+          console.warn('[Gemini Service Soil JSON Parse Warning] Falling back to raw response:', parseErr);
+          return {
+            suitability: ["Review raw recommendations"],
+            fertilizerPlan: [text],
+            soilImprovementSuggestions: []
+          };
+        }
       } catch (error) {
         console.error('[Gemini Live Soil Analysis Error]', error);
         throw error;

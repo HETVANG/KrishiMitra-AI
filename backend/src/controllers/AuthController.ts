@@ -1,7 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { LoginHistory } from '../models/LoginHistory';
 import { AuthRequest } from '../middleware/auth';
+
+const parseUserAgent = (userAgentStr: string = '') => {
+  const ua = userAgentStr.toLowerCase();
+  let browser = 'Unknown Browser';
+  let device = 'Desktop';
+
+  if (ua.includes('firefox')) browser = 'Firefox';
+  else if (ua.includes('chrome') && !ua.includes('chromium')) browser = 'Chrome';
+  else if (ua.includes('safari') && !ua.includes('chrome')) browser = 'Safari';
+  else if (ua.includes('edge')) browser = 'Edge';
+  else if (ua.includes('opr') || ua.includes('opera')) browser = 'Opera';
+
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone') || ua.includes('ipad')) {
+    device = 'Mobile';
+  } else if (ua.includes('tablet') || ua.includes('ipad') || ua.includes('playbook')) {
+    device = 'Tablet';
+  }
+
+  return { browser, device };
+};
 
 const generateToken = (userId: string): string => {
   return jwt.sign(
@@ -47,7 +68,7 @@ export class AuthController {
         email: email.toLowerCase(),
         password,
         phone,
-        role: role || 'farmer',
+        role: role || 'user',
         settings: settings || { language: 'en', theme: 'light' },
         farmLocation,
         plan: 'free',
@@ -56,6 +77,21 @@ export class AuthController {
         trialStartDate: new Date(),
         trialEndDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
         subscriptionExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      });
+
+      user.lastLogin = new Date();
+      await user.save();
+
+      const userAgent = req.headers['user-agent'] || '';
+      const { browser, device } = parseUserAgent(userAgent);
+      const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+
+      await LoginHistory.create({
+        userId: user._id,
+        loginTime: user.lastLogin,
+        browser,
+        device,
+        ipAddress
       });
 
       const token = generateToken(user._id.toString());
@@ -84,6 +120,25 @@ export class AuthController {
       if (!isMatch) {
         return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }
+
+      if (user.isBlocked) {
+        return res.status(403).json({ success: false, message: 'Account is blocked. Please contact support.' });
+      }
+
+      user.lastLogin = new Date();
+      await user.save();
+
+      const userAgent = req.headers['user-agent'] || '';
+      const { browser, device } = parseUserAgent(userAgent);
+      const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+
+      await LoginHistory.create({
+        userId: user._id,
+        loginTime: user.lastLogin,
+        browser,
+        device,
+        ipAddress
+      });
 
       const token = generateToken(user._id.toString());
 

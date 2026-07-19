@@ -17,6 +17,7 @@ import reportRoutes from './routes/reportRoutes';
 import schemeRoutes from './routes/schemeRoutes';
 import chatbotRoutes from './routes/chatbotRoutes';
 import billingRoutes from './routes/billingRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

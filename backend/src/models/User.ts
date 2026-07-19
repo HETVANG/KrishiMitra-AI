@@ -7,7 +7,9 @@ const UserSchema = new Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     phone: { type: String, sparse: true, trim: true },
-    role: { type: String, enum: ['farmer', 'expert', 'admin'], default: 'farmer' },
+    role: { type: String, enum: ['user', 'farmer', 'expert', 'admin'], default: 'user' },
+    lastLogin: { type: Date },
+    isBlocked: { type: Boolean, default: false },
     settings: {
       language: { type: String, enum: ['en', 'hi', 'gu', 'mr', 'pa', 'bn', 'ta', 'te', 'kn', 'ml', 'or', 'as'], default: 'en' },
       theme: { type: String, enum: ['light', 'dark'], default: 'light' },

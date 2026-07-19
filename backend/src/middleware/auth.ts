@@ -29,6 +29,10 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({ message: 'User not found or account deactivated' });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({ message: 'Account is blocked. Please contact support.' });
+    }
+
     req.user = user;
     next();
   } catch (error) {

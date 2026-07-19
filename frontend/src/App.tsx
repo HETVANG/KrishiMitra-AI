@@ -43,7 +43,34 @@ const ProtectedRoute = () => {
 // Admin Route Guard
 const AdminRoute = () => {
   const { user } = useAuth();
-  return user?.role === 'admin' ? <Outlet /> : <Navigate to="/" replace />;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== 'admin') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center my-12">
+        <div className="bg-white dark:bg-dark-900 border p-8 rounded-3xl max-w-sm shadow-sm space-y-4">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-955/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-xl font-extrabold border border-red-100">
+            403
+          </div>
+          <h2 className="text-lg font-extrabold text-gray-800 dark:text-dark-100">Access Denied</h2>
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            You do not have administrative privileges to access the control center. Please contact systems administrator to request access.
+          </p>
+          <a
+            href="/"
+            className="inline-block px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
+          >
+            Return to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return <Outlet />;
 };
 
 // Layout Wrapper

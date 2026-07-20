@@ -44,8 +44,8 @@ export const Login: React.FC = () => {
       </div>
 
       {/* Form Area on Right */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-dark-800/30">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 dark:border-dark-800/30">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex lg:hidden items-center justify-center w-12 h-12 bg-brand-500 rounded-2xl text-white mb-3 shadow-md shadow-brand-500/20">
@@ -63,33 +63,37 @@ export const Login: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-3.5 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <Mail size={16} />
+                </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@farm.com"
-                  className="custom-input pl-11"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">Password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-3.5 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <Lock size={16} />
+                </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="custom-input pl-11"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>

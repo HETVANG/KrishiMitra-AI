@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const getApiBaseUrl = (): string => {
+export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
   if (!envUrl) return 'http://localhost:5000/api';
   return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;

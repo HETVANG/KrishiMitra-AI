@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const apiKey = process.env.GEMINI_API_KEY;
+const geminiModel = process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-lite';
 let genAI: GoogleGenerativeAI | null = null;
 
 if (apiKey) {
@@ -139,7 +140,7 @@ export class GeminiService {
 
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: geminiModel });
         
         const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
         Answer the farmer's questions clearly, concisely, and practically.
@@ -273,7 +274,7 @@ export class GeminiService {
   static async diagnoseCropDisease(imageBuffer: Buffer, mimeType: string, language: string = 'en'): Promise<any> {
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: geminiModel });
         
         const prompt = `You are a professional plant pathologist. Analyze the attached plant leaf image.
         Diagnose the crop disease, or state if it is healthy.
@@ -379,7 +380,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: geminiModel });
         const prompt = `You are a senior agricultural advisor. Recommend 3 suitable crops based on these parameters:
         State: ${inputs.state}
         District: ${inputs.district}
@@ -471,7 +472,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: geminiModel });
         const prompt = `You are a soil chemist. Analyze these soil parameters:
         pH: ${inputs.pH}
         Nitrogen (N): ${inputs.N} kg/ha

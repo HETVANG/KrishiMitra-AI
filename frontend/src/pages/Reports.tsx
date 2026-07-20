@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getApiBaseUrl } from '../services/api';
 import { FileText, Download, Sprout, CloudSun, Coins, ScanEye, ArrowUpRight } from 'lucide-react';
 
 export const Reports: React.FC = () => {
@@ -17,7 +18,8 @@ export const Reports: React.FC = () => {
     }
 
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5000/api/reports/download?type=${reportType}&Authorization=Bearer ${token}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}/reports/download?type=${reportType}&Authorization=Bearer ${token}`;
     window.open(url, '_blank');
   };
 

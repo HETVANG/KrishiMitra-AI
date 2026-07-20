@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { api } from '../services/api';
+import { api, getApiBaseUrl } from '../services/api';
 import { 
   Upload, 
   ShieldAlert, 
@@ -160,8 +160,8 @@ export const DiseaseDetection: React.FC = () => {
   const handleDownloadPdf = () => {
     if (!result) return;
     const token = localStorage.getItem('token');
-    // Pass diseaseName and active lang for localized PDF generation
-    const url = `http://localhost:5000/api/reports/download?type=disease&diseaseName=${encodeURIComponent(result.name)}&lang=${i18n.language}&Authorization=Bearer ${token}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}/reports/download?type=disease&diseaseName=${encodeURIComponent(result.name)}&lang=${i18n.language}&Authorization=Bearer ${token}`;
     window.open(url, '_blank');
   };
 

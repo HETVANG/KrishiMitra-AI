@@ -109,38 +109,44 @@ export const Register: React.FC = () => {
             {/* Core Fields */}
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Full Name</label>
-              <div className="relative">
-                <User size={16} className="absolute left-3.5 top-3 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <User size={16} />
+                </div>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Rajesh Kumar"
-                  className="custom-input pl-10"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Email Address</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-3 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <Mail size={16} />
+                </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@farm.com"
-                  className="custom-input pl-10"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Mobile Number</label>
-              <div className="relative">
-                <Phone size={16} className="absolute left-3.5 top-3 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <Phone size={16} />
+                </div>
                 <input
                   type="tel"
                   required
@@ -148,22 +154,24 @@ export const Register: React.FC = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   placeholder="9876543210"
-                  className="custom-input pl-10"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Create Password</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-3 text-gray-400" />
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <Lock size={16} />
+                </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="custom-input pl-10"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
               </div>
             </div>
@@ -175,15 +183,17 @@ export const Register: React.FC = () => {
                 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Specialization</label>
-                  <div className="relative">
-                    <Stethoscope size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                  <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                      <Stethoscope size={16} />
+                    </div>
                     <input
                       type="text"
                       required
                       value={specialization}
                       onChange={(e) => setSpecialization(e.target.value)}
                       placeholder="e.g. Agronomy, Plant Pathology"
-                      className="custom-input pl-10"
+                      className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                     />
                   </div>
                 </div>
@@ -191,30 +201,34 @@ export const Register: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Years of Exp</label>
-                    <div className="relative">
-                      <Briefcase size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                    <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                        <Briefcase size={16} />
+                      </div>
                       <input
                         type="number"
                         required
                         value={experienceYears}
                         onChange={(e) => setExperienceYears(e.target.value)}
                         placeholder="5"
-                        className="custom-input pl-10"
+                        className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Fee (per session)</label>
-                    <div className="relative">
-                      <IndianRupee size={16} className="absolute left-3.5 top-3 text-gray-400" />
+                    <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                        <IndianRupee size={16} />
+                      </div>
                       <input
                         type="number"
                         required
                         value={consultationFee}
                         onChange={(e) => setConsultationFee(e.target.value)}
                         placeholder="200"
-                        className="custom-input pl-10"
+                        className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                       />
                     </div>
                   </div>

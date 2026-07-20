@@ -16,6 +16,33 @@ if (apiKey) {
   console.log('[Gemini Service] Running in MOCK mode (No GEMINI_API_KEY configured).');
 }
 
+/**
+ * Helper to call Gemini API with exponential backoff retries on transient errors (429, 500, 502, 503, 504)
+ */
+async function callGeminiWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 2000): Promise<T> {
+  let attempt = 0;
+  let delay = initialDelayMs;
+
+  while (attempt < maxRetries) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      attempt++;
+      const isTransient = err?.status === 429 || err?.status === 500 || err?.status === 502 || err?.status === 503 || err?.status === 504 || (err?.message && (err.message.includes('429') || err.message.includes('503') || err.message.includes('quota') || err.message.includes('high demand') || err.message.includes('Service Unavailable')));
+
+      console.warn(`[Gemini Retry Attempt ${attempt}/${maxRetries}] Failed with status ${err?.status || 'Error'}: ${err?.message?.split('\n')[0]}. Transient: ${isTransient}`);
+
+      if (attempt >= maxRetries || !isTransient) {
+        throw err;
+      }
+
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 2; // Exponential backoff
+    }
+  }
+  throw new Error('Gemini API call failed after max retries.');
+}
+
 // Helper to fetch localized mock data from disk
 const getLocalizedMockData = (language: string): any => {
   try {
@@ -112,7 +139,7 @@ export class GeminiService {
 
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
         const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
         Answer the farmer's questions clearly, concisely, and practically.
@@ -143,7 +170,7 @@ export class GeminiService {
           }
         });
 
-        const result = await chat.sendMessage(`${systemInstruction}\n\nUser Question: ${prompt}`);
+        const result = await callGeminiWithRetry(() => chat.sendMessage(`${systemInstruction}\n\nUser Question: ${prompt}`));
         const responseText = result.response.text().trim();
         console.log('[Gemini Service Chat Raw Response]', responseText);
 
@@ -246,7 +273,7 @@ export class GeminiService {
   static async diagnoseCropDisease(imageBuffer: Buffer, mimeType: string, language: string = 'en'): Promise<any> {
     if (genAI) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
         const prompt = `You are a professional plant pathologist. Analyze the attached plant leaf image.
         Diagnose the crop disease, or state if it is healthy.
@@ -288,7 +315,7 @@ export class GeminiService {
           }
         };
 
-        const result = await model.generateContent([prompt, imagePart]);
+        const result = await callGeminiWithRetry(() => model.generateContent([prompt, imagePart]));
         const responseText = result.response.text().trim();
         console.log('[Gemini Service Diagnose Raw Response]', responseText);
 
@@ -352,7 +379,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const prompt = `You are a senior agricultural advisor. Recommend 3 suitable crops based on these parameters:
         State: ${inputs.state}
         District: ${inputs.district}
@@ -385,7 +412,7 @@ export class GeminiService {
           }
         ]`;
 
-        const result = await model.generateContent(prompt);
+        const result = await callGeminiWithRetry(() => model.generateContent(prompt));
         const text = result.response.text().trim();
         console.log('[Gemini Service Recommend Raw Response]', text);
 
@@ -444,7 +471,7 @@ export class GeminiService {
         };
         const targetLang = langNames[lang] || 'English';
 
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const prompt = `You are a soil chemist. Analyze these soil parameters:
         pH: ${inputs.pH}
         Nitrogen (N): ${inputs.N} kg/ha
@@ -464,7 +491,7 @@ export class GeminiService {
           "soilImprovementSuggestions": ["Suggestion 1", "Suggestion 2"]
         }`;
 
-        const result = await model.generateContent(prompt);
+        const result = await callGeminiWithRetry(() => model.generateContent(prompt));
         const text = result.response.text().trim();
         console.log('[Gemini Service Soil Raw Response]', text);
 

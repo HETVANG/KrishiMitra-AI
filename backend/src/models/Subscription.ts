@@ -3,7 +3,7 @@ import { Schema, model } from 'mongoose';
 const SubscriptionSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
-    plan: { type: String, enum: ['free', 'premium', 'enterprise'], default: 'free' },
+    plan: { type: String, enum: ['free', 'basic', 'premium', 'enterprise'], default: 'free' },
     status: { type: String, enum: ['active', 'inactive', 'expired', 'trialing'], default: 'trialing' },
     expiryDate: { type: Date },
     paymentHistory: [{

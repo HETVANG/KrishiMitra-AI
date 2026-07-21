@@ -44,6 +44,7 @@ const mapUserPayload = (user: any) => {
     plan: user.plan || 'free',
     subscriptionStatus: user.subscriptionStatus || 'trialing',
     subscriptionType: user.subscriptionType || 'trial',
+    paymentProvider: user.paymentProvider || 'none',
     trialStartDate: user.trialStartDate,
     trialEndDate: user.trialEndDate,
     subscriptionExpiry: user.subscriptionExpiry,

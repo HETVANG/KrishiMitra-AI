@@ -30,18 +30,16 @@ const resetDailyLimitsIfNeeded = async (user: any) => {
  * Helper to determine if a user currently has Premium privileges (via active subscription or active trial)
  */
 export const hasPremiumAccess = (user: any): boolean => {
-  if (user.plan === 'premium' || user.plan === 'enterprise') {
-    return true;
+  const isPremiumPlan = user.plan === 'premium' || user.plan === 'enterprise';
+  if (isPremiumPlan) {
+    return user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing';
   }
-  
-  // Check if still trialing
+
   if (user.subscriptionStatus === 'trialing') {
     const trialEnd = user.trialEndDate ? new Date(user.trialEndDate).getTime() : 0;
-    if (Date.now() < trialEnd) {
-      return true;
-    }
+    return Date.now() < trialEnd;
   }
-  
+
   return false;
 };
 

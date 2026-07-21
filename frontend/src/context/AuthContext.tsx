@@ -24,6 +24,7 @@ interface User {
   trialStartDate?: string;
   trialEndDate?: string;
   subscriptionExpiry?: string;
+  paymentProvider?: 'stripe' | 'razorpay' | 'upi' | 'none';
   scansUsedToday: number;
   chatMessagesToday: number;
 }

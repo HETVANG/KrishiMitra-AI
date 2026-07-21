@@ -13,7 +13,8 @@ import {
   Calendar,
   Layers,
   CloudSun,
-  Sparkles
+  Sparkles,
+  Wallet
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +40,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { to: '/expenses', label: t('nav.expense'), icon: Coins },
     { to: '/reports', label: t('nav.reports'), icon: FileText },
     { to: '/pricing', label: 'Upgrade to Premium', icon: Sparkles },
+    { to: '/subscription', label: 'My Subscription', icon: Wallet },
+    { to: '/billing-history', label: 'Billing History', icon: Wallet },
   ];
 
   return (

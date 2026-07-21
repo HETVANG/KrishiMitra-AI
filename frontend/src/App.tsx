@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -23,6 +25,11 @@ const Expenses = React.lazy(() => import('./pages/Expenses').then(m => ({ defaul
 const Reports = React.lazy(() => import('./pages/Reports').then(m => ({ default: m.Reports })));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const Pricing = React.lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
+const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })));
+const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed').then(m => ({ default: m.PaymentFailed })));
+const PaymentPending = React.lazy(() => import('./pages/PaymentPending').then(m => ({ default: m.PaymentPending })));
+const Subscription = React.lazy(() => import('./pages/Subscription').then(m => ({ default: m.Subscription })));
+const BillingHistory = React.lazy(() => import('./pages/BillingHistory').then(m => ({ default: m.BillingHistory })));
 const NotFound = React.lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
 
 // Protected Route Guard
@@ -92,6 +99,8 @@ const DashboardLayout = () => {
     if (path === '/expenses') return 'Farm Cost ledger logbook';
     if (path === '/reports') return 'Export Statement PDF Reports';
     if (path === '/pricing') return 'Premium Pricing & Checkout';
+    if (path === '/subscription') return 'My Subscription';
+    if (path === '/billing-history') return 'Billing History';
     if (path === '/admin') return 'Control Panel Admin dashboard';
     return 'KrishiMitra AI';
   };
@@ -126,6 +135,7 @@ export const AppContent = () => {
           <div className="w-10 h-10 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
         </div>
       }>
+        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
           {/* Public auth pages */}
           <Route path="/login" element={<Login />} />
@@ -145,6 +155,11 @@ export const AppContent = () => {
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failed" element={<PaymentFailed />} />
+              <Route path="/payment/pending" element={<PaymentPending />} />
+              <Route path="/subscription" element={<Subscription />} />
+              <Route path="/billing-history" element={<BillingHistory />} />
               
               {/* Admin only dashboard portal */}
               <Route element={<AdminRoute />}>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { 
   Check, 
   Sparkles, 
@@ -38,6 +40,7 @@ export const Pricing: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
 
   useEffect(() => {
     // 1. Determine base price
@@ -91,21 +94,40 @@ export const Pricing: React.FC = () => {
       else if (sponsorType === 'ngo') discountType = 'ngo';
       else if (isStudent) discountType = 'student';
 
-      const res = await api.post('/billing/checkout', {
-        planType: billingCycle,
-        paymentProvider: provider,
-        couponCode: coupon || undefined,
-        referralCode: referral || undefined,
-        discountType
+      const res = await api.post('/payments/create-order', {
+        planName: selectedPlan,
+        billingCycle,
+        provider: provider === 'razorpay' ? 'razorpay' : 'mock',
+        metadata: { coupon, referral, discountType, sponsorType, isStudent }
       });
 
-      if (res.data && res.data.success) {
-        updateUser(res.data.user);
-        setSuccess(true);
+      if (res.data?.success) {
+        const verifyRes = await api.post('/payments/verify', {
+          orderId: res.data.order.id,
+          status: 'captured',
+          provider: provider === 'razorpay' ? 'razorpay' : 'mock'
+        });
+
+        if (verifyRes.data?.success) {
+          updateUser({
+            ...user,
+            plan: 'premium',
+            subscriptionStatus: 'active',
+            subscriptionType: billingCycle,
+            paymentProvider: provider === 'razorpay' ? 'razorpay' : 'mock'
+          });
+
+          setSuccess(true);
+          toast.success('Subscription activated successfully');
+        } else {
+          throw new Error('Unable to complete payment verification');
+        }
       }
     } catch (err: any) {
       console.error('Checkout error:', err);
-      setError(err.response?.data?.message || 'Failed to initialize subscription checkout.');
+      const message = err.response?.data?.message || 'Failed to initialize subscription checkout.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -224,7 +246,7 @@ export const Pricing: React.FC = () => {
               </div>
 
               {/* Premium Plan Card */}
-              <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border-2 border-brand-500 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className={`bg-white dark:bg-dark-900 rounded-3xl p-6 border-2 shadow-lg flex flex-col justify-between relative overflow-hidden ${selectedPlan === 'basic' ? 'border-brand-500' : 'border-slate-200'}`}>
                 <div className="absolute top-0 right-0 bg-brand-500 text-white text-[9px] font-extrabold px-3.5 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
                   <Sparkles size={10} /> Popular
                 </div>
@@ -288,9 +310,12 @@ export const Pricing: React.FC = () => {
                 <h4 className="font-extrabold text-base text-gray-800 dark:text-dark-150">Enterprise Organization Plan</h4>
                 <p className="text-xs text-gray-500 dark:text-dark-400 max-w-lg">Dedicated agronomic dashboards, expert calendar slots allocation for cooperative clusters, government subsidized integrations, and API accesses.</p>
               </div>
-              <span className="shrink-0 text-xs font-bold text-brand-600 bg-brand-50 dark:bg-brand-950/20 px-3 py-1.5 rounded-xl uppercase border">
-                Coming Soon
-              </span>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setSelectedPlan('premium')} className="rounded-xl bg-brand-600 px-3 py-2 text-xs font-semibold uppercase text-white">Select Premium</button>
+                <span className="shrink-0 text-xs font-bold text-brand-600 bg-brand-50 dark:bg-brand-950/20 px-3 py-1.5 rounded-xl uppercase border">
+                  Coming Soon
+                </span>
+              </div>
             </div>
           </div>
 

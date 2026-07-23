@@ -54,35 +54,51 @@ class MarketSyncService {
     }
 
     try {
-      let response = await this.fetchWithRetry(apiUrl, apiKey);
-      let payload = response.data;
-      let records = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.records)
-          ? payload.records
-          : Array.isArray(payload?.data)
-            ? payload.data
-            : Array.isArray(payload?.prices)
-              ? payload.prices
-              : [];
+      const targetCrops = ['Potato', 'Tomato', 'Wheat', 'Mustard', 'Onion', 'Rice', 'Paddy', 'Green Peas'];
+      let records: any[] = [];
 
-      // Fallback: If official resource is empty, query the active Agmarknet endpoint
-      if (!records.length && apiUrl.includes('9ef842f8-8580-4c7b-bc95-a912e774d9d3')) {
-        const altUrl = 'https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24';
-        console.warn(`[Market Sync] Official dataset ${apiUrl} returned 0 records. Retrying with active Agmarknet dataset: ${altUrl}`);
-        warnings.push('Official variety-wise daily commodity prices dataset was empty; fell back to alternative Agmarknet resource.');
-        
-        response = await this.fetchWithRetry(altUrl, apiKey);
-        payload = response.data;
-        records = Array.isArray(payload?.records) ? payload.records : [];
+      for (const crop of targetCrops) {
+        const cropUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}filters[Commodity]=${encodeURIComponent(crop)}`;
+        try {
+          console.info(`[Market Sync] Querying live daily rates for commodity: "${crop}"`);
+          let response = await this.fetchWithRetry(cropUrl, apiKey);
+          let payload = response.data;
+          let cropRecords = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.records)
+              ? payload.records
+              : Array.isArray(payload?.data)
+                ? payload.data
+                : Array.isArray(payload?.prices)
+                  ? payload.prices
+                  : [];
+
+          // Fallback: If official resource is empty, query the active Agmarknet endpoint
+          if (!cropRecords.length && apiUrl.includes('9ef842f8-8580-4c7b-bc95-a912e774d9d3')) {
+            const altUrl = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?filters[Commodity]=${encodeURIComponent(crop)}`;
+            console.warn(`[Market Sync] Official dataset returned 0 records for "${crop}". Retrying with active Agmarknet dataset: ${altUrl}`);
+            warnings.push(`Official daily dataset was empty for "${crop}"; fell back to alternative Agmarknet resource.`);
+            
+            response = await this.fetchWithRetry(altUrl, apiKey);
+            payload = response.data;
+            cropRecords = Array.isArray(payload?.records) ? payload.records : [];
+          }
+
+          if (cropRecords.length > 0) {
+            records.push(...cropRecords);
+          }
+        } catch (err: any) {
+          console.warn(`[Market Sync] Failed to fetch rates for crop "${crop}": ${err.message}`);
+          warnings.push(`Failed to fetch crop "${crop}": ${err.message}`);
+        }
       }
 
       if (!records.length) {
-        warnings.push('Mandi API returned an empty payload.');
+        warnings.push('Mandi API returned an empty payload for all target commodities.');
         await this.seedFallbackIfEmpty(warnings);
         return {
           success: false,
-          message: 'Mandi API returned an empty payload. Loaded fallback seed data.',
+          message: 'Mandi API returned an empty payload for all target commodities. Loaded fallback seed data.',
           recordsInserted: 0,
           recordsUpdated: 0,
           warnings

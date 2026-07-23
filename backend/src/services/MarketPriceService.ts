@@ -40,13 +40,50 @@ class MarketPriceService {
 
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
-    const filter = buildMarketFilter(query);
+    let filter = buildMarketFilter(query);
 
-    const [total, prices, latestHistory] = await Promise.all([
-      MarketPrice.countDocuments(filter),
+    let fallbackSource = 'exact-match';
+    let total = await MarketPrice.countDocuments(filter);
+    
+    // Diagnostic Fallback Engine
+    if (total === 0) {
+      // Level 2: latest-local (Drop date restriction, keep crop & location filters)
+      if (filter.date) {
+        console.info('[Market Price Service Fallback] Level 1 (exact-match) returned 0 records. Attempting Level 2 (latest-local) by dropping date constraint...');
+        delete filter.date;
+        total = await MarketPrice.countDocuments(filter);
+        if (total > 0) {
+          fallbackSource = 'latest-local';
+        }
+      }
+
+      // Level 3: latest-state (Drop location filters, keep crop & state only)
+      if (total === 0) {
+        console.info('[Market Price Service Fallback] Level 2 (latest-local) returned 0 records. Attempting Level 3 (latest-state) by keeping crop & state only...');
+        delete filter.$or;
+        delete filter.district;
+        delete filter.market;
+        total = await MarketPrice.countDocuments(filter);
+        if (total > 0) {
+          fallbackSource = 'latest-state';
+        }
+      }
+
+      // Level 4: latest-country (Drop state filter, keep crop only)
+      if (total === 0) {
+        console.info('[Market Price Service Fallback] Level 3 (latest-state) returned 0 records. Attempting Level 4 (latest-country) by keeping crop only...');
+        delete filter.state;
+        total = await MarketPrice.countDocuments(filter);
+        fallbackSource = 'latest-country';
+      }
+    }
+
+    const [prices, latestHistory] = await Promise.all([
       MarketPrice.find(filter).sort({ date: -1, lastUpdated: -1 }).skip((page - 1) * limit).limit(limit).lean(),
       MarketPriceHistory.find(filter).sort({ date: -1 }).limit(1).lean()
     ]);
+
+    console.info(`[Market Price Query Completed] Fallback Level: ${fallbackSource} | Filter: ${JSON.stringify(filter)} | Count: ${total}`);
 
     const analytics = this.buildAnalytics(prices, latestHistory[0]);
     const lastUpdated = await MarketPrice.findOne(filter).sort({ lastUpdated: -1 }).lean();
@@ -55,7 +92,8 @@ class MarketPriceService {
       prices,
       analytics,
       pagination: getPaginationMeta(page, limit, total),
-      lastUpdated: lastUpdated?.lastUpdated || null
+      lastUpdated: lastUpdated?.lastUpdated || null,
+      fallbackSource
     };
 
     this.setCache(cacheKey, result);
@@ -71,12 +109,18 @@ class MarketPriceService {
 
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.min(60, Math.max(1, Number(query.limit) || 30));
-    const filter = buildMarketFilter(query);
+    
+    // Always build the filter without the date filter for historical trends
+    const queryCopy = { ...query };
+    delete queryCopy.date;
+    const filter = buildMarketFilter(queryCopy);
 
     const [total, history] = await Promise.all([
       MarketPriceHistory.countDocuments(filter),
       MarketPriceHistory.find(filter).sort({ date: -1 }).skip((page - 1) * limit).limit(limit).lean()
     ]);
+
+    console.info(`[Market History Query] Filter: ${JSON.stringify(filter)} | Matched count: ${total}`);
 
     const result = {
       history: history.map((item) => ({

@@ -20,6 +20,7 @@ export const MarketDashboard: React.FC = () => {
   const [loadingTrending, setLoadingTrending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [fallbackSource, setFallbackSource] = useState<string | null>(null);
 
   const fetchPrices = async (targetPage = page) => {
     setLoading(true);
@@ -40,6 +41,7 @@ export const MarketDashboard: React.FC = () => {
         setAnalytics(res.data.analytics || null);
         setPagination(res.data.pagination || null);
         setLastUpdated(res.data.lastUpdated ? new Date(res.data.lastUpdated).toLocaleString('en-IN') : null);
+        setFallbackSource(res.data.fallbackSource || 'exact-match');
       } else {
         setError('Unable to load mandi prices right now.');
       }
@@ -276,6 +278,16 @@ export const MarketDashboard: React.FC = () => {
 
           <div className="space-y-2 border-t border-gray-50 dark:border-dark-850 pt-4">
             <h4 className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Today’s Prices</h4>
+            {fallbackSource && fallbackSource !== 'exact-match' && prices.length > 0 && (
+              <div className="mb-2.5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-300 text-[10px] md:text-xs font-semibold flex items-center gap-1.5 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                <span>
+                  {fallbackSource === 'latest-local' && `Showing latest available ${searchCrop || 'crop'} prices for ${searchDistrict || 'local market'}${searchState ? ', ' + searchState : ''}.`}
+                  {fallbackSource === 'latest-state' && `Showing latest available ${searchCrop || 'crop'} prices for ${searchState || 'selected state'}.`}
+                  {fallbackSource === 'latest-country' && `Showing latest available ${searchCrop || 'crop'} prices across India.`}
+                </span>
+              </div>
+            )}
             <div className="max-h-[180px] overflow-y-auto divide-y divide-gray-50 dark:divide-dark-800/40 pr-1">
               {loading ? (
                 <div className="text-center py-4"><div className="w-5 h-5 border-2 border-t-transparent border-brand-500 rounded-full animate-spin inline-block"></div></div>

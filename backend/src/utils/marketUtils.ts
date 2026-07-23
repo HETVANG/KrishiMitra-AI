@@ -72,16 +72,20 @@ export const buildMarketFilter = (query: MarketQueryOptions) => {
   if (query.state) {
     filter.state = new RegExp(escapeRegex(query.state), 'i');
   }
-  if (query.district) {
-    filter.district = new RegExp(escapeRegex(query.district), 'i');
+  
+  if (query.district || query.market) {
+    const locationTerm = query.district || query.market;
+    if (locationTerm) {
+      const escaped = escapeRegex(locationTerm);
+      const regex = new RegExp(escaped, 'i');
+      filter.$or = [
+        { district: regex },
+        { market: regex },
+        { mandiName: regex }
+      ];
+    }
   }
-  if (query.market) {
-    const escapedMarket = escapeRegex(query.market);
-    filter.$or = [
-      { market: new RegExp(escapedMarket, 'i') },
-      { mandiName: new RegExp(escapedMarket, 'i') }
-    ];
-  }
+  
   if (query.date) {
     const dateValue = new Date(query.date);
     if (!Number.isNaN(dateValue.getTime())) {

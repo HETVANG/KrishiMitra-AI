@@ -4,6 +4,7 @@ import { MarketPriceHistory } from '../models/MarketPriceHistory';
 import type { MarketApiRecord, MarketSyncResult } from '../interfaces/market';
 import { getStartOfDay, normalizeMarketRecord } from '../utils/marketUtils';
 import cron from 'node-cron';
+import { SUPPORTED_COMMODITIES } from '../config/commodities';
 
 class MarketSyncService {
   private cache: { records: any[]; expiresAt: number } | null = null;
@@ -54,10 +55,14 @@ class MarketSyncService {
     }
 
     try {
-      const targetCrops = ['Potato', 'Tomato', 'Wheat', 'Mustard', 'Onion', 'Rice', 'Paddy', 'Green Peas'];
+      const startTime = Date.now();
+      let successfulImports = 0;
+      let failedImports = 0;
+      const recordsPerCommodity: Record<string, number> = {};
+      let totalImported = 0;
       let records: any[] = [];
 
-      for (const crop of targetCrops) {
+      for (const crop of SUPPORTED_COMMODITIES) {
         const cropUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}filters[Commodity]=${encodeURIComponent(crop)}`;
         try {
           console.info(`[Market Sync] Querying live daily rates for commodity: "${crop}"`);
@@ -86,12 +91,34 @@ class MarketSyncService {
 
           if (cropRecords.length > 0) {
             records.push(...cropRecords);
+            successfulImports++;
+            recordsPerCommodity[crop] = cropRecords.length;
+            totalImported += cropRecords.length;
+          } else {
+            recordsPerCommodity[crop] = 0;
           }
         } catch (err: any) {
+          failedImports++;
+          recordsPerCommodity[crop] = 0;
           console.warn(`[Market Sync] Failed to fetch rates for crop "${crop}": ${err.message}`);
           warnings.push(`Failed to fetch crop "${crop}": ${err.message}`);
         }
+        // Stagger queries to prevent OGD Gateway rate-limit blocking (HTTP 429)
+        await new Promise((resolve) => setTimeout(resolve, 1200));
       }
+
+      const executionTimeMs = Date.now() - startTime;
+      console.info(`
+--- 📊 MANDI PRICE SYNC SUMMARY ---
+Total Commodities Processed: ${SUPPORTED_COMMODITIES.length}
+Successful Crop Imports:      ${successfulImports}
+Failed Crop Imports:          ${failedImports}
+Total Records Imported:       ${totalImported}
+Execution Time:               ${(executionTimeMs / 1000).toFixed(2)} seconds
+Imports Per Commodity:
+${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).join('\n')}
+----------------------------------
+      `);
 
       if (!records.length) {
         warnings.push('Mandi API returned an empty payload for all target commodities.');

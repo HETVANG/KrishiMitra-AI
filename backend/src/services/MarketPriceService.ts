@@ -104,7 +104,19 @@ class MarketPriceService {
     }
 
     const filter = buildMarketFilter(query);
-    const prices = await MarketPrice.find(filter).sort({ avgPrice: -1 }).limit(6).lean();
+    const prices = await MarketPrice.aggregate([
+      { $match: filter },
+      { $sort: { date: -1, modalPrice: -1 } },
+      {
+        $group: {
+          _id: '$crop',
+          doc: { $first: '$$ROOT' }
+        }
+      },
+      { $replaceRoot: { newRoot: '$doc' } },
+      { $sort: { modalPrice: -1 } },
+      { $limit: 4 }
+    ]);
     
     this.setCache(cacheKey, prices);
     return prices;

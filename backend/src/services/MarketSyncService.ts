@@ -31,7 +31,7 @@ class MarketSyncService {
   public async syncLatestPrices(): Promise<MarketSyncResult> {
     const warnings: string[] = [];
     const apiKey = process.env.MANDI_API_KEY;
-    const apiUrl = process.env.MANDI_API_URL;
+    let apiUrl = process.env.MANDI_API_URL;
 
     console.info('[Market Sync] Sync started');
 
@@ -47,10 +47,16 @@ class MarketSyncService {
       };
     }
 
+    // Normalize human-facing page URL to data.gov.in API resource endpoint
+    if (apiUrl.includes('www.data.gov.in/resource/variety-wise-daily-market-prices-data-commodity')) {
+      apiUrl = 'https://api.data.gov.in/resource/9ef842f8-8580-4c7b-bc95-a912e774d9d3';
+      console.info(`[Market Sync] Normalizing human web page URL to official API endpoint: ${apiUrl}`);
+    }
+
     try {
-      const response = await this.fetchWithRetry(apiUrl, apiKey);
-      const payload = response.data;
-      const records = Array.isArray(payload)
+      let response = await this.fetchWithRetry(apiUrl, apiKey);
+      let payload = response.data;
+      let records = Array.isArray(payload)
         ? payload
         : Array.isArray(payload?.records)
           ? payload.records
@@ -59,6 +65,17 @@ class MarketSyncService {
             : Array.isArray(payload?.prices)
               ? payload.prices
               : [];
+
+      // Fallback: If official resource is empty, query the active Agmarknet endpoint
+      if (!records.length && apiUrl.includes('9ef842f8-8580-4c7b-bc95-a912e774d9d3')) {
+        const altUrl = 'https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24';
+        console.warn(`[Market Sync] Official dataset ${apiUrl} returned 0 records. Retrying with active Agmarknet dataset: ${altUrl}`);
+        warnings.push('Official variety-wise daily commodity prices dataset was empty; fell back to alternative Agmarknet resource.');
+        
+        response = await this.fetchWithRetry(altUrl, apiKey);
+        payload = response.data;
+        records = Array.isArray(payload?.records) ? payload.records : [];
+      }
 
       if (!records.length) {
         warnings.push('Mandi API returned an empty payload.');
@@ -229,9 +246,17 @@ class MarketSyncService {
   private async fetchWithRetry(apiUrl: string, apiKey: string) {
     let lastError: unknown;
 
+    let targetUrl = apiUrl;
+    if (apiUrl.includes('api.data.gov.in')) {
+      const separator = apiUrl.includes('?') ? '&' : '?';
+      targetUrl = `${apiUrl}${separator}api-key=${apiKey}&format=json&limit=150`;
+    }
+
+    console.info(`[Market Sync] Requesting URL: ${targetUrl.replace(apiKey, 'REDACTED')}`);
+
     for (let attempt = 1; attempt <= this.maxRetries; attempt += 1) {
       try {
-        return await axios.get(apiUrl, {
+        const res = await axios.get(targetUrl, {
           headers: {
             'x-api-key': apiKey,
             Authorization: `Bearer ${apiKey}`,
@@ -240,6 +265,27 @@ class MarketSyncService {
           timeout: this.timeoutMs,
           validateStatus: (status) => status >= 200 && status < 300
         });
+
+        // Log the raw response keys and counts safely (without keys)
+        const payload = res.data;
+        const records = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.records)
+            ? payload.records
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : Array.isArray(payload?.prices)
+                ? payload.prices
+                : [];
+        
+        console.log('[Market Sync Raw API Response Logs] SUCCESS.');
+        console.log('[Market Sync Raw API Response Keys]', Object.keys(payload || {}));
+        console.log('[Market Sync Raw API Records Count]', records.length);
+        if (records.length > 0) {
+          console.log('[Market Sync Raw API Record Sample]', JSON.stringify(records[0]));
+        }
+
+        return res;
       } catch (error) {
         lastError = error;
         if (this.isRetryable(error) && attempt < this.maxRetries) {

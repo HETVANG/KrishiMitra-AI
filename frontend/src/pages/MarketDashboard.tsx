@@ -10,8 +10,8 @@ export const MarketDashboard: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [pagination, setPagination] = useState<any>(null);
-  const [searchCrop, setSearchCrop] = useState('Wheat');
-  const [searchState, setSearchState] = useState('Haryana');
+  const [searchCrop, setSearchCrop] = useState('');
+  const [searchState, setSearchState] = useState('');
   const [searchDistrict, setSearchDistrict] = useState('');
   const [searchDate, setSearchDate] = useState('');
   const [page, setPage] = useState(1);
@@ -55,9 +55,9 @@ export const MarketDashboard: React.FC = () => {
     setLoadingHistory(true);
     try {
       const query = new URLSearchParams({
-        crop: searchCrop,
-        state: searchState,
-        district: searchDistrict || 'Karnal',
+        crop: searchCrop || 'Potato',
+        state: searchState || 'West Bengal',
+        district: searchDistrict || 'Hooghly',
         limit: '12',
       });
       if (searchDate) query.set('date', searchDate);
@@ -169,6 +169,7 @@ export const MarketDashboard: React.FC = () => {
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
             <select value={searchState} onChange={(e) => setSearchState(e.target.value)} className="custom-input text-sm">
+              <option value="">All States</option>
               <option value="Haryana">Haryana</option>
               <option value="Punjab">Punjab</option>
               <option value="Uttar Pradesh">Uttar Pradesh</option>

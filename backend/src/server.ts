@@ -12,20 +12,26 @@ try {
 
 import app from './app';
 import { connectDB } from './config/db';
+import { marketSyncService } from './services/MarketSyncService';
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    // Establish connection to MongoDB Atlas
     await connectDB();
+
+    try {
+      marketSyncService.scheduleDailySync();
+      await marketSyncService.syncLatestPrices();
+    } catch (syncErr) {
+      console.warn('[Server] Market sync initialization failed. The app will continue running.', syncErr);
+    }
 
     const server = app.listen(PORT, () => {
       console.log(`[Server] KrishiMitra AI Server listening on port ${PORT}`);
       console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
-    // Handle system signals gracefully
     process.on('SIGTERM', () => {
       console.log('[Server] SIGTERM received. Shutting down server gracefully...');
       server.close(() => {
@@ -43,5 +49,4 @@ const startServer = async () => {
   }
 };
 
-// Production verification build tag: live-auth-audit-verified-2026
 startServer();

@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { MarketPrice } from '../models/MarketPrice';
 import { MarketPriceHistory } from '../models/MarketPriceHistory';
+import { MarketSyncMetadata } from '../models/MarketSyncMetadata';
 import type { MarketApiRecord, MarketSyncResult } from '../interfaces/market';
 import { getStartOfDay, normalizeMarketRecord } from '../utils/marketUtils';
 import cron from 'node-cron';
-import { SUPPORTED_COMMODITIES } from '../config/commodities';
+import { ALL_COMMODITIES } from '../config/commodities';
 
 class MarketSyncService {
   private cache: { records: any[]; expiresAt: number } | null = null;
@@ -20,13 +21,13 @@ class MarketSyncService {
   }
 
   public async scheduleDailySync() {
-    cron.schedule('0 6 * * *', async () => {
+    cron.schedule('0 */6 * * *', async () => {
       await this.syncLatestPrices();
     }, {
       timezone: 'Asia/Kolkata'
     });
 
-    console.info('[Market Sync] Daily scheduler initialized for 6:00 AM IST');
+    console.info('[Market Sync] Scheduler initialized to run every 6 hours (IST)');
   }
 
   public async syncLatestPrices(): Promise<MarketSyncResult> {
@@ -54,18 +55,20 @@ class MarketSyncService {
       console.info(`[Market Sync] Normalizing human web page URL to official API endpoint: ${apiUrl}`);
     }
 
-    try {
-      const startTime = Date.now();
-      let successfulImports = 0;
-      let failedImports = 0;
-      const recordsPerCommodity: Record<string, number> = {};
-      let totalImported = 0;
-      let records: any[] = [];
+    const startTime = Date.now();
+    let successfulImports = 0;
+    let failedImports = 0;
+    const recordsPerCommodity: Record<string, number> = {};
+    const noDataCommodities: string[] = [];
+    const apiErrors: string[] = [];
+    let totalImported = 0;
+    let records: any[] = [];
 
-      for (const crop of SUPPORTED_COMMODITIES) {
-        const cropUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}filters[Commodity]=${encodeURIComponent(crop)}`;
+    try {
+      for (const crop of ALL_COMMODITIES) {
+        const cropUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}filters[Commodity]=${encodeURIComponent(crop.apiCommodity)}`;
         try {
-          console.info(`[Market Sync] Querying live daily rates for commodity: "${crop}"`);
+          console.info(`[Market Sync] Querying live daily rates for commodity: "${crop.displayName}" (API: "${crop.apiCommodity}")`);
           let response = await this.fetchWithRetry(cropUrl, apiKey);
           let payload = response.data;
           let cropRecords = Array.isArray(payload)
@@ -80,9 +83,9 @@ class MarketSyncService {
 
           // Fallback: If official resource is empty, query the active Agmarknet endpoint
           if (!cropRecords.length && apiUrl.includes('9ef842f8-8580-4c7b-bc95-a912e774d9d3')) {
-            const altUrl = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?filters[Commodity]=${encodeURIComponent(crop)}`;
-            console.warn(`[Market Sync] Official dataset returned 0 records for "${crop}". Retrying with active Agmarknet dataset: ${altUrl}`);
-            warnings.push(`Official daily dataset was empty for "${crop}"; fell back to alternative Agmarknet resource.`);
+            const altUrl = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?filters[Commodity]=${encodeURIComponent(crop.apiCommodity)}`;
+            console.warn(`[Market Sync] Official daily dataset was empty for "${crop.displayName}". Retrying alternative active resource: ${altUrl}`);
+            warnings.push(`Official daily dataset was empty for "${crop.displayName}"; fell back to alternative Agmarknet resource.`);
             
             response = await this.fetchWithRetry(altUrl, apiKey);
             payload = response.data;
@@ -92,25 +95,28 @@ class MarketSyncService {
           if (cropRecords.length > 0) {
             records.push(...cropRecords);
             successfulImports++;
-            recordsPerCommodity[crop] = cropRecords.length;
+            recordsPerCommodity[crop.displayName] = cropRecords.length;
             totalImported += cropRecords.length;
           } else {
-            recordsPerCommodity[crop] = 0;
+            noDataCommodities.push(crop.displayName);
+            recordsPerCommodity[crop.displayName] = 0;
           }
         } catch (err: any) {
           failedImports++;
-          recordsPerCommodity[crop] = 0;
-          console.warn(`[Market Sync] Failed to fetch rates for crop "${crop}": ${err.message}`);
-          warnings.push(`Failed to fetch crop "${crop}": ${err.message}`);
+          recordsPerCommodity[crop.displayName] = 0;
+          const errMsg = `${crop.displayName}: ${err.message}`;
+          apiErrors.push(errMsg);
+          console.warn(`[Market Sync] Failed to fetch rates for crop "${crop.displayName}": ${err.message}`);
+          warnings.push(`Failed to fetch crop "${crop.displayName}": ${err.message}`);
         }
         // Stagger queries to prevent OGD Gateway rate-limit blocking (HTTP 429)
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+        await new Promise((resolve) => setTimeout(resolve, 450));
       }
 
       const executionTimeMs = Date.now() - startTime;
       console.info(`
 --- 📊 MANDI PRICE SYNC SUMMARY ---
-Total Commodities Processed: ${SUPPORTED_COMMODITIES.length}
+Total Commodities Processed: ${ALL_COMMODITIES.length}
 Successful Crop Imports:      ${successfulImports}
 Failed Crop Imports:          ${failedImports}
 Total Records Imported:       ${totalImported}
@@ -123,6 +129,26 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
       if (!records.length) {
         warnings.push('Mandi API returned an empty payload for all target commodities.');
         await this.seedFallbackIfEmpty(warnings);
+        
+        // Save stats for empty payload run
+        try {
+          await MarketSyncMetadata.create({
+            lastSyncTime: new Date(),
+            activeSource: 'seed-fallback',
+            status: 'Fallback',
+            totalProcessed: ALL_COMMODITIES.length,
+            successfulImports,
+            noDataCommodities,
+            apiErrors,
+            recordsPerCommodity,
+            totalImported: 0,
+            executionTimeSeconds: Number((executionTimeMs / 1000).toFixed(2)),
+            message: 'Mandi API returned an empty payload for all target commodities. Seed data used.'
+          });
+        } catch (dbErr) {
+          console.error('[Market Sync] Failed to save fallback sync stats:', dbErr);
+        }
+
         return {
           success: false,
           message: 'Mandi API returned an empty payload for all target commodities. Loaded fallback seed data.',
@@ -151,6 +177,8 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
           district: normalized.district,
           market: normalized.market,
           crop: normalized.crop,
+          variety: normalized.variety,
+          grade: normalized.grade,
           unit: normalized.unit
         };
 
@@ -168,6 +196,8 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
           updateOne: {
             filter: {
               crop: normalized.crop,
+              variety: normalized.variety,
+              grade: normalized.grade,
               state: normalized.state,
               district: normalized.district,
               market: normalized.market,
@@ -205,6 +235,25 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
         console.warn('[Market Sync] Failed to clear query cache:', cacheErr);
       }
 
+      // Save statistics in MongoDB
+      try {
+        await MarketSyncMetadata.create({
+          lastSyncTime: lastUpdated,
+          activeSource: 'live-api',
+          status: failedImports === 0 ? 'Success' : 'Fallback',
+          totalProcessed: ALL_COMMODITIES.length,
+          successfulImports,
+          noDataCommodities,
+          apiErrors,
+          recordsPerCommodity,
+          totalImported,
+          executionTimeSeconds: Number((executionTimeMs / 1000).toFixed(2)),
+          message: `Sync completed successfully. Inserted: ${recordsInserted}, Updated: ${recordsUpdated}.`
+        });
+      } catch (dbErr) {
+        console.error('[Market Sync] Failed to save sync stats in MongoDB:', dbErr);
+      }
+
       console.info(`[Market Sync] Sync completed. Inserted: ${recordsInserted}, Updated: ${recordsUpdated}`);
       return {
         success: true,
@@ -215,10 +264,31 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
         warnings
       };
     } catch (error) {
+      const executionTimeMs = Date.now() - startTime;
       const message = this.describeError(error);
       console.error(`[Market Sync] Sync failed: ${message}`);
       warnings.push(message);
       await this.seedFallbackIfEmpty(warnings);
+
+      // Save sync statistics as Failed in MongoDB
+      try {
+        await MarketSyncMetadata.create({
+          lastSyncTime: new Date(),
+          activeSource: 'live-api',
+          status: 'Failed',
+          totalProcessed: ALL_COMMODITIES.length,
+          successfulImports,
+          noDataCommodities,
+          apiErrors: [...apiErrors, message],
+          recordsPerCommodity,
+          totalImported,
+          executionTimeSeconds: Number((executionTimeMs / 1000).toFixed(2)),
+          message: `Sync failed: ${message}. Active database fallback seeded.`
+        });
+      } catch (dbErr) {
+        console.error('[Market Sync] Failed to save failure sync stats:', dbErr);
+      }
+
       return {
         success: false,
         message: `Mandi API sync failed: ${message}. Active database fallback seeded.`,

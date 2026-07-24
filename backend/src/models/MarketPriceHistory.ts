@@ -3,6 +3,8 @@ import { Schema, model } from 'mongoose';
 const MarketPriceHistorySchema = new Schema(
   {
     crop: { type: String, required: true, trim: true },
+    variety: { type: String, trim: true, default: 'FAQ' },
+    grade: { type: String, trim: true, default: 'FAQ' },
     state: { type: String, required: true, trim: true },
     district: { type: String, required: true, trim: true },
     market: { type: String, required: true, trim: true },

@@ -85,11 +85,17 @@ class MarketPriceService {
 
     console.info(`[Market Price Query Completed] Fallback Level: ${fallbackSource} | Filter: ${JSON.stringify(filter)} | Count: ${total}`);
 
+    const { resolveCropToDisplayName } = require('../config/commodities');
+    const enrichedPrices = prices.map((p) => ({
+      ...p,
+      displayName: resolveCropToDisplayName(p.crop)
+    }));
+
     const analytics = this.buildAnalytics(prices, latestHistory[0]);
     const lastUpdated = await MarketPrice.findOne(filter).sort({ lastUpdated: -1 }).lean();
 
     const result = {
-      prices,
+      prices: enrichedPrices,
       analytics,
       pagination: getPaginationMeta(page, limit, total),
       lastUpdated: lastUpdated?.lastUpdated || null,
@@ -98,6 +104,37 @@ class MarketPriceService {
 
     this.setCache(cacheKey, result);
     return result;
+  }
+
+  public async getSyncStats() {
+    const { MarketSyncMetadata } = require('../models/MarketSyncMetadata');
+    const latest = await MarketSyncMetadata.findOne({}).sort({ createdAt: -1 }).lean();
+    if (!latest) {
+      return {
+        lastSyncTime: null,
+        activeSource: 'N/A',
+        status: 'N/A',
+        totalProcessed: 0,
+        successfulImports: 0,
+        totalImported: 0,
+        executionTimeSeconds: 0,
+        apiHealth: 'N/A',
+        noDataCommodities: [],
+        apiErrors: []
+      };
+    }
+    return {
+      lastSyncTime: latest.lastSyncTime,
+      activeSource: latest.activeSource,
+      status: latest.status,
+      totalProcessed: latest.totalProcessed,
+      successfulImports: latest.successfulImports,
+      totalImported: latest.totalImported,
+      executionTimeSeconds: latest.executionTimeSeconds,
+      apiHealth: latest.apiErrors && latest.apiErrors.length > 0 ? 'Degraded' : 'Healthy',
+      noDataCommodities: latest.noDataCommodities || [],
+      apiErrors: latest.apiErrors || []
+    };
   }
 
   public async getHistory(query: MarketQueryOptions = {}) {

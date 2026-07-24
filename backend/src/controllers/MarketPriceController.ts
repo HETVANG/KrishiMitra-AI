@@ -131,4 +131,22 @@ export class MarketPriceController {
       next(error);
     }
   }
+
+  static async getCommodities(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { CATEGORIZED_COMMODITIES } = require('../config/commodities');
+      return res.json({ success: true, commodities: CATEGORIZED_COMMODITIES });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSyncStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await marketPriceService.getSyncStats();
+      return res.json({ success: true, stats: result });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

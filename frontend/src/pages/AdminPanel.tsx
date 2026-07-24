@@ -147,6 +147,10 @@ export const AdminPanel: React.FC = () => {
   const [mandiMax, setMandiMax] = useState('');
   const [mandiAvg, setMandiAvg] = useState('');
 
+  // Mandi Sync Stats state
+  const [mandiSyncStats, setMandiSyncStats] = useState<any>(null);
+  const [loadingMandiSync, setLoadingMandiSync] = useState(false);
+
   // Forum state
   const [postsList, setPostsList] = useState<any[]>([]);
   const [loadingForum, setLoadingForum] = useState(false);
@@ -169,6 +173,40 @@ export const AdminPanel: React.FC = () => {
       setError('Failed to fetch dashboard metrics telemetry.');
     } finally {
       setLoadingDashboard(false);
+    }
+  };
+
+  // Fetch Mandi Ingestion stats
+  const loadMandiSyncStats = async () => {
+    setLoadingMandiSync(true);
+    try {
+      const res = await api.get('/market/sync-stats');
+      if (res.data?.success) {
+        setMandiSyncStats(res.data.stats || null);
+      }
+    } catch (err) {
+      console.error('Failed to load mandi sync stats:', err);
+    } finally {
+      setLoadingMandiSync(false);
+    }
+  };
+
+  const handleTriggerMandiSync = async () => {
+    setSubmitting(true);
+    setInfo('Starting Mandi sync in background...');
+    setError('');
+    try {
+      const res = await api.post('/market/sync');
+      if (res.data?.success) {
+        setInfo('Mandi sync completed successfully!');
+        loadMandiSyncStats();
+      } else {
+        setError(res.data?.message || 'Sync failed.');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Sync failed.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -278,7 +316,9 @@ export const AdminPanel: React.FC = () => {
       loadAuditLogs();
     } else if (activeTab === 'forum') {
       loadForumQueue();
-    } else if (activeTab === 'mandi' || activeTab === 'schemes' || activeTab === 'broadcast') {
+    } else if (activeTab === 'mandi') {
+      loadMandiSyncStats();
+    } else if (activeTab === 'schemes' || activeTab === 'broadcast') {
       // Form tabs - clear state
     }
   }, [activeTab, usersPage, usersRole, usersPlan, loginsPage, auditPage]);
@@ -1033,116 +1073,215 @@ export const AdminPanel: React.FC = () => {
 
         {/* TAB 5: MANDI FEEDS */}
         {activeTab === 'mandi' && (
-          <form onSubmit={handleUpdateMandi} className="space-y-4 text-left">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mb-4 flex items-center gap-1.5 pb-2 border-b border-gray-50 dark:border-dark-850">
-              <Plus size={18} className="text-red-500" /> Update Mandi Crop Price
-            </h3>
+          <div className="space-y-6">
+            <form onSubmit={handleUpdateMandi} className="space-y-4 text-left bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mb-4 flex items-center gap-1.5 pb-2 border-b border-gray-50 dark:border-dark-850">
+                <Plus size={18} className="text-red-500" /> Update Mandi Crop Price
+              </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Crop Commodity</label>
-                <select
-                  value={mandiCrop}
-                  onChange={(e) => setMandiCrop(e.target.value)}
-                  className="custom-input text-sm"
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Crop Commodity</label>
+                  <select
+                    value={mandiCrop}
+                    onChange={(e) => setMandiCrop(e.target.value)}
+                    className="custom-input text-sm"
+                  >
+                    <option value="Wheat">Wheat</option>
+                    <option value="Paddy">Paddy</option>
+                    <option value="Rice (Basmati)">Rice (Basmati)</option>
+                    <option value="Mustard">Mustard</option>
+                    <option value="Cotton">Cotton</option>
+                    <option value="Soybean">Soybean</option>
+                    <option value="Potato">Potato</option>
+                    <option value="Onion">Onion</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
+                  <select
+                    value={mandiState}
+                    onChange={(e) => setMandiState(e.target.value)}
+                    className="custom-input text-sm"
+                  >
+                    <option value="Haryana">Haryana</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">District</label>
+                  <input
+                    type="text"
+                    required
+                    value={mandiDistrict}
+                    onChange={(e) => setMandiDistrict(e.target.value)}
+                    placeholder="e.g. Karnal, Rajkot"
+                    className="custom-input text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Mandi Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={mandiName}
+                    onChange={(e) => setMandiName(e.target.value)}
+                    placeholder="e.g. Karnal Mandi"
+                    className="custom-input text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Min Rate (₹/Qtl)</label>
+                  <input
+                    type="number"
+                    required
+                    value={mandiMin}
+                    onChange={(e) => setMandiMin(e.target.value)}
+                    placeholder="2100"
+                    className="custom-input text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Max Rate (₹/Qtl)</label>
+                  <input
+                    type="number"
+                    required
+                    value={mandiMax}
+                    onChange={(e) => setMandiMax(e.target.value)}
+                    placeholder="2300"
+                    className="custom-input text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Avg Rate (₹/Qtl)</label>
+                  <input
+                    type="number"
+                    required
+                    value={mandiAvg}
+                    onChange={(e) => setMandiAvg(e.target.value)}
+                    placeholder="2200"
+                    className="custom-input text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-100 text-white font-bold rounded-xl text-xs md:text-sm shadow-md flex items-center justify-center shrink-0 w-full transition-colors duration-150"
+              >
+                {submitting ? 'Updating...' : 'Publish Mandi Rate Log'}
+              </button>
+            </form>
+
+            <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm text-left space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-gray-50 dark:border-dark-850 gap-3">
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-1.5">
+                    <Coins size={18} className="text-amber-500" /> Mandi Synchronization Telemetry & Statistics
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Real-time status of Government of India (data.gov.in) daily price ingestion engine.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTriggerMandiSync}
+                  disabled={submitting || loadingMandiSync}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-150 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 justify-center transition-colors shadow-sm"
                 >
-                  <option value="Wheat">Wheat</option>
-                  <option value="Paddy">Paddy</option>
-                  <option value="Rice (Basmati)">Rice (Basmati)</option>
-                  <option value="Mustard">Mustard</option>
-                  <option value="Cotton">Cotton</option>
-                  <option value="Soybean">Soybean</option>
-                  <option value="Potato">Potato</option>
-                  <option value="Onion">Onion</option>
-                </select>
+                  <RefreshCw size={12} className={submitting ? 'animate-spin' : ''} />
+                  Trigger Manual Sync
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
-                <select
-                  value={mandiState}
-                  onChange={(e) => setMandiState(e.target.value)}
-                  className="custom-input text-sm"
-                >
-                  <option value="Haryana">Haryana</option>
-                  <option value="Punjab">Punjab</option>
-                  <option value="Uttar Pradesh">Uttar Pradesh</option>
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Madhya Pradesh">Madhya Pradesh</option>
-                </select>
-              </div>
+              {loadingMandiSync ? (
+                <div className="py-12 text-center">
+                  <div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin inline-block"></div>
+                </div>
+              ) : mandiSyncStats ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Sync Status</span>
+                      <span className={`text-base font-extrabold flex items-center gap-1.5 mt-1 ${mandiSyncStats.status === 'Success' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        <span className={`w-2 h-2 rounded-full ${mandiSyncStats.status === 'Success' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                        {mandiSyncStats.status}
+                      </span>
+                    </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">District</label>
-                <input
-                  type="text"
-                  required
-                  value={mandiDistrict}
-                  onChange={(e) => setMandiDistrict(e.target.value)}
-                  placeholder="e.g. Karnal, Rajkot"
-                  className="custom-input text-sm"
-                />
-              </div>
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total Commodities</span>
+                      <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 block mt-1">
+                        {mandiSyncStats.totalProcessed} Crops
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Imported Records</span>
+                      <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 block mt-1">
+                        {mandiSyncStats.totalImported} Logs
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Sync Duration</span>
+                      <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 block mt-1">
+                        {mandiSyncStats.executionTimeSeconds}s
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">API Gateway Health</span>
+                      <span className={`text-sm font-bold block mt-1.5 ${mandiSyncStats.apiHealth === 'Healthy' ? 'text-emerald-600' : 'text-amber-500'}`}>
+                        {mandiSyncStats.apiHealth === 'Healthy' ? '🟢 Healthy (OGD Gateway Stable)' : '🟡 Degraded (Rate limits / timeouts detected)'}
+                      </span>
+                      {mandiSyncStats.apiErrors && mandiSyncStats.apiErrors.length > 0 && (
+                        <div className="mt-2.5 max-h-[80px] overflow-y-auto divide-y divide-gray-100/60 dark:divide-dark-800/40 text-[9px] text-red-500 font-mono pr-1">
+                          {mandiSyncStats.apiErrors.map((err: string, idx: number) => (
+                            <div key={idx} className="py-1">{err}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Telemetry Logs</span>
+                      <div className="text-[10px] space-y-1 mt-2 text-gray-500 dark:text-dark-400">
+                        <div>Last Sync Time: <span className="font-bold text-gray-600 dark:text-dark-300">{new Date(mandiSyncStats.lastSyncTime).toLocaleString('en-IN')}</span></div>
+                        <div>Active Provider: <span className="font-bold text-gray-600 dark:text-dark-300">{mandiSyncStats.activeSource}</span></div>
+                        <div>Crops Synced: <span className="font-bold text-emerald-600">{mandiSyncStats.successfulImports}</span> / <span className="font-bold text-gray-400">{mandiSyncStats.totalProcessed}</span></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {mandiSyncStats.noDataCommodities && mandiSyncStats.noDataCommodities.length > 0 && (
+                    <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100/50 dark:border-dark-800/10">
+                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-2">Crops with No Data (OGD Empty Payload)</span>
+                      <div className="flex flex-wrap gap-1.5 flex-row">
+                        {mandiSyncStats.noDataCommodities.map((cropName: string, idx: number) => (
+                          <span key={idx} className="inline-block px-2 py-1 text-[9px] font-bold rounded-lg bg-gray-100 dark:bg-dark-800 text-gray-500 dark:text-dark-350">{cropName}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-center py-6 text-xs text-gray-400">No sync telemetry data available. Click trigger manual sync to run the daily parser.</p>
+              )}
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="sm:col-span-1">
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Mandi Name</label>
-                <input
-                  type="text"
-                  required
-                  value={mandiName}
-                  onChange={(e) => setMandiName(e.target.value)}
-                  placeholder="e.g. Karnal Mandi"
-                  className="custom-input text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Min Rate (₹/Qtl)</label>
-                <input
-                  type="number"
-                  required
-                  value={mandiMin}
-                  onChange={(e) => setMandiMin(e.target.value)}
-                  placeholder="2100"
-                  className="custom-input text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Max Rate (₹/Qtl)</label>
-                <input
-                  type="number"
-                  required
-                  value={mandiMax}
-                  onChange={(e) => setMandiMax(e.target.value)}
-                  placeholder="2300"
-                  className="custom-input text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Avg Rate (₹/Qtl)</label>
-                <input
-                  type="number"
-                  required
-                  value={mandiAvg}
-                  onChange={(e) => setMandiAvg(e.target.value)}
-                  placeholder="2200"
-                  className="custom-input text-sm"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-100 text-white font-bold rounded-xl text-xs md:text-sm shadow-md flex items-center justify-center shrink-0 w-full transition-colors duration-150"
-            >
-              {submitting ? 'Updating...' : 'Publish Mandi Rate Log'}
-            </button>
-          </form>
+          </div>
         )}
 
         {/* TAB 6: MODERATION BOARD */}

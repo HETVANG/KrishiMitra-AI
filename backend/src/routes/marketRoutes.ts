@@ -11,6 +11,8 @@ router.get('/history', MarketPriceController.getPriceHistory);
 router.get('/trending', MarketPriceController.getTrending);
 router.get('/nearby', MarketPriceController.getNearby);
 router.get('/last-update', MarketPriceController.getLastUpdate);
+router.get('/commodities', MarketPriceController.getCommodities);
+router.get('/sync-stats', MarketPriceController.getSyncStats);
 
 router.post(
   '/sync',

@@ -7,6 +7,8 @@ const MarketPriceSchema = new Schema(
     market: { type: String, required: true, trim: true },
     mandiName: { type: String, trim: true },
     crop: { type: String, required: true, trim: true },
+    variety: { type: String, trim: true, default: 'FAQ' },
+    grade: { type: String, trim: true, default: 'FAQ' },
     minPrice: { type: Number, required: true },
     maxPrice: { type: Number, required: true },
     avgPrice: { type: Number, required: true },

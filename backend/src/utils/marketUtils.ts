@@ -19,6 +19,8 @@ const escapeRegex = (str: string): string => {
 
 export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date()) => {
   const crop = normalizeText(record.crop || record.commodity || record.Commodity || record.cropName) || 'Unknown Crop';
+  const variety = normalizeText(record.variety || record.Variety) || 'FAQ';
+  const grade = normalizeText(record.grade || record.Grade || record.GradeName) || 'FAQ';
   const state = normalizeText(record.state || record.State) || 'Unknown State';
   const district = normalizeText(record.district || record.District) || 'Unknown District';
   const market = normalizeText(record.market || record.Market || record.mandiName || record.mandi_name) || `${district} Mandi`;
@@ -41,6 +43,8 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
 
   return {
     crop,
+    variety,
+    grade,
     state,
     district,
     market,
@@ -67,7 +71,9 @@ export const buildMarketFilter = (query: MarketQueryOptions) => {
   const filter: Record<string, unknown> = {};
 
   if (query.crop) {
-    filter.crop = new RegExp(escapeRegex(query.crop), 'i');
+    const { resolveCropToApiName } = require('../config/commodities');
+    const apiCrop = resolveCropToApiName(query.crop);
+    filter.crop = new RegExp(escapeRegex(apiCrop), 'i');
   }
   if (query.state) {
     filter.state = new RegExp(escapeRegex(query.state), 'i');

@@ -21,6 +21,21 @@ export const MarketDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [fallbackSource, setFallbackSource] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadCommodities = async () => {
+      try {
+        const res = await api.get('/market/commodities');
+        if (res.data?.success) {
+          setCategories(res.data.commodities || []);
+        }
+      } catch (err) {
+        console.error('Failed to load crop catalog:', err);
+      }
+    };
+    void loadCommodities();
+  }, []);
 
   const fetchPrices = async (targetPage = page) => {
     setLoading(true);
@@ -166,7 +181,22 @@ export const MarketDashboard: React.FC = () => {
         <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Target Crop</label>
-            <input type="text" value={searchCrop} onChange={(e) => setSearchCrop(e.target.value)} placeholder="e.g. Wheat" className="custom-input text-sm" />
+            <select
+              value={searchCrop}
+              onChange={(e) => setSearchCrop(e.target.value)}
+              className="custom-input text-sm"
+            >
+              <option value="">All Crops</option>
+              {categories.map((cat) => (
+                <optgroup key={cat.category} label={cat.category}>
+                  {cat.items.map((crop: any) => (
+                    <option key={crop.id} value={crop.displayName}>
+                      {crop.displayName}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
@@ -288,17 +318,24 @@ export const MarketDashboard: React.FC = () => {
                 </span>
               </div>
             )}
-            <div className="max-h-[180px] overflow-y-auto divide-y divide-gray-50 dark:divide-dark-800/40 pr-1">
+            <div className="max-h-[350px] overflow-y-auto divide-y divide-gray-50 dark:divide-dark-800/40 pr-1">
               {loading ? (
                 <div className="text-center py-4"><div className="w-5 h-5 border-2 border-t-transparent border-brand-500 rounded-full animate-spin inline-block"></div></div>
               ) : prices.length > 0 ? (
                 prices.map((p, pIdx) => (
-                  <div key={pIdx} className="py-2.5 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-gray-800 dark:text-dark-200">{p.market || p.mandiName}</span>
-                      <span className="block text-[9px] text-gray-400">{p.district}, {p.state}</span>
+                  <div key={pIdx} className="py-3 flex flex-col gap-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-gray-800 dark:text-dark-200">{p.market || p.mandiName} Mandi</span>
+                      <span className="font-extrabold text-brand-650 dark:text-brand-400">₹{p.modalPrice || p.avgPrice}</span>
                     </div>
-                    <span className="font-extrabold text-gray-700 dark:text-dark-200">₹{p.avgPrice || p.modalPrice}</span>
+                    <div className="flex items-center justify-between text-[9.5px] text-gray-400">
+                      <span>{p.district}, {p.state}</span>
+                      <span>Variety: <strong className="text-gray-500 dark:text-dark-350">{p.variety || 'FAQ'}</strong> (Grade: <strong className="text-gray-500 dark:text-dark-350">{p.grade || 'Standard'}</strong>)</span>
+                    </div>
+                    <div className="flex items-center justify-between text-[8px] text-gray-400/80 border-t border-gray-50 dark:border-dark-800/30 pt-1 mt-0.5">
+                      <span>Source: {p.source || 'live-api'}</span>
+                      <span>Arrival: {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}</span>
+                    </div>
                   </div>
                 ))
               ) : (

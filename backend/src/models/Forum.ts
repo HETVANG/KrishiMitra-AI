@@ -10,12 +10,12 @@ const ForumSchema = new Schema(
     comments: [
       {
         author: { type: Schema.Types.ObjectId, ref: 'User' },
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: { type: Schema.Types.ObjectId, ref: 'User' },
         name: { type: String },
-        username: { type: String, required: true },
+        username: { type: String },
         profileImage: { type: String },
         content: { type: String },
-        text: { type: String, required: true },
+        text: { type: String },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
       },

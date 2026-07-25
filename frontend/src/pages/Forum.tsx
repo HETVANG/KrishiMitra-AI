@@ -119,8 +119,16 @@ export const Forum: React.FC = () => {
     try {
       const res = await api.get(`/forum/details/${postId}`);
       if (res.data && res.data.success) {
-        setActivePost(res.data.post);
-        void loadComments(postId);
+        const post = res.data.post;
+        try {
+          const commRes = await api.get(`/community/posts/${postId}/comments`);
+          if (commRes.data && commRes.data.success) {
+            post.comments = commRes.data.comments;
+          }
+        } catch (commErr) {
+          console.error('Failed to load comments sequentially:', commErr);
+        }
+        setActivePost(post);
         // Scroll to comments panel on mobile/tablet screens
         setTimeout(() => {
           commentsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -373,8 +381,10 @@ export const Forum: React.FC = () => {
                   <h4 className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-2">Replies Feed ({activePost.comments?.length || 0})</h4>
                   {activePost.comments && activePost.comments.length > 0 ? (
                     activePost.comments.map((comm: any, cIdx: number) => {
-                      const commentOwnerId = comm.userId || comm.author?._id || comm.author;
+                      const commentOwnerId = comm.userId || (comm.author && typeof comm.author === 'object' ? comm.author._id : comm.author);
                       const isOwner = user && commentOwnerId && commentOwnerId.toString() === user.id.toString();
+                      const commentText = comm.text || comm.content || '';
+                      const commentUsername = comm.username || comm.name || (comm.author && typeof comm.author === 'object' ? comm.author.name : 'User');
                       
                       return (
                         <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
@@ -383,17 +393,17 @@ export const Forum: React.FC = () => {
                               {comm.profileImage ? (
                                 <img
                                   src={comm.profileImage}
-                                  alt={comm.username || comm.name}
+                                  alt={commentUsername}
                                   className="w-6 h-6 rounded-full object-cover"
                                 />
                               ) : (
                                 <div className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 rounded-full flex items-center justify-center font-bold text-[9px] text-brand-700 dark:text-brand-400 uppercase">
-                                  {(comm.username || comm.name || 'U').slice(0, 2)}
+                                  {(commentUsername || 'U').slice(0, 2)}
                                 </div>
                               )}
                               <div>
                                 <span className="font-extrabold text-gray-700 dark:text-dark-250 block leading-tight">
-                                  {comm.username || comm.name}
+                                  {commentUsername}
                                 </span>
                                 <span className="text-[8px] text-gray-400 font-semibold block mt-0.5">
                                   {new Date(comm.createdAt).toLocaleString('en-IN', {
@@ -420,7 +430,7 @@ export const Forum: React.FC = () => {
                                   <button
                                     onClick={() => {
                                       setEditingCommentId(comm._id);
-                                      setEditingCommentText(comm.text || comm.content || '');
+                                      setEditingCommentText(commentText);
                                     }}
                                     className="text-[9px] font-bold text-brand-600 hover:text-brand-700 transition-colors"
                                   >
@@ -455,8 +465,8 @@ export const Forum: React.FC = () => {
                               </button>
                             </div>
                           ) : (
-                            <p className="text-gray-650 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
-                              {comm.text || comm.content}
+                            <p className="text-gray-655 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
+                              {commentText}
                             </p>
                           )}
                         </div>

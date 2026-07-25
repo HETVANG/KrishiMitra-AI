@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { Search, TrendingUp, TrendingDown, HelpCircle, LineChart, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 export const MarketDashboard: React.FC = () => {
+  const { i18n } = useTranslation();
   const [prices, setPrices] = useState<any[]>([]);
   const [trending, setTrending] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);

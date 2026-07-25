@@ -250,7 +250,7 @@ export const Forum: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 max-w-3xl mx-auto">
       {/* Banner */}
       <div className="bg-gradient-to-r from-emerald-600 to-green-700 text-white p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -265,262 +265,239 @@ export const Forum: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Posts feed list (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-20 bg-white dark:bg-dark-900 border rounded-3xl">
-              <div className="w-8 h-8 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
-            </div>
-          ) : posts.length > 0 ? (
-            posts.map((item) => {
-              const isLiked = item.likes.includes(user?.id);
-              return (
-                <div
-                  key={item._id}
-                  onClick={() => handleExpandPost(item._id)}
-                  className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/40 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer text-left transition-all duration-150"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/50 rounded-full flex items-center justify-center font-bold text-brand-700 dark:text-brand-400 text-xs uppercase">
-                        {item.author?.name?.slice(0, 2)}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-xs text-gray-800 dark:text-dark-200">{item.author?.name}</h4>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-gray-150 dark:bg-dark-800 text-gray-505 dark:text-dark-400 font-bold rounded uppercase">
-                          {item.author?.role}
-                        </span>
-                      </div>
+      {/* Posts feed list */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-20 bg-white dark:bg-dark-900 border rounded-3xl">
+            <div className="w-8 h-8 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map((item) => {
+            const isLiked = item.likes.includes(user?.id);
+            return (
+              <div
+                key={item._id}
+                onClick={() => handleExpandPost(item._id)}
+                className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/40 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer text-left transition-all duration-150"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/50 rounded-full flex items-center justify-center font-bold text-brand-700 dark:text-brand-400 text-xs uppercase">
+                      {item.author?.name?.slice(0, 2)}
                     </div>
-                    <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-0.5">
-                      <Calendar size={11} /> {formatPostDate(item.createdAt)}
-                    </span>
-                  </div>
-
-                  <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-50 tracking-tight mt-4 line-clamp-2 leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs md:text-sm text-gray-500 dark:text-dark-400 mt-2 line-clamp-3 leading-relaxed">
-                    {item.content}
-                  </p>
-
-                  {/* Tags */}
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-4">
-                      {item.tags.map((tag: string, tIdx: number) => (
-                        <span key={tIdx} className="px-2 py-0.5 bg-gray-100 dark:bg-dark-800/60 text-gray-500 dark:text-dark-400 font-semibold rounded text-[10px] flex items-center gap-0.5">
-                          <Tag size={9} /> #{tag}
-                        </span>
-                      ))}
+                    <div>
+                      <h4 className="font-bold text-xs text-gray-800 dark:text-dark-200">{item.author?.name}</h4>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-gray-150 dark:bg-dark-800 text-gray-505 dark:text-dark-400 font-bold rounded uppercase">
+                        {item.author?.role}
+                      </span>
                     </div>
-                  )}
-
-                  {/* Actions summary */}
-                  <div className="border-t border-gray-50 dark:border-dark-850 mt-5 pt-3.5 flex items-center gap-6">
-                    <button
-                      onClick={(e) => handleLike(item._id, e)}
-                      className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
-                        isLiked 
-                          ? 'text-red-500' 
-                          : 'text-gray-500 hover:text-red-500'
-                      }`}
-                    >
-                      <Heart size={15} fill={isLiked ? 'currentColor' : 'none'} />
-                      <span>{item.likes?.length || 0}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        void handleExpandPost(item._id);
-                      }}
-                      className="flex items-center gap-1.5 text-xs text-gray-500 font-bold hover:text-brand-650 transition-colors"
-                    >
-                      <MessageCircle size={15} />
-                      <span>{item.comments?.length || 0} Comments</span>
-                    </button>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="bg-white dark:bg-dark-900 rounded-3xl p-12 text-center border">
-              <HelpCircle size={48} className="text-gray-300 dark:text-dark-800 mx-auto mb-3" />
-              <p className="font-bold text-sm text-gray-700 dark:text-dark-200">No community posts yet</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">Be the first to ask a question! Click Create Thread above.</p>
-            </div>
-          )}
-        </div>
-
-        {/* Detailed Thread Comments Panel (5 cols) */}
-        <div ref={commentsPanelRef} className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm min-h-[350px] sticky top-[90px]">
-          {activePost ? (
-            <div className="flex flex-col h-[600px] justify-between">
-              {/* Post Content Header */}
-              <div className="overflow-y-auto pr-1 flex-1 space-y-4">
-                <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-850 pb-3 mb-2">
-                  <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider">Active Discussion</span>
-                  <button onClick={() => setActivePost(null)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-dark-200">✕ Close</button>
+                  <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-0.5">
+                    <Calendar size={11} /> {formatPostDate(item.createdAt)}
+                  </span>
                 </div>
 
-                <div>
-                  <h3 className="font-extrabold text-base text-gray-850 dark:text-dark-50 leading-tight">{activePost.title}</h3>
-                  <div className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-1 font-semibold">
-                    <span>By {activePost.author?.name}</span>
-                    <span>•</span>
-                    <span>{formatPostDate(activePost.createdAt)}</span>
+                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-50 tracking-tight mt-4 line-clamp-2 leading-tight">
+                  {item.title}
+                </h3>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-dark-400 mt-2 line-clamp-3 leading-relaxed">
+                  {item.content}
+                </p>
+
+                {/* Tags */}
+                {item.tags && item.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-4">
+                    {item.tags.map((tag: string, tIdx: number) => (
+                      <span key={tIdx} className="px-2 py-0.5 bg-gray-100 dark:bg-dark-800/60 text-gray-505 dark:text-dark-400 font-semibold rounded text-[10px] flex items-center gap-0.5">
+                        <Tag size={9} /> #{tag}
+                      </span>
+                    ))}
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed bg-gray-50 dark:bg-dark-850/40 p-3 rounded-2xl border border-gray-150/40 dark:border-dark-850 mt-3">
-                    {activePost.content}
-                  </p>
-                </div>
+                )}
 
-                {/* Comments list logs */}
-                <div className="border-t border-gray-100 dark:border-dark-850 pt-4 space-y-3">
-                  <h4 className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-2">Replies Feed ({activePost.comments?.length || 0})</h4>
-                  {activePost.comments && activePost.comments.length > 0 ? (
-                    activePost.comments.map((comm: any, cIdx: number) => {
-                      const commentOwnerId = comm.userId || (comm.author && typeof comm.author === 'object' ? comm.author._id : comm.author);
-                      const isOwner = user && commentOwnerId && commentOwnerId.toString() === user.id.toString();
-                      const commentText = comm.text || comm.content || '';
-                      const commentUsername = comm.username || comm.name || (comm.author && typeof comm.author === 'object' ? comm.author.name : 'User');
-                      
-                      return (
-                        <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {comm.profileImage ? (
-                                <img
-                                  src={comm.profileImage}
-                                  alt={commentUsername}
-                                  className="w-6 h-6 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 rounded-full flex items-center justify-center font-bold text-[9px] text-brand-700 dark:text-brand-400 uppercase">
-                                  {(commentUsername || 'U').slice(0, 2)}
-                                </div>
-                              )}
-                              <div>
-                                <span className="font-extrabold text-gray-700 dark:text-dark-250 block leading-tight">
-                                  {commentUsername}
-                                </span>
-                                <span className="text-[8px] text-gray-400 font-semibold block mt-0.5">
-                                  {new Date(comm.createdAt).toLocaleString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Edit/Delete Options */}
-                            {isOwner && (
-                              <div className="flex items-center gap-2 shrink-0">
-                                {editingCommentId === comm._id ? (
-                                  <button
-                                    onClick={() => setEditingCommentId(null)}
-                                    className="text-[9px] font-bold text-gray-400 hover:text-gray-600 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setEditingCommentId(comm._id);
-                                      setEditingCommentText(commentText);
-                                    }}
-                                    className="text-[9px] font-bold text-brand-600 hover:text-brand-700 transition-colors"
-                                  >
-                                    Edit
-                                  </button>
-                                )}
-                                <span className="text-gray-300">|</span>
-                                <button
-                                  onClick={() => handleDeleteComment(comm._id)}
-                                  className="text-[9px] font-bold text-red-500 hover:text-red-600 transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          {editingCommentId === comm._id ? (
-                            <div className="flex gap-2 items-center mt-1">
-                              <input
-                                type="text"
-                                value={editingCommentText}
-                                onChange={(e) => setEditingCommentText(e.target.value)}
-                                className="custom-input py-1 text-xs flex-1"
-                                maxLength={500}
-                              />
-                              <button
-                                onClick={() => handleEditComment(comm._id, editingCommentText)}
-                                className="px-3 py-1.5 bg-brand-600 text-white rounded-lg font-bold text-[10px] hover:bg-brand-700 transition-colors"
-                              >
-                                Save
-                              </button>
-                            </div>
-                          ) : (
-                            <p className="text-gray-655 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
-                              {commentText}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-center text-xs text-gray-450 py-8 bg-gray-50/20 dark:bg-dark-900/10 border border-dashed rounded-2xl border-gray-100 dark:border-dark-800">
-                      No comments yet. Be the first to comment!
-                    </p>
-                  )}
+                {/* Actions summary */}
+                <div className="border-t border-gray-50 dark:border-dark-850 mt-5 pt-3.5 flex items-center gap-6">
+                  <button
+                    onClick={(e) => handleLike(item._id, e)}
+                    className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
+                      isLiked 
+                        ? 'text-red-500' 
+                        : 'text-gray-500 hover:text-red-500'
+                    }`}
+                  >
+                    <Heart size={15} fill={isLiked ? 'currentColor' : 'none'} />
+                    <span>{item.likes?.length || 0}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleExpandPost(item._id);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-gray-500 font-bold hover:text-brand-650 transition-colors"
+                  >
+                    <MessageCircle size={15} />
+                    <span>{item.comments?.length || 0} Comments</span>
+                  </button>
                 </div>
               </div>
+            );
+          })
+        ) : (
+          <div className="bg-white dark:bg-dark-900 rounded-3xl p-12 text-center border">
+            <HelpCircle size={48} className="text-gray-300 dark:text-dark-800 mx-auto mb-3" />
+            <p className="font-bold text-sm text-gray-700 dark:text-dark-200">No community posts yet</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Be the first to ask a question! Click Create Thread above.</p>
+          </div>
+        )}
+      </div>
 
-              {/* Submit comment input */}
-              {user ? (
-                <form onSubmit={handleSubmitComment} className="border-t border-gray-50 dark:border-dark-850 pt-3 mt-3 flex gap-2">
-                  <input
-                    type="text"
-                    value={commentInput}
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="custom-input text-xs"
-                    disabled={submittingComment}
-                    maxLength={500}
-                  />
-                  <button
-                    type="submit"
-                    disabled={submittingComment || !commentInput.trim()}
-                    className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-150 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
-                  >
-                    Reply
-                  </button>
-                </form>
+      {/* COMMENTS MODAL */}
+      {activePost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative flex flex-col max-h-[80vh] text-left">
+            <button
+              onClick={() => { setActivePost(null); setEditingCommentId(null); }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-2 pr-8 truncate">
+              {activePost.title}
+            </h2>
+            <p className="text-[10px] text-gray-400 mb-4">
+              Posted by {activePost.author?.name} on {formatPostDate(activePost.createdAt)}
+            </p>
+
+            {/* Comments list container */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 my-4 border-y border-gray-100 dark:border-dark-800/40 py-4 min-h-[150px]">
+              {activePost.comments && activePost.comments.length > 0 ? (
+                activePost.comments.map((comm: any, cIdx: number) => {
+                  const commentOwnerId = comm.userId || (comm.author && typeof comm.author === 'object' ? comm.author._id : comm.author);
+                  const isOwner = user && commentOwnerId && commentOwnerId.toString() === user.id.toString();
+                  const commentText = comm.text || comm.content || '';
+                  const commentUsername = comm.username || comm.name || (comm.author && typeof comm.author === 'object' ? comm.author.name : 'User');
+                  
+                  return (
+                    <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 rounded-full flex items-center justify-center font-bold text-[9px] text-brand-700 dark:text-brand-400 uppercase">
+                            {(commentUsername || 'U').slice(0, 2)}
+                          </div>
+                          <div>
+                            <span className="font-extrabold text-gray-700 dark:text-dark-250 block leading-tight">
+                              {commentUsername}
+                            </span>
+                            <span className="text-[8px] text-gray-400 font-semibold block mt-0.5">
+                              {new Date(comm.createdAt).toLocaleString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Edit/Delete Options */}
+                        {isOwner && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            {editingCommentId === comm._id ? (
+                              <button
+                                onClick={() => setEditingCommentId(null)}
+                                className="text-[9px] font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setEditingCommentId(comm._id);
+                                  setEditingCommentText(commentText);
+                                }}
+                                className="text-[9px] font-bold text-brand-600 hover:text-brand-700 transition-colors"
+                              >
+                                Edit
+                              </button>
+                            )}
+                            <span className="text-gray-300">|</span>
+                            <button
+                              onClick={() => handleDeleteComment(comm._id)}
+                              className="text-[9px] font-bold text-red-500 hover:text-red-600 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {editingCommentId === comm._id ? (
+                        <div className="flex gap-2 items-center mt-1">
+                          <input
+                            type="text"
+                            value={editingCommentText}
+                            onChange={(e) => setEditingCommentText(e.target.value)}
+                            className="custom-input py-1 text-xs flex-1"
+                            maxLength={500}
+                          />
+                          <button
+                            onClick={() => handleEditComment(comm._id, editingCommentText)}
+                            className="px-3 py-1.5 bg-brand-600 text-white rounded-lg font-bold text-[10px] hover:bg-brand-700 transition-colors"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-gray-655 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
+                          {commentText}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
-                <div className="border-t border-gray-50 dark:border-dark-850 pt-4 mt-3 text-center">
-                  <p className="text-xs text-gray-500 mb-2">You must be logged in to join the discussion.</p>
-                  <a
-                    href="/login"
-                    className="inline-block px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
-                  >
-                    Login to Comment
-                  </a>
-                </div>
+                <p className="text-center text-xs text-gray-450 py-8">
+                  No comments yet. Be the first to comment.
+                </p>
               )}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-gray-400 h-full">
-              <MessageSquare size={36} className="text-gray-300 dark:text-dark-800 mb-2" />
-              <p className="font-bold text-xs">No active thread selected</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Click on a forum card in the left list to review detailed responses or add comments.</p>
-            </div>
-          )}
+
+            {/* Submit comment input */}
+            {user ? (
+              <form onSubmit={handleSubmitComment} className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="custom-input text-xs"
+                  disabled={submittingComment}
+                  maxLength={500}
+                />
+                <button
+                  type="submit"
+                  disabled={submittingComment || !commentInput.trim()}
+                  className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-150 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+                >
+                  Post
+                </button>
+              </form>
+            ) : (
+              <div className="text-center py-2 mt-2">
+                <p className="text-xs text-gray-500 mb-2">You must be logged in to join the discussion.</p>
+                <a
+                  href="/login"
+                  className="inline-block px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
+                >
+                  Login to Comment
+                </a>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* CREATE POST MODAL */}
       {showCreateModal && (

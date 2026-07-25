@@ -23,6 +23,23 @@ export const MarketDashboard: React.FC = () => {
   const [fallbackSource, setFallbackSource] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
 
+  const getTranslatedCropName = (englishName: string): string => {
+    if (!englishName) return '';
+    const clean = englishName.trim().toLowerCase();
+    for (const cat of categories) {
+      for (const item of cat.items) {
+        if (
+          item.displayName.toLowerCase() === clean || 
+          item.apiCommodity.toLowerCase() === clean || 
+          item.id.toLowerCase() === clean
+        ) {
+          return item.translations?.[i18n.language] || item.displayName;
+        }
+      }
+    }
+    return englishName;
+  };
+
   useEffect(() => {
     const loadCommodities = async () => {
       try {
@@ -191,7 +208,7 @@ export const MarketDashboard: React.FC = () => {
                 <optgroup key={cat.category} label={cat.category}>
                   {cat.items.map((crop: any) => (
                     <option key={crop.id} value={crop.displayName}>
-                      {crop.displayName}
+                      {getTranslatedCropName(crop.displayName)}
                     </option>
                   ))}
                 </optgroup>
@@ -265,7 +282,7 @@ export const MarketDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-50 dark:border-dark-850">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2"><LineChart className="text-brand-650" size={18} /> {searchCrop || 'Crop'} Price History</h3>
+            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2"><LineChart className="text-brand-650" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} Price History</h3>
             <span className="text-xs text-gray-400">Last updated: {lastUpdated || 'Not available'}</span>
           </div>
           <div className="h-[260px] w-full">
@@ -298,7 +315,7 @@ export const MarketDashboard: React.FC = () => {
             ) : trendCards.map((c, idx) => (
               <div key={idx} className="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-dark-850 border border-gray-150 dark:border-dark-800/50 rounded-2xl">
                 <div>
-                  <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200">{c.name}</h4>
+                  <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200">{getTranslatedCropName(c.name)}</h4>
                   <p className="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Estimated local Mandi rate: {c.price}</p>
                 </div>
                 <div className="text-right"><span className={`inline-block px-2.5 py-1 text-[10px] font-bold rounded-lg ${c.trend === 'up' ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/20' : 'bg-red-50 text-red-500 dark:bg-red-950/20'}`}>{c.growth}</span></div>
@@ -312,9 +329,9 @@ export const MarketDashboard: React.FC = () => {
               <div className="mb-2.5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-300 text-[10px] md:text-xs font-semibold flex items-center gap-1.5 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
                 <span>
-                  {fallbackSource === 'latest-local' && `Showing latest available ${searchCrop || 'crop'} prices for ${searchDistrict || 'local market'}${searchState ? ', ' + searchState : ''}.`}
-                  {fallbackSource === 'latest-state' && `Showing latest available ${searchCrop || 'crop'} prices for ${searchState || 'selected state'}.`}
-                  {fallbackSource === 'latest-country' && `Showing latest available ${searchCrop || 'crop'} prices across India.`}
+                  {fallbackSource === 'latest-local' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices for ${searchDistrict || 'local market'}${searchState ? ', ' + searchState : ''}.`}
+                  {fallbackSource === 'latest-state' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices for ${searchState || 'selected state'}.`}
+                  {fallbackSource === 'latest-country' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices across India.`}
                 </span>
               </div>
             )}

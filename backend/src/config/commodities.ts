@@ -1,3 +1,5 @@
+import { CROP_TRANSLATIONS } from './cropTranslations';
+
 export interface Commodity {
   id: string;
   displayName: string;
@@ -5,6 +7,7 @@ export interface Commodity {
   category: string;
   aliases: string[];
   icon?: string;
+  translations: Record<string, string>;
 }
 
 export interface CategorizedCommodityGroup {
@@ -12,7 +15,7 @@ export interface CategorizedCommodityGroup {
   items: Commodity[];
 }
 
-export const CATEGORIZED_COMMODITIES: CategorizedCommodityGroup[] = [
+const CATEGORIZED_COMMODITIES_BASE: any[] = [
   {
     category: '🌾 Cereals',
     items: [
@@ -185,26 +188,40 @@ export const CATEGORIZED_COMMODITIES: CategorizedCommodityGroup[] = [
   }
 ];
 
+export const CATEGORIZED_COMMODITIES: CategorizedCommodityGroup[] = CATEGORIZED_COMMODITIES_BASE.map((group: any) => ({
+  category: group.category,
+  items: group.items.map((item: any) => ({
+    ...item,
+    translations: CROP_TRANSLATIONS[item.id] || { en: item.displayName }
+  }))
+}));
+
 export const ALL_COMMODITIES: Commodity[] = CATEGORIZED_COMMODITIES.reduce((acc, cat) => {
   return acc.concat(cat.items);
 }, [] as Commodity[]);
 
 /**
- * Resolves a crop search query (display name or alias or API name) to the canonical apiCommodity name.
+ * Resolves a crop search query (display name or alias or API name or translation in any language) to the canonical apiCommodity name.
  */
 export const resolveCropToApiName = (query: string): string => {
   if (!query) return '';
   const clean = query.trim().toLowerCase();
   
-  // Try match displayName
-  let matched = ALL_COMMODITIES.find(c => c.displayName.toLowerCase() === clean);
+  // 1. Try match translations in any language
+  let matched = ALL_COMMODITIES.find(c => 
+    Object.values(c.translations || {}).some(v => v.toLowerCase() === clean)
+  );
   if (matched) return matched.apiCommodity;
 
-  // Try match apiCommodity
+  // 2. Try match displayName
+  matched = ALL_COMMODITIES.find(c => c.displayName.toLowerCase() === clean);
+  if (matched) return matched.apiCommodity;
+
+  // 3. Try match apiCommodity
   matched = ALL_COMMODITIES.find(c => c.apiCommodity.toLowerCase() === clean);
   if (matched) return matched.apiCommodity;
 
-  // Try match aliases
+  // 4. Try match aliases
   matched = ALL_COMMODITIES.find(c => c.aliases.some(a => a.toLowerCase() === clean));
   if (matched) return matched.apiCommodity;
 
@@ -218,12 +235,21 @@ export const resolveCropToDisplayName = (query: string): string => {
   if (!query) return '';
   const clean = query.trim().toLowerCase();
 
+  // 1. Try match apiCommodity
   let matched = ALL_COMMODITIES.find(c => c.apiCommodity.toLowerCase() === clean);
   if (matched) return matched.displayName;
 
+  // 2. Try match translations in any language
+  matched = ALL_COMMODITIES.find(c => 
+    Object.values(c.translations || {}).some(v => v.toLowerCase() === clean)
+  );
+  if (matched) return matched.displayName;
+
+  // 3. Try match displayName
   matched = ALL_COMMODITIES.find(c => c.displayName.toLowerCase() === clean);
   if (matched) return matched.displayName;
 
+  // 4. Try match aliases
   matched = ALL_COMMODITIES.find(c => c.aliases.some(a => a.toLowerCase() === clean));
   if (matched) return matched.displayName;
 

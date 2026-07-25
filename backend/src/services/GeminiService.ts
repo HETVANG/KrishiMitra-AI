@@ -269,6 +269,86 @@ export class GeminiService {
   }
 
   /**
+   * Transcribe in-memory audio recording and respond using Gemini Multimodal content generation
+   */
+  static async transcribeAndReplyAudio(
+    audioBuffer: Buffer,
+    mimeType: string,
+    language: string
+  ): Promise<{ transcript: string; reply: string; originalEnglishReply: string }> {
+    const langNames: Record<string, string> = {
+      en: 'English', hi: 'Hindi', gu: 'Gujarati', mr: 'Marathi', pa: 'Punjabi',
+      bn: 'Bengali', ta: 'Tamil', te: 'Telugu', kn: 'Kannada', ml: 'Malayalam',
+      or: 'Odia', as: 'Assamese'
+    };
+    const targetLang = langNames[language] || 'English';
+
+    if (!genAI) {
+      // Mock mode fallback if no API key is set
+      return {
+        transcript: 'Tell me about wheat crops.',
+        reply: language === 'hi' 
+          ? 'गेहूं की फसल रबी सीजन में उगाई जाती है।' 
+          : 'Wheat crops are grown in the Rabi season.',
+        originalEnglishReply: 'Wheat crops are grown in the Rabi season.'
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({ model: geminiModel });
+
+      const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
+      The user is sending an audio voice recording.
+      1. Transcribe the user's spoken voice command/question from the audio into written text.
+      2. Answer the user's question clearly, concisely, and practically.
+      3. Provide your response in two languages:
+         - Translated response in: ${targetLang} (You must respond ONLY in ${targetLang} for this part).
+         - Original equivalent response in: English
+
+      Return your output in STRICT JSON format with three keys. Do NOT include markdown code fences (e.g. \`\`\`json). Return raw JSON:
+      {
+        "transcript": "Written text of the user's transcribed question...",
+        "translated": "Advisory text in ${targetLang}...",
+        "english": "Advisory text in English..."
+      }
+
+      If the query is unrelated to farming, agriculture, livestock, weather, or market pricing, politely guide them back to agriculture topics.`;
+
+      const audioPart = {
+        inlineData: {
+          data: audioBuffer.toString('base64'),
+          mimeType: mimeType || 'audio/webm'
+        }
+      };
+
+      const result = await callGeminiWithRetry(() =>
+        model.generateContent([
+          audioPart,
+          { text: systemInstruction }
+        ])
+      );
+
+      const responseText = result.response.text().trim();
+      console.log('[Gemini Service Audio Response]', responseText);
+
+      try {
+        const parsed = cleanAndParseJson(responseText);
+        return {
+          transcript: parsed.transcript || 'Voice query received.',
+          reply: parsed.translated || parsed.reply || '',
+          originalEnglishReply: parsed.english || parsed.originalEnglishReply || ''
+        };
+      } catch (parseErr) {
+        console.error('[Gemini Audio Parse Error] Failed to parse JSON response:', responseText, parseErr);
+        throw new Error('Failed to parse voice response from Gemini API.');
+      }
+    } catch (error) {
+      console.error('[Gemini Live Audio Ingestion Error]', error);
+      throw error;
+    }
+  }
+
+  /**
    * Multimodal Leaf Disease Detection supporting 12 languages & rich pesticide details
    */
   static async diagnoseCropDisease(imageBuffer: Buffer, mimeType: string, language: string = 'en'): Promise<any> {

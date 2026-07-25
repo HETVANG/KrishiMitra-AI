@@ -20,3 +20,34 @@ export const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
 });
+
+const audioFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedMimeTypes = [
+    'audio/webm',
+    'audio/wav',
+    'audio/ogg',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/m4a',
+    'audio/x-m4a',
+    'audio/mp4',
+    'audio/aac',
+    'audio/3gpp',
+    'video/webm',
+    'application/octet-stream'
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/') || file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid audio file type: ${file.mimetype}. Only standard audio formats are allowed.`) as any, false);
+  }
+};
+
+export const audioUpload = multer({
+  storage,
+  fileFilter: audioFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});

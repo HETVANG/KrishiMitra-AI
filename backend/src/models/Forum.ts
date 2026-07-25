@@ -9,10 +9,15 @@ const ForumSchema = new Schema(
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     comments: [
       {
-        author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-        name: { type: String, required: true },
-        content: { type: String, required: true },
+        author: { type: Schema.Types.ObjectId, ref: 'User' },
+        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        name: { type: String },
+        username: { type: String, required: true },
+        profileImage: { type: String },
+        content: { type: String },
+        text: { type: String, required: true },
         createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now },
       },
     ],
     tags: [{ type: String, trim: true }],

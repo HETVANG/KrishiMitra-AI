@@ -20,6 +20,8 @@ export const Forum: React.FC = () => {
   const [activePost, setActivePost] = useState<any | null>(null);
   const [commentInput, setCommentInput] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState('');
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -96,11 +98,28 @@ export const Forum: React.FC = () => {
     }
   };
 
+  const loadComments = async (postId: string) => {
+    try {
+      const res = await api.get(`/community/posts/${postId}/comments`);
+      if (res.data?.success) {
+        setActivePost((prev: any) => {
+          if (prev && prev._id === postId) {
+            return { ...prev, comments: res.data.comments };
+          }
+          return prev;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    }
+  };
+
   const handleExpandPost = async (postId: string) => {
     try {
       const res = await api.get(`/forum/details/${postId}`);
       if (res.data && res.data.success) {
         setActivePost(res.data.post);
+        void loadComments(postId);
       }
     } catch (err) {
       console.error('Failed to fetch thread detail:', err);
@@ -111,27 +130,30 @@ export const Forum: React.FC = () => {
     e.preventDefault();
     if (!commentInput.trim() || !activePost) return;
 
+    if (commentInput.length > 500) {
+      alert('Comment cannot exceed 500 characters.');
+      return;
+    }
+
     setSubmittingComment(true);
     try {
-      const res = await api.post(`/forum/comment/${activePost._id}`, {
-        content: commentInput
+      const res = await api.post(`/community/posts/${activePost._id}/comments`, {
+        text: commentInput.trim()
       });
 
       if (res.data && res.data.success) {
         setCommentInput('');
         
-        // Refresh active post comment panel
         setActivePost((prev: any) => ({
           ...prev,
           comments: res.data.comments
         }));
 
-        // Refresh main listing comments count
         setPosts(prev => prev.map(p => {
           if (p._id === activePost._id) {
             return {
               ...p,
-              commentsCount: res.data.comments.length
+              comments: res.data.comments
             };
           }
           return p;
@@ -141,6 +163,68 @@ export const Forum: React.FC = () => {
       console.error('Failed to submit comment:', err);
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  const handleEditComment = async (commentId: string, text: string) => {
+    if (!text.trim()) return;
+    if (text.length > 500) {
+      alert('Comment cannot exceed 500 characters.');
+      return;
+    }
+
+    try {
+      const res = await api.put(`/community/comments/${commentId}`, {
+        text: text.trim()
+      });
+
+      if (res.data && res.data.success) {
+        setEditingCommentId(null);
+        setEditingCommentText('');
+
+        setActivePost((prev: any) => ({
+          ...prev,
+          comments: res.data.comments
+        }));
+
+        setPosts(prev => prev.map(p => {
+          if (p._id === activePost?._id) {
+            return {
+              ...p,
+              comments: res.data.comments
+            };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to edit comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      const res = await api.delete(`/community/comments/${commentId}`);
+      if (res.data && res.data.success) {
+        setActivePost((prev: any) => ({
+          ...prev,
+          comments: res.data.comments
+        }));
+
+        setPosts(prev => prev.map(p => {
+          if (p._id === activePost?._id) {
+            return {
+              ...p,
+              comments: res.data.comments
+            };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
     }
   };
 
@@ -276,39 +360,135 @@ export const Forum: React.FC = () => {
                 <div className="border-t border-gray-100 dark:border-dark-850 pt-4 space-y-3">
                   <h4 className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider mb-2">Replies Feed ({activePost.comments?.length || 0})</h4>
                   {activePost.comments && activePost.comments.length > 0 ? (
-                    activePost.comments.map((comm: any, cIdx: number) => (
-                      <div key={cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3 rounded-xl border border-gray-150/40 dark:border-dark-800/30">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-bold text-gray-700 dark:text-dark-200 uppercase">{comm.name}</span>
-                          <span className="text-[9px] text-gray-400">{new Date(comm.createdAt).toLocaleDateString('en-IN')}</span>
+                    activePost.comments.map((comm: any, cIdx: number) => {
+                      const commentOwnerId = comm.userId || comm.author?._id || comm.author;
+                      const isOwner = user && commentOwnerId && commentOwnerId.toString() === user.id.toString();
+                      
+                      return (
+                        <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {comm.profileImage ? (
+                                <img
+                                  src={comm.profileImage}
+                                  alt={comm.username || comm.name}
+                                  className="w-6 h-6 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 rounded-full flex items-center justify-center font-bold text-[9px] text-brand-700 dark:text-brand-400 uppercase">
+                                  {(comm.username || comm.name || 'U').slice(0, 2)}
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-extrabold text-gray-700 dark:text-dark-250 block leading-tight">
+                                  {comm.username || comm.name}
+                                </span>
+                                <span className="text-[8px] text-gray-400 font-semibold block mt-0.5">
+                                  {new Date(comm.createdAt).toLocaleString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Edit/Delete Options */}
+                            {isOwner && (
+                              <div className="flex items-center gap-2 shrink-0">
+                                {editingCommentId === comm._id ? (
+                                  <button
+                                    onClick={() => setEditingCommentId(null)}
+                                    className="text-[9px] font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setEditingCommentId(comm._id);
+                                      setEditingCommentText(comm.text || comm.content || '');
+                                    }}
+                                    className="text-[9px] font-bold text-brand-600 hover:text-brand-700 transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                                <span className="text-gray-300">|</span>
+                                <button
+                                  onClick={() => handleDeleteComment(comm._id)}
+                                  className="text-[9px] font-bold text-red-500 hover:text-red-600 transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {editingCommentId === comm._id ? (
+                            <div className="flex gap-2 items-center mt-1">
+                              <input
+                                type="text"
+                                value={editingCommentText}
+                                onChange={(e) => setEditingCommentText(e.target.value)}
+                                className="custom-input py-1 text-xs flex-1"
+                                maxLength={500}
+                              />
+                              <button
+                                onClick={() => handleEditComment(comm._id, editingCommentText)}
+                                className="px-3 py-1.5 bg-brand-600 text-white rounded-lg font-bold text-[10px] hover:bg-brand-700 transition-colors"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-gray-650 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
+                              {comm.text || comm.content}
+                            </p>
+                          )}
                         </div>
-                        <p className="text-gray-655 dark:text-dark-350 leading-relaxed">{comm.content}</p>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
-                    <p className="text-center text-[11px] text-gray-450 py-6">No answers yet. Post a comment below to reply.</p>
+                    <p className="text-center text-xs text-gray-450 py-8 bg-gray-50/20 dark:bg-dark-900/10 border border-dashed rounded-2xl border-gray-100 dark:border-dark-800">
+                      No comments yet. Be the first to comment!
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* Submit comment input */}
-              <form onSubmit={handleSubmitComment} className="border-t border-gray-50 dark:border-dark-850 pt-3 mt-3 flex gap-2">
-                <input
-                  type="text"
-                  value={commentInput}
-                  onChange={(e) => setCommentInput(e.target.value)}
-                  placeholder="Type your reply comment..."
-                  className="custom-input text-xs"
-                  disabled={submittingComment}
-                />
-                <button
-                  type="submit"
-                  disabled={submittingComment || !commentInput.trim()}
-                  className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-100 dark:disabled:bg-dark-800 disabled:text-gray-400 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
-                >
-                  Reply
-                </button>
-              </form>
+              {user ? (
+                <form onSubmit={handleSubmitComment} className="border-t border-gray-50 dark:border-dark-850 pt-3 mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={commentInput}
+                    onChange={(e) => setCommentInput(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="custom-input text-xs"
+                    disabled={submittingComment}
+                    maxLength={500}
+                  />
+                  <button
+                    type="submit"
+                    disabled={submittingComment || !commentInput.trim()}
+                    className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-150 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+                  >
+                    Reply
+                  </button>
+                </form>
+              ) : (
+                <div className="border-t border-gray-50 dark:border-dark-850 pt-4 mt-3 text-center">
+                  <p className="text-xs text-gray-500 mb-2">You must be logged in to join the discussion.</p>
+                  <a
+                    href="/login"
+                    className="inline-block px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
+                  >
+                    Login to Comment
+                  </a>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-24 text-gray-400 h-full">

@@ -22,6 +22,7 @@ export const Forum: React.FC = () => {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState('');
+  const commentsPanelRef = React.useRef<HTMLDivElement>(null);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -120,6 +121,10 @@ export const Forum: React.FC = () => {
       if (res.data && res.data.success) {
         setActivePost(res.data.post);
         void loadComments(postId);
+        // Scroll to comments panel on mobile/tablet screens
+        setTimeout(() => {
+          commentsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
     } catch (err) {
       console.error('Failed to fetch thread detail:', err);
@@ -316,10 +321,17 @@ export const Forum: React.FC = () => {
                       <Heart size={15} fill={isLiked ? 'currentColor' : 'none'} />
                       <span>{item.likes?.length || 0}</span>
                     </button>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleExpandPost(item._id);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-gray-500 font-bold hover:text-brand-650 transition-colors"
+                    >
                       <MessageCircle size={15} />
                       <span>{item.comments?.length || 0} Comments</span>
-                    </div>
+                    </button>
                   </div>
                 </div>
               );
@@ -334,7 +346,7 @@ export const Forum: React.FC = () => {
         </div>
 
         {/* Detailed Thread Comments Panel (5 cols) */}
-        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm min-h-[350px] sticky top-[90px]">
+        <div ref={commentsPanelRef} className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm min-h-[350px] sticky top-[90px]">
           {activePost ? (
             <div className="flex flex-col h-[600px] justify-between">
               {/* Post Content Header */}

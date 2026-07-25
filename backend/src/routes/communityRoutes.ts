@@ -81,7 +81,8 @@ router.put('/comments/:commentId', authenticate, async (req: AuthRequest, res: R
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
-    if (comment.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const ownerId = comment.userId || comment.author;
+    if (!ownerId || (ownerId.toString() !== req.user._id.toString() && req.user.role !== 'admin')) {
       return res.status(403).json({ success: false, message: 'Forbidden: Unauthorized action' });
     }
 
@@ -109,7 +110,8 @@ router.delete('/comments/:commentId', authenticate, async (req: AuthRequest, res
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
-    if (comment.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const deleteOwnerId = comment.userId || comment.author;
+    if (!deleteOwnerId || (deleteOwnerId.toString() !== req.user._id.toString() && req.user.role !== 'admin')) {
       return res.status(403).json({ success: false, message: 'Forbidden: Unauthorized action' });
     }
 

@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  RefreshCw
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 

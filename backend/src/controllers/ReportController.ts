@@ -38,6 +38,16 @@ export class ReportController {
       const activeLang = (lang || req.user?.settings?.language || 'en') as string;
       let reportData: any = {};
 
+      if (reportType === 'weather' && (!req.user.farmLocation?.latitude || !req.user.farmLocation?.longitude)) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(400).json({ success: false, message: 'Weather reports require a configured farm location. Please set your location on the dashboard first.' });
+      }
+
+      if (reportType === 'crop' && (!req.user.farmLocation?.address)) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(400).json({ success: false, message: 'Crop reports require a configured farm location. Please set your location on the dashboard first.' });
+      }
+
       // Set headers for PDF streaming
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=KrishiMitra_${reportType}_Report.pdf`);
@@ -47,8 +57,8 @@ export class ReportController {
 
         if (farm) {
           const recs = await GeminiService.recommendCrops({
-            state: req.user.farmLocation?.address?.split(',')[1]?.trim() || 'Haryana',
-            district: req.user.farmLocation?.address?.split(',')[0]?.trim() || 'Karnal',
+            state: req.user.farmLocation?.address?.split(',')[1]?.trim() || 'Location not selected',
+            district: req.user.farmLocation?.address?.split(',')[0]?.trim() || 'Location not selected',
             soilType: farm.soilType,
             season: 'Rabi',
             waterAvailability: farm.waterSource,
@@ -76,8 +86,8 @@ export class ReportController {
       } 
       
       else if (reportType === 'weather') {
-        const lat = req.user.farmLocation?.latitude || 29.6857;
-        const lon = req.user.farmLocation?.longitude || 76.9905;
+        const lat = req.user.farmLocation!.latitude!;
+        const lon = req.user.farmLocation!.longitude!;
         const weather = await WeatherService.getWeatherData(lat, lon);
         reportData = weather;
       } 

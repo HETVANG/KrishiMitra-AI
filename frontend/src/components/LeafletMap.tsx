@@ -17,7 +17,7 @@ interface LeafletMapProps {
 }
 
 export const LeafletMap: React.FC<LeafletMapProps> = ({
-  initialCenter = [29.6857, 76.9905], // Default Karnal, India
+  initialCenter = [20.5937, 78.9629], // Default center on India
   boundary = [],
   onBoundaryChange,
   markers = [],

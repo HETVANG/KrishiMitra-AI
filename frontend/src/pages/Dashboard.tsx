@@ -13,7 +13,8 @@ import {
   Coins,
   ChevronRight,
   TrendingDown,
-  Volume2
+  Volume2,
+  Search
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -29,9 +30,44 @@ export const Dashboard: React.FC = () => {
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
 
-  // Default coordinate location (Karnal, Haryana) if user geolocation is unconfigured
-  const lat = user?.farmLocation?.latitude || 29.6857;
-  const lon = user?.farmLocation?.longitude || 76.9905;
+  const [activeLocation, setActiveLocation] = useState<{
+    latitude: number | null;
+    longitude: number | null;
+    address: string | null;
+  }>(() => {
+    const saved = localStorage.getItem('selectedLocation');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    if (user?.farmLocation?.latitude && user?.farmLocation?.longitude) {
+      return {
+        latitude: user.farmLocation.latitude,
+        longitude: user.farmLocation.longitude,
+        address: user.farmLocation.address || 'Detected Location'
+      };
+    }
+    return {
+      latitude: null,
+      longitude: null,
+      address: null
+    };
+  });
+
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const lat = activeLocation.latitude || 20.5937;
+  const lon = activeLocation.longitude || 78.9629;
 
   const getTrialDaysRemaining = (): number => {
     if (!user?.trialEndDate) return 0;
@@ -45,12 +81,100 @@ export const Dashboard: React.FC = () => {
   const isTrialExpired = user?.plan === 'free' && (user.subscriptionStatus === 'expired' || (user.trialEndDate && new Date(user.trialEndDate) < new Date()));
   const shouldShowExpiringAlert = isTrialActive && [30, 15, 7, 3, 1].includes(trialDaysLeft);
 
+  // Geolocation effect on mount
+  useEffect(() => {
+    const requestGeolocation = () => {
+      if (activeLocation.latitude && activeLocation.longitude) return;
+
+      if (!navigator.geolocation) {
+        setLocationError('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      setLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const res = await api.get(`/weather/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+            if (res.data && res.data.success) {
+              const address = res.data.state ? `${res.data.city}, ${res.data.state}` : res.data.city;
+              const newLoc = { latitude, longitude, address };
+              setActiveLocation(newLoc);
+              localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+              if (user) {
+                setFarmLocationLocally(newLoc);
+                try {
+                  await api.put('/auth/settings', {
+                    language: i18n.language,
+                    theme: user.settings?.theme || 'light',
+                    farmLocation: newLoc
+                  });
+                } catch (saveErr) {
+                  console.error('Failed to save geolocated settings to backend:', saveErr);
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error reverse geocoding location:', err);
+            const fallbackLoc = { latitude, longitude, address: 'Detected Location' };
+            setActiveLocation(fallbackLoc);
+            localStorage.setItem('selectedLocation', JSON.stringify(fallbackLoc));
+          } finally {
+            setLocating(false);
+          }
+        },
+        (error) => {
+          console.warn('Geolocation access denied or failed:', error);
+          setLocating(false);
+          setLocationError('Permission denied');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    };
+
+    requestGeolocation();
+  }, []);
+
+  // Suggestions search effect
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        setSearching(true);
+        setSearchError(null);
+        const res = await api.get(`/weather/geocode?query=${encodeURIComponent(searchQuery)}`);
+        if (res.data && res.data.success) {
+          setSuggestions(res.data.suggestions || []);
+        }
+      } catch (err) {
+        console.error('Geocoding suggestions fetch failed:', err);
+        setSearchError('Failed to fetch suggestions');
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Main data fetching effect
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!activeLocation.latitude || !activeLocation.longitude) {
+        setLoadingWeather(false);
+        setLoadingMandi(false);
+        return;
+      }
+
       // 1. Fetch Weather coordinates
       try {
         setLoadingWeather(true);
-        const res = await api.get(`/weather?lat=${lat}&lon=${lon}&lang=${i18n.language}`);
+        const res = await api.get(`/weather?lat=${activeLocation.latitude}&lon=${activeLocation.longitude}&lang=${i18n.language}`);
         if (res.data && res.data.success) {
           setWeather(res.data.weather);
         }
@@ -63,7 +187,9 @@ export const Dashboard: React.FC = () => {
       // 2. Fetch Mandi price trends
       try {
         setLoadingMandi(true);
-        const res = await api.get(`/market/search?state=Haryana&crop=Wheat&lang=${i18n.language}`);
+        const addressParts = activeLocation.address?.split(',') || [];
+        const stateName = addressParts[addressParts.length - 1]?.trim() || 'Haryana';
+        const res = await api.get(`/market/search?state=${encodeURIComponent(stateName)}&crop=Wheat&lang=${i18n.language}`);
         if (res.data && res.data.success) {
           setMandiPrices(res.data.prices.slice(0, 4));
         }
@@ -72,8 +198,9 @@ export const Dashboard: React.FC = () => {
       } finally {
         setLoadingMandi(false);
       }
+    };
 
-      // 3. Fetch Financial analytics summary
+    const fetchFinancials = async () => {
       try {
         const res = await api.get('/expenses/summary');
         if (res.data && res.data.success) {
@@ -85,25 +212,31 @@ export const Dashboard: React.FC = () => {
     };
 
     fetchDashboardData();
-  }, [lat, lon, i18n.language]);
+    fetchFinancials();
+  }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
   const handleMapBoundaryChange = async (coords: [number, number][]) => {
     if (coords.length > 0) {
       try {
-        const address = `Karnal, Haryana`;
+        const address = activeLocation.address || 'My Field Location';
         const res = await api.post('/crops/farm', {
-          name: `${user?.name}'s Field`,
+          name: `${user?.name || 'Farmer'}'s Field`,
           size: coords.length * 0.4,
           soilType: 'Loamy',
           waterSource: 'Tube Well',
           boundary: coords
         });
         if (res.data && res.data.success) {
-          setFarmLocationLocally({
+          const newLoc = {
             latitude: coords[0][0],
             longitude: coords[0][1],
             address
-          });
+          };
+          setActiveLocation(newLoc);
+          localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+          if (user) {
+            setFarmLocationLocally(newLoc);
+          }
         }
       } catch (err) {
         console.error('Failed to autosave boundary:', err);
@@ -199,12 +332,44 @@ export const Dashboard: React.FC = () => {
             <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
               <CloudSun className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.weather')}
             </h3>
-            <span className="text-xs text-gray-400 dark:text-dark-500 font-bold">
-              {user?.farmLocation?.address || 'Karnal, Haryana'}
-            </span>
+            {activeLocation.address ? (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-700 dark:text-dark-250 font-extrabold">
+                  {activeLocation.address}
+                </span>
+                <button
+                  onClick={() => setShowLocationModal(true)}
+                  className="text-[10px] text-brand-600 dark:text-brand-400 font-bold hover:underline min-h-[32px] px-1.5 flex items-center"
+                >
+                  (Change)
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-gray-400 dark:text-dark-500 font-bold">
+                No Location
+              </span>
+            )}
           </div>
 
-          {loadingWeather ? (
+          {!activeLocation.latitude ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500 dark:text-dark-400 w-full">
+              <CloudSun size={48} className="text-gray-300 dark:text-dark-800 mx-auto mb-3 animate-pulse" />
+              <p className="font-extrabold text-sm text-gray-700 dark:text-dark-250">
+                {locating ? 'Detecting your location...' : 'Location not selected'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+                {locating ? 'Requesting geolocation coordinates...' : 'Please enable browser geolocation permission or select a location manually to view today\'s weather.'}
+              </p>
+              {!locating && (
+                <button
+                  onClick={() => setShowLocationModal(true)}
+                  className="mt-4 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors min-h-[38px]"
+                >
+                  Choose Location
+                </button>
+              )}
+            </div>
+          ) : loadingWeather ? (
             <div className="flex items-center justify-center py-10 text-brand-600">
               <div className="w-8 h-8 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
             </div>
@@ -328,12 +493,16 @@ export const Dashboard: React.FC = () => {
 
           <div className="h-[280px] w-full rounded-2xl overflow-hidden mt-3">
             <LeafletMap 
-              initialCenter={[lat, lon]}
+              initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
               onBoundaryChange={handleMapBoundaryChange}
-              markers={[
-                { position: [29.6857, 76.9905], title: 'Karnal Mandi', popupText: 'Current wheat average: ₹2225/Qtl', type: 'mandi' },
-                { position: [29.7050, 77.0120], title: 'Karnal Weather Station', popupText: 'Active station telemetry: Ok', type: 'station' }
-              ]}
+              markers={activeLocation.latitude && activeLocation.longitude ? [
+                {
+                  position: [activeLocation.latitude, activeLocation.longitude],
+                  title: 'My Farm Location',
+                  popupText: activeLocation.address || 'My Fields',
+                  type: 'farm'
+                }
+              ] : []}
             />
           </div>
         </div>
@@ -400,6 +569,131 @@ export const Dashboard: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* LOCATION SEARCH MODAL */}
+      {showLocationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-left flex flex-col max-h-[80vh]">
+            <button
+              onClick={() => { setShowLocationModal(false); setSearchQuery(''); setSuggestions([]); }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-1">
+              Select Location
+            </h2>
+            <p className="text-[11px] text-gray-400 mb-4 font-semibold">
+              Search by City, District, or State in India to fetch today's weather.
+            </p>
+
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search location (e.g. Nagpur, Rajkot...)"
+                className="custom-input text-xs pl-8"
+                autoFocus
+              />
+              <span className="absolute left-2.5 top-2.5 text-gray-400">
+                <Search size={14} />
+              </span>
+            </div>
+
+            {/* Suggestions list container */}
+            <div className="flex-1 overflow-y-auto mt-4 space-y-1.5 pr-1 min-h-[180px]">
+              {searching ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+                </div>
+              ) : searchError ? (
+                <p className="text-center text-xs text-red-500 py-6 font-bold">{searchError}</p>
+              ) : suggestions.length > 0 ? (
+                suggestions.map((sug, idx) => (
+                  <button
+                    key={idx}
+                    onClick={async () => {
+                      const newLoc = {
+                        latitude: sug.lat,
+                        longitude: sug.lon,
+                        address: sug.state ? `${sug.city}, ${sug.state}` : sug.city
+                      };
+                      setActiveLocation(newLoc);
+                      localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+                      
+                      if (user) {
+                        setFarmLocationLocally(newLoc);
+                        try {
+                          await api.put('/auth/settings', {
+                            language: i18n.language,
+                            theme: user.settings?.theme || 'light',
+                            farmLocation: newLoc
+                          });
+                        } catch (saveErr) {
+                          console.error('Failed to save selected location to backend:', saveErr);
+                        }
+                      }
+                      
+                      setShowLocationModal(false);
+                      setSearchQuery('');
+                      setSuggestions([]);
+                    }}
+                    className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-dark-850 rounded-xl border border-gray-100/50 dark:border-dark-850 text-xs font-bold text-gray-700 dark:text-dark-250 transition-colors flex flex-col gap-0.5"
+                  >
+                    <span>{sug.city}</span>
+                    <span className="text-[10px] text-gray-400 font-semibold">{sug.state ? `${sug.state}, ` : ''}{sug.country}</span>
+                  </button>
+                ))
+              ) : searchQuery.trim() ? (
+                <p className="text-center text-xs text-gray-450 py-8">No matching locations found.</p>
+              ) : (
+                <div className="text-center py-4 text-gray-400 space-y-2">
+                  <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400/80">Popular Indian Farming Centers</p>
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    {[
+                      { city: 'Karnal', state: 'Haryana', lat: 29.6857, lon: 76.9905 },
+                      { city: 'Rajkot', state: 'Gujarat', lat: 22.3039, lon: 70.8022 },
+                      { city: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882 },
+                      { city: 'Ludhiana', state: 'Punjab', lat: 30.9010, lon: 75.8573 }
+                    ].map((pop, pIdx) => (
+                      <button
+                        key={pIdx}
+                        onClick={async () => {
+                          const newLoc = {
+                            latitude: pop.lat,
+                            longitude: pop.lon,
+                            address: `${pop.city}, ${pop.state}`
+                          };
+                          setActiveLocation(newLoc);
+                          localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+                          if (user) {
+                            setFarmLocationLocally(newLoc);
+                            try {
+                              await api.put('/auth/settings', {
+                                language: i18n.language,
+                                theme: user.settings?.theme || 'light',
+                                farmLocation: newLoc
+                              });
+                            } catch (saveErr) {
+                              console.error(saveErr);
+                            }
+                          }
+                          setShowLocationModal(false);
+                        }}
+                        className="p-2.5 text-center bg-gray-50/50 dark:bg-dark-850 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-gray-700 dark:text-dark-250 border rounded-xl text-[10px] font-bold transition-all duration-150"
+                      >
+                        {pop.city}, {pop.state}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

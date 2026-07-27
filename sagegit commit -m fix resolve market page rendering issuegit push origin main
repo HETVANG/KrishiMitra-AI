@@ -1,0 +1,113 @@
+warning: in the working copy of 'frontend/src/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/context/AuthContext.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/context/ThemeContext.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/main.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/pages/Dashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/frontend/src/App.tsx b/frontend/src/App.tsx[m
+[1mindex 4f3fc3b..2d045e1 100644[m
+[1m--- a/frontend/src/App.tsx[m
+[1m+++ b/frontend/src/App.tsx[m
+[36m@@ -4,6 +4,7 @@[m [mimport { ToastContainer, toast } from 'react-toastify';[m
+ import 'react-toastify/dist/ReactToastify.css';[m
+ import { AuthProvider, useAuth } from './context/AuthContext';[m
+ import { ThemeProvider } from './context/ThemeContext';[m
+[32m+[m[32mimport { ErrorBoundary } from './components/ErrorBoundary';[m
+ [m
+ // Import Layouts & widgets[m
+ import { Sidebar } from './components/Sidebar';[m
+[36m@@ -128,6 +129,7 @@[m [mconst DashboardLayout = () => {[m
+ };[m
+ [m
+ export const AppContent = () => {[m
+[32m+[m[32m  console.log('[KrishiMitra Startup Log] Loading Routes & React Router');[m
+   return ([m
+     <BrowserRouter>[m
+       <React.Suspense fallback={[m
+[36m@@ -177,12 +179,15 @@[m [mexport const AppContent = () => {[m
+ };[m
+ [m
+ export const App = () => {[m
+[32m+[m[32m  console.log('[KrishiMitra Startup Log] React Mounted - App initialized - Loading Context & Providers');[m
+   return ([m
+[31m-    <AuthProvider>[m
+[31m-      <ThemeProvider>[m
+[31m-        <AppContent />[m
+[31m-      </ThemeProvider>[m
+[31m-    </AuthProvider>[m
+[32m+[m[32m    <ErrorBoundary>[m
+[32m+[m[32m      <AuthProvider>[m
+[32m+[m[32m        <ThemeProvider>[m
+[32m+[m[32m          <AppContent />[m
+[32m+[m[32m        </ThemeProvider>[m
+[32m+[m[32m      </AuthProvider>[m
+[32m+[m[32m    </ErrorBoundary>[m
+   );[m
+ };[m
+ [m
+[1mdiff --git a/frontend/src/context/AuthContext.tsx b/frontend/src/context/AuthContext.tsx[m
+[1mindex 8e966cb..0729168 100644[m
+[1m--- a/frontend/src/context/AuthContext.tsx[m
+[1m+++ b/frontend/src/context/AuthContext.tsx[m
+[36m@@ -46,6 +46,7 @@[m [minterface AuthContextType {[m
+ const AuthContext = createContext<AuthContextType | undefined>(undefined);[m
+ [m
+ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {[m
+[32m+[m[32m  console.log('[KrishiMitra Startup Log] Loading Authentication');[m
+   const [user, setUser] = useState<User | null>(() => {[m
+     const cachedUser = localStorage.getItem('user');[m
+     try {[m
+[1mdiff --git a/frontend/src/context/ThemeContext.tsx b/frontend/src/context/ThemeContext.tsx[m
+[1mindex 0c433aa..30b53df 100644[m
+[1m--- a/frontend/src/context/ThemeContext.tsx[m
+[1m+++ b/frontend/src/context/ThemeContext.tsx[m
+[36m@@ -13,6 +13,7 @@[m [minterface ThemeContextType {[m
+ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);[m
+ [m
+ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {[m
+[32m+[m[32m  console.log('[KrishiMitra Startup Log] Loading Theme');[m
+   const [theme, setTheme] = useState<Theme>(() => {[m
+     const saved = localStorage.getItem('km-theme');[m
+     return (saved as Theme) || 'light';[m
+[1mdiff --git a/frontend/src/main.tsx b/frontend/src/main.tsx[m
+[1mindex 7d27693..4f8e260 100644[m
+[1m--- a/frontend/src/main.tsx[m
+[1m+++ b/frontend/src/main.tsx[m
+[36m@@ -4,8 +4,21 @@[m [mimport App from './App';[m
+ import './index.css';[m
+ import './i18n';[m
+ [m
+[31m-ReactDOM.createRoot(document.getElementById('root')!).render([m
+[31m-  <React.StrictMode>[m
+[31m-    <App />[m
+[31m-  </React.StrictMode>[m
+[31m-);[m
+[32m+[m[32mconsole.log('[KrishiMitra Startup Log] main.tsx starting React mount');[m
+[32m+[m[32mtry {[m
+[32m+[m[32m  const rootEl = document.getElementById('root');[m
+[32m+[m[32m  if (!rootEl) {[m
+[32m+[m[32m    console.error('[KrishiMitra Startup Log] Root element not found in DOM!');[m
+[32m+[m[32m  } else {[m
+[32m+[m[32m    console.log('[KrishiMitra Startup Log] Root element found, calling createRoot');[m
+[32m+[m[32m    const root = ReactDOM.createRoot(rootEl);[m
+[32m+[m[32m    root.render([m
+[32m+[m[32m      <React.StrictMode>[m
+[32m+[m[32m        <App />[m
+[32m+[m[32m      </React.StrictMode>[m
+[32m+[m[32m    );[m
+[32m+[m[32m    console.log('[KrishiMitra Startup Log] ReactDOM.render completed successfully');[m
+[32m+[m[32m  }[m
+[32m+[m[32m} catch (mountErr) {[m
+[32m+[m[32m  console.error('[KrishiMitra Startup Log] Failed during React mounting phase:', mountErr);[m
+[32m+[m[32m}[m
+[1mdiff --git a/frontend/src/pages/Dashboard.tsx b/frontend/src/pages/Dashboard.tsx[m
+[1mindex 5c11710..29d33cb 100644[m
+[1m--- a/frontend/src/pages/Dashboard.tsx[m
+[1m+++ b/frontend/src/pages/Dashboard.tsx[m
+[36m@@ -21,6 +21,7 @@[m [mimport { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec[m
+ import { useTranslation } from 'react-i18next';[m
+ [m
+ export const Dashboard: React.FC = () => {[m
+[32m+[m[32m  console.log('[KrishiMitra Startup Log] Loading Dashboard');[m
+   const { user, setFarmLocationLocally } = useAuth();[m
+   const { t, i18n } = useTranslation();[m
+ [m

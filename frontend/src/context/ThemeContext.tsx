@@ -13,6 +13,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('[KrishiMitra Startup Log] Loading Theme');
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('km-theme');
     return (saved as Theme) || 'light';

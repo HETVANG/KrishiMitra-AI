@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Import Layouts & widgets
 import { Sidebar } from './components/Sidebar';
@@ -128,6 +129,7 @@ const DashboardLayout = () => {
 };
 
 export const AppContent = () => {
+  console.log('[KrishiMitra Startup Log] Loading Routes & React Router');
   return (
     <BrowserRouter>
       <React.Suspense fallback={
@@ -177,12 +179,15 @@ export const AppContent = () => {
 };
 
 export const App = () => {
+  console.log('[KrishiMitra Startup Log] React Mounted - App initialized - Loading Context & Providers');
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 };
 

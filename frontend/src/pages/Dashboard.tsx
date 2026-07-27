@@ -21,6 +21,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import { useTranslation } from 'react-i18next';
 
 export const Dashboard: React.FC = () => {
+  console.log('[KrishiMitra Startup Log] Loading Dashboard');
   const { user, setFarmLocationLocally } = useAuth();
   const { t, i18n } = useTranslation();
 

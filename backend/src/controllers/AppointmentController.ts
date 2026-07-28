@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Appointment } from '../models/Appointment';
+import { CloudinaryService } from '../services/CloudinaryService';
 
 export class AppointmentController {
   /**
@@ -28,25 +29,76 @@ export class AppointmentController {
   static async bookAppointment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: 'Unauthenticated' });
-      const { expertId, date, timeSlot, notes } = req.body;
+      const { 
+        expertId, 
+        date, 
+        timeSlot, 
+        notes,
+        cropName,
+        category,
+        description,
+        preferredLanguage,
+        consultationType
+      } = req.body;
 
-      // Live Mode
-      const expert = await User.findOne({ _id: expertId, role: 'expert' });
-      if (!expert) {
-        return res.status(404).json({ success: false, message: 'Agriculture Expert not found' });
+      if (!date || !timeSlot) {
+        return res.status(400).json({ success: false, message: 'Preferred Date and Time Slot are required.' });
       }
 
-      const conflict = await Appointment.findOne({ expert: expertId, date, timeSlot, status: 'approved' });
-      if (conflict) {
-        return res.status(400).json({ success: false, message: 'This timeslot has already been booked.' });
+      // Check conflict if expert is specified
+      if (expertId) {
+        const expert = await User.findOne({ _id: expertId, role: 'expert' });
+        if (!expert) {
+          return res.status(404).json({ success: false, message: 'Agriculture Expert not found' });
+        }
+
+        const conflict = await Appointment.findOne({ expert: expertId, date, timeSlot, status: { $in: ['accepted', 'scheduled'] } });
+        if (conflict) {
+          return res.status(400).json({ success: false, message: 'This timeslot has already been booked with this expert.' });
+        }
+      }
+
+      // Handle file uploads (crop photos and videos)
+      const images: string[] = [];
+      const videos: string[] = [];
+
+      if (req.files) {
+        const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+        if (files['images']) {
+          for (const file of files['images']) {
+            try {
+              const url = await CloudinaryService.uploadImageBuffer(file.buffer, file.mimetype);
+              images.push(url);
+            } catch (err) {
+              console.error('[Book Appointment] Image upload failed:', err);
+            }
+          }
+        }
+        if (files['videos']) {
+          for (const file of files['videos']) {
+            try {
+              const url = await CloudinaryService.uploadVideoBuffer(file.buffer, file.mimetype);
+              videos.push(url);
+            } catch (err) {
+              console.error('[Book Appointment] Video upload failed:', err);
+            }
+          }
+        }
       }
 
       const appointment = await Appointment.create({
         farmer: req.user._id,
-        expert: expertId,
+        expert: expertId || undefined,
         date,
         timeSlot,
-        notes,
+        notes: notes || description || '',
+        cropName: cropName || '',
+        category: category || 'Other',
+        description: description || notes || '',
+        preferredLanguage: preferredLanguage || 'English',
+        consultationType: consultationType || 'Video',
+        images,
+        videos,
         status: 'pending'
       });
 
@@ -66,10 +118,16 @@ export class AppointmentController {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: 'Unauthenticated' });
 
-      // Live Mode
       let appointments;
       if (req.user.role === 'expert') {
-        appointments = await Appointment.find({ expert: req.user._id })
+        // Experts see their bookings and general pending bookings
+        appointments = await Appointment.find({
+          $or: [
+            { expert: req.user._id },
+            { expert: { $exists: false }, status: 'pending' },
+            { expert: null, status: 'pending' }
+          ]
+        })
           .populate('farmer', 'name email phone')
           .sort({ date: 1, timeSlot: 1 });
       } else {
@@ -96,17 +154,16 @@ export class AppointmentController {
       const { id } = req.params;
       const { status } = req.body;
 
-      if (!['approved', 'completed', 'cancelled'].includes(status)) {
+      if (!['pending', 'accepted', 'scheduled', 'in_progress', 'completed', 'cancelled'].includes(status)) {
         return res.status(400).json({ success: false, message: 'Invalid status update request' });
       }
 
-      // Live Mode
       const appointment = await Appointment.findById(id);
       if (!appointment) {
         return res.status(404).json({ success: false, message: 'Appointment not found' });
       }
 
-      const isExpert = appointment.expert.toString() === req.user._id.toString();
+      const isExpert = req.user.role === 'expert';
       const isFarmer = appointment.farmer.toString() === req.user._id.toString();
 
       if (!isExpert && !isFarmer) {
@@ -114,9 +171,16 @@ export class AppointmentController {
       }
 
       appointment.status = status;
-      if (status === 'approved') {
-        const randRoom = Math.random().toString(36).substring(7);
-        appointment.meetLink = `https://meet.jit.si/KrishiMitraConsultation_${randRoom}`;
+      
+      // If expert accepts/schedules a pending request
+      if (['accepted', 'scheduled'].includes(status) && isExpert) {
+        if (!appointment.expert) {
+          appointment.expert = req.user._id; // Assign themselves to general booking request
+        }
+        if (!appointment.meetLink) {
+          const randRoom = Math.random().toString(36).substring(7);
+          appointment.meetLink = `https://meet.jit.si/KrishiMitraConsultation_${randRoom}`;
+        }
       }
 
       await appointment.save();

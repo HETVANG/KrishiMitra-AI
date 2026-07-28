@@ -51,3 +51,28 @@ export const audioUpload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 });
+
+const videoFileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedMimeTypes = [
+    'video/mp4',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/webm',
+    'video/avi',
+    'video/mpeg'
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('video/')) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid video file type: ${file.mimetype}. Only MP4, MOV, AVI, and WebM video uploads are allowed.`) as any, false);
+  }
+};
+
+export const videoUpload = multer({
+  storage,
+  fileFilter: videoFileFilter,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit
+  },
+});

@@ -48,4 +48,60 @@ export class CloudinaryService {
       uploadStream.end(buffer);
     });
   }
+
+  static async uploadVideoBuffer(buffer: Buffer, mimetype: string): Promise<string> {
+    if (!isCloudinaryConfigured) {
+      console.warn('[Cloudinary Service] Cloudinary not configured. Returning fallback mock video.');
+      return 'https://www.w3schools.com/html/mov_bbb.mp4';
+    }
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'krishimitra-videos',
+          resource_type: 'video',
+        },
+        (error, result) => {
+          if (error) {
+            console.error('[Cloudinary Video Upload Error]', error);
+            reject(error);
+          } else if (result) {
+            resolve(result.secure_url);
+          } else {
+            reject(new Error('Cloudinary video upload returned empty result'));
+          }
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+  }
+
+  static async uploadFileBuffer(buffer: Buffer, mimetype: string): Promise<string> {
+    if (!isCloudinaryConfigured) {
+      console.warn('[Cloudinary Service] Cloudinary not configured. Returning fallback document.');
+      return 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    }
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'krishimitra-docs',
+          resource_type: 'auto',
+        },
+        (error, result) => {
+          if (error) {
+            console.error('[Cloudinary File Upload Error]', error);
+            reject(error);
+          } else if (result) {
+            resolve(result.secure_url);
+          } else {
+            reject(new Error('Cloudinary file upload returned empty result'));
+          }
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+  }
 }

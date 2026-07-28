@@ -28,8 +28,27 @@ export const Dashboard: React.FC = () => {
   const [weather, setWeather] = useState<any>(null);
   const [mandiPrices, setMandiPrices] = useState<any[]>([]);
   const [financials, setFinancials] = useState<any>(null);
+  const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
+
+  // Load Farm profile on mount to restore saved boundary
+  useEffect(() => {
+    const fetchFarmProfile = async () => {
+      try {
+        const res = await api.get('/crops/farm');
+        if (res.data && res.data.success && res.data.farm) {
+          const farm = res.data.farm;
+          if (farm.boundary && farm.boundary.length > 0) {
+            setBoundary(farm.boundary);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load saved farm profile:', err);
+      }
+    };
+    fetchFarmProfile();
+  }, []);
 
   const [activeLocation, setActiveLocation] = useState<{
     latitude: number | null;
@@ -216,6 +235,50 @@ export const Dashboard: React.FC = () => {
     fetchFinancials();
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
+  // GIS calculation helper functions
+  const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Earth radius in meters
+    const phi1 = (lat1 * Math.PI) / 180;
+    const phi2 = (lat2 * Math.PI) / 180;
+    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+      Math.cos(phi1) * Math.cos(phi2) *
+      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  };
+
+  const calculatePerimeter = (pts: [number, number][]): number => {
+    if (pts.length < 2) return 0;
+    let total = 0;
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      total += getHaversineDistance(p1[0], p1[1], p2[0], p2[1]);
+    }
+    return total;
+  };
+
+  const calculateAreaM2 = (pts: [number, number][]): number => {
+    if (pts.length < 3) return 0;
+    let area = 0;
+    const factor = 111319.9;
+    for (let i = 0; i < pts.length; i++) {
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % pts.length];
+      const x1 = p1[1] * factor * Math.cos((p1[0] * Math.PI) / 180);
+      const y1 = p1[0] * factor;
+      const x2 = p2[1] * factor * Math.cos((p2[0] * Math.PI) / 180);
+      const y2 = p2[0] * factor;
+      area += x1 * y2 - x2 * y1;
+    }
+    return Math.abs(area) * 0.5;
+  };
+
   const handleLocationSelect = async (loc: any) => {
     const newLoc = {
       latitude: loc.latitude,
@@ -246,15 +309,30 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleMapBoundaryChange = async (coords: [number, number][]) => {
+    setBoundary(coords);
     if (coords.length > 0) {
       try {
+        const areaSqM = calculateAreaM2(coords);
+        const acres = Number((areaSqM * 0.000247105).toFixed(2));
+        const hectares = Number((areaSqM * 0.0001).toFixed(2));
+        const perimeter = Number(calculatePerimeter(coords).toFixed(1));
+
         const res = await api.post('/crops/farm', {
           name: `${user?.name || 'Farmer'}'s Field`,
-          size: coords.length * 0.4,
+          size: acres > 0 ? acres : 1.0,
           soilType: 'Loamy',
           waterSource: 'Tube Well',
-          boundary: coords
+          boundary: coords,
+          village: activeLocation.village || '',
+          taluka: activeLocation.city || '',
+          district: activeLocation.district || '',
+          state: activeLocation.state || '',
+          latitude: activeLocation.latitude || coords[0][0],
+          longitude: activeLocation.longitude || coords[0][1],
+          perimeter: perimeter,
+          areaHectares: hectares
         });
+
         if (res.data && res.data.success) {
           const newLoc = {
             latitude: activeLocation.latitude || coords[0][0],
@@ -537,6 +615,7 @@ export const Dashboard: React.FC = () => {
           <div className="h-[280px] w-full rounded-2xl overflow-hidden mt-3">
             <LeafletMap 
               initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
+              boundary={boundary}
               onBoundaryChange={handleMapBoundaryChange}
               onLocationSelect={handleLocationSelect}
               markers={activeLocation.latitude && activeLocation.longitude ? [

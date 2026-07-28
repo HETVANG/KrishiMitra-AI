@@ -11,6 +11,14 @@ const FarmSchema = new Schema(
       type: [[Number]], // Array of [lat, lng] coordinates defining a polygon
       default: [],
     },
+    village: { type: String, default: '' },
+    taluka: { type: String, default: '' },
+    district: { type: String, default: '' },
+    state: { type: String, default: '' },
+    latitude: { type: Number },
+    longitude: { type: Number },
+    perimeter: { type: Number, default: 0 }, // in meters
+    areaHectares: { type: Number, default: 0 },
     currentCrops: [{ type: String }],
   },
   { timestamps: true }

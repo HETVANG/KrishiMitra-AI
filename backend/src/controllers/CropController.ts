@@ -98,7 +98,22 @@ export class CropController {
   static async upsertFarmProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: 'Unauthenticated' });
-      const { name, size, soilType, waterSource, boundary, currentCrops } = req.body;
+      const { 
+        name, 
+        size, 
+        soilType, 
+        waterSource, 
+        boundary, 
+        currentCrops,
+        village,
+        taluka,
+        district,
+        state,
+        latitude,
+        longitude,
+        perimeter,
+        areaHectares
+      } = req.body;
 
       const farm = await Farm.findOneAndUpdate(
         { user: req.user._id },
@@ -109,6 +124,14 @@ export class CropController {
           soilType,
           waterSource,
           boundary,
+          village: village || '',
+          taluka: taluka || '',
+          district: district || '',
+          state: state || '',
+          latitude: latitude ? Number(latitude) : undefined,
+          longitude: longitude ? Number(longitude) : undefined,
+          perimeter: perimeter ? Number(perimeter) : 0,
+          areaHectares: areaHectares ? Number(areaHectares) : 0,
           currentCrops: currentCrops || [],
         },
         { upsert: true, new: true, setDefaultsOnInsert: true }

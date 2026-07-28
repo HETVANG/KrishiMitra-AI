@@ -16,7 +16,7 @@ interface LeafletMapProps {
   readOnly?: boolean;
 }
 
-export const LeafletMap: React.FC<LeafletMapProps> = ({
+const LeafletMapInner: React.FC<LeafletMapProps> = ({
   initialCenter = [20.5937, 78.9629], // Default center on India
   boundary = [],
   onBoundaryChange,
@@ -29,7 +29,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const clickMarkersRef = useRef<L.Marker[]>([]);
   const [points, setPoints] = useState<[number, number][]>(boundary);
 
-  // Initialize Map
+  // Initialize Map once on mount
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -69,12 +69,29 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     }
 
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
+      const activeMap = mapRef.current;
+      if (activeMap) {
+        try {
+          activeMap.off('click');
+          activeMap.remove();
+        } catch (e) {
+          console.warn('[LeafletMap] Error during map destruction:', e);
+        }
         mapRef.current = null;
       }
     };
-  }, [initialCenter, readOnly]);
+  }, [readOnly]);
+
+  // Sync Map view when initialCenter changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    try {
+      map.setView(initialCenter, map.getZoom() || 13);
+    } catch (err) {
+      console.warn('[LeafletMap] Failed to set view on center update:', err);
+    }
+  }, [initialCenter[0], initialCenter[1]]);
 
   // Sync external points updates (like parent clearing boundary)
   useEffect(() => {
@@ -83,20 +100,38 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     }
   }, [boundary]);
 
-  // Redraw Boundary Polygon and points markers
+  // Redraw Boundary Polygon and points markers reactively
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Remove old polygon
-    if (polygonRef.current) {
-      polygonRef.current.remove();
-      polygonRef.current = null;
-    }
+    const cleanupLayers = () => {
+      // Remove old polygon safely using hasLayer check
+      if (polygonRef.current) {
+        try {
+          if (map.hasLayer(polygonRef.current)) {
+            map.removeLayer(polygonRef.current);
+          }
+        } catch (err) {
+          console.warn('[LeafletMap] Failed to remove polygon:', err);
+        }
+        polygonRef.current = null;
+      }
 
-    // Remove old click markers
-    clickMarkersRef.current.forEach((marker) => marker.remove());
-    clickMarkersRef.current = [];
+      // Remove old click markers safely using hasLayer check
+      clickMarkersRef.current.forEach((marker) => {
+        try {
+          if (map.hasLayer(marker)) {
+            map.removeLayer(marker);
+          }
+        } catch (err) {
+          console.warn('[LeafletMap] Failed to remove vertex marker:', err);
+        }
+      });
+      clickMarkersRef.current = [];
+    };
+
+    cleanupLayers();
 
     // Draw new polygon if points exist
     if (points.length > 0) {
@@ -119,7 +154,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       // Draw dot marker pins for each click vertex
       if (!readOnly) {
-        points.forEach((pt, index) => {
+        points.forEach((pt) => {
           const vertexMarker = L.marker([pt[0], pt[1]], {
             icon: L.divIcon({
               className: 'vertex-dot',
@@ -132,6 +167,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
         });
       }
     }
+
+    return cleanupLayers;
   }, [points, readOnly]);
 
   // Render static markers (Mandi positions, weather stations, etc.)
@@ -158,13 +195,28 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
     markers.forEach((m) => {
       const icon = m.type === 'mandi' ? mandiIcon : m.type === 'station' ? stationIcon : undefined;
-      const marker = L.marker(m.position, { icon }).addTo(map);
-      marker.bindPopup(`<b>${m.title}</b><br/>${m.popupText}`);
-      listMarkers.push(marker);
+      try {
+        const marker = L.marker(m.position, { icon }).addTo(map);
+        marker.bindPopup(`<b>${m.title}</b><br/>${m.popupText}`);
+        listMarkers.push(marker);
+      } catch (err) {
+        console.warn('[LeafletMap] Failed to render static marker:', err);
+      }
     });
 
     return () => {
-      listMarkers.forEach((m) => m.remove());
+      const activeMap = mapRef.current;
+      if (activeMap) {
+        listMarkers.forEach((m) => {
+          try {
+            if (activeMap.hasLayer(m)) {
+              activeMap.removeLayer(m);
+            }
+          } catch (err) {
+            console.warn('[LeafletMap] Failed to remove static marker:', err);
+          }
+        });
+      }
     };
   }, [markers]);
 
@@ -178,12 +230,18 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          mapRef.current?.setView([latitude, longitude], 15);
-          // Place center marker
-          L.marker([latitude, longitude])
-            .addTo(mapRef.current!)
-            .bindPopup('Your Current GPS Location')
-            .openPopup();
+          const map = mapRef.current;
+          if (map) {
+            try {
+              map.setView([latitude, longitude], 15);
+              L.marker([latitude, longitude])
+                .addTo(map)
+                .bindPopup('Your Current GPS Location')
+                .openPopup();
+            } catch (err) {
+              console.warn('[LeafletMap] Failed setting map view:', err);
+            }
+          }
         },
         (err) => {
           console.error('[Geolocation Error]', err);
@@ -193,19 +251,15 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     }
   };
 
-  // Estimate field size based on polygon bounds in acres (mock/simple estimation helper)
+  // Estimate field size based on polygon bounds in acres
   const estimateAcres = () => {
     if (points.length < 3) return 0;
-    // Standard surveyor estimation model (simplified coordinates bounding box)
     let area = 0;
-    const j = points.length - 1;
-    // Calculate polygon area in coordinate delta
     for (let i = 0; i < points.length; i++) {
       const p1 = points[i];
       const p2 = points[(i + 1) % points.length];
       area += (p1[1] + p2[1]) * (p1[0] - p2[0]);
     }
-    // Convert coordinate area delta into estimated acres (approximate scaling)
     const rawArea = Math.abs(area) * 0.5;
     const acres = rawArea * 2471050; // scaling factor
     return Number(Math.min(100, Math.max(0.5, acres)).toFixed(2));
@@ -255,3 +309,35 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     </div>
   );
 };
+
+// Leaflet Map Error Boundary to isolate crashes
+class MapErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('[Leaflet Map Error Boundary] Intercepted a Leaflet runtime crash:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full min-h-[280px] bg-gray-50 dark:bg-dark-850 rounded-2xl flex flex-col items-center justify-center p-6 text-center border border-gray-150/40 dark:border-dark-800/10">
+          <span className="text-2xl mb-2">🗺️</span>
+          <p className="text-xs font-bold text-gray-700 dark:text-dark-200">Map loading error</p>
+          <p className="text-[10px] text-gray-400 mt-1 max-w-[200px]">Failed to render interactive map. Please check your browser's WebGL / Canvas settings or reload the page.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export const LeafletMap: React.FC<LeafletMapProps> = (props) => (
+  <MapErrorBoundary>
+    <LeafletMapInner {...props} />
+  </MapErrorBoundary>
+);

@@ -15,6 +15,11 @@ interface User {
     latitude: number;
     longitude: number;
     address: string;
+    village?: string;
+    city?: string;
+    district?: string;
+    state?: string;
+    postcode?: string;
   };
   
   // Subscription properties

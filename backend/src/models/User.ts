@@ -18,6 +18,11 @@ const UserSchema = new Schema(
       latitude: { type: Number },
       longitude: { type: Number },
       address: { type: String },
+      village: { type: String },
+      city: { type: String },
+      district: { type: String },
+      state: { type: String },
+      postcode: { type: String },
     },
     expertProfile: {
       specialization: { type: String },

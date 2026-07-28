@@ -216,10 +216,38 @@ export const Dashboard: React.FC = () => {
     fetchFinancials();
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
+  const handleLocationSelect = async (loc: any) => {
+    const newLoc = {
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      address: loc.address,
+      village: loc.village,
+      city: loc.city,
+      district: loc.district,
+      state: loc.state,
+      postcode: loc.postcode || ''
+    };
+    
+    setActiveLocation(newLoc);
+    localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+    
+    if (user) {
+      setFarmLocationLocally(newLoc);
+      try {
+        await api.put('/auth/settings', {
+          language: i18n.language,
+          theme: user.settings?.theme || 'light',
+          farmLocation: newLoc
+        });
+      } catch (saveErr) {
+        console.error('Failed to save selected location components to backend:', saveErr);
+      }
+    }
+  };
+
   const handleMapBoundaryChange = async (coords: [number, number][]) => {
     if (coords.length > 0) {
       try {
-        const address = activeLocation.address || 'My Field Location';
         const res = await api.post('/crops/farm', {
           name: `${user?.name || 'Farmer'}'s Field`,
           size: coords.length * 0.4,
@@ -229,14 +257,28 @@ export const Dashboard: React.FC = () => {
         });
         if (res.data && res.data.success) {
           const newLoc = {
-            latitude: coords[0][0],
-            longitude: coords[0][1],
-            address
+            latitude: activeLocation.latitude || coords[0][0],
+            longitude: activeLocation.longitude || coords[0][1],
+            address: activeLocation.address || 'My Field Location',
+            village: activeLocation.village || '',
+            city: activeLocation.city || '',
+            district: activeLocation.district || '',
+            state: activeLocation.state || '',
+            postcode: activeLocation.postcode || ''
           };
           setActiveLocation(newLoc);
           localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
           if (user) {
             setFarmLocationLocally(newLoc);
+            try {
+              await api.put('/auth/settings', {
+                language: i18n.language,
+                theme: user.settings?.theme || 'light',
+                farmLocation: newLoc
+              });
+            } catch (saveErr) {
+              console.error('Failed to update farm location on boundary autosave:', saveErr);
+            }
           }
         }
       } catch (err) {
@@ -496,6 +538,7 @@ export const Dashboard: React.FC = () => {
             <LeafletMap 
               initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
               onBoundaryChange={handleMapBoundaryChange}
+              onLocationSelect={handleLocationSelect}
               markers={activeLocation.latitude && activeLocation.longitude ? [
                 {
                   position: [activeLocation.latitude, activeLocation.longitude],

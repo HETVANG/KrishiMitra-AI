@@ -61,8 +61,11 @@ export class WeatherController {
             const { name, state, country } = geoRes.data[0];
             return res.json({
               success: true,
+              village: '',
               city: name,
+              district: '',
               state: state || '',
+              postcode: '',
               country
             });
           }
@@ -78,13 +81,19 @@ export class WeatherController {
           headers: { 'User-Agent': 'KrishiMitra-AI-Agent/1.0' }
         });
         if (geoRes.data) {
-          const address = geoRes.data.address;
-          const city = address.city || address.town || address.village || address.suburb || address.county || 'Detected Location';
+          const address = geoRes.data.address || {};
+          const city = address.city || address.town || '';
+          const village = address.village || address.suburb || address.hamlet || '';
+          const district = address.county || address.state_district || '';
           const state = address.state || '';
+          const postcode = address.postcode || '';
           return res.json({
             success: true,
+            village,
             city,
+            district,
             state,
+            postcode,
             country: address.country_code?.toUpperCase() || 'IN'
           });
         }
@@ -94,8 +103,11 @@ export class WeatherController {
 
       return res.json({
         success: true,
+        village: '',
         city: 'Detected Location',
+        district: '',
         state: 'India',
+        postcode: '',
         country: 'IN'
       });
     } catch (error) {
@@ -117,8 +129,12 @@ export class WeatherController {
           const geoRes = await axios.get(url);
           if (geoRes.data && geoRes.data.length > 0) {
             const suggestions = geoRes.data.map((item: any) => ({
+              display_name: `${item.name}, ${item.state || ''}, ${item.country}`,
+              village: '',
               city: item.name,
+              district: '',
               state: item.state || '',
+              postcode: '',
               country: item.country,
               lat: item.lat,
               lon: item.lon
@@ -132,19 +148,26 @@ export class WeatherController {
 
       // Fallback to Nominatim
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query as string)}&format=json&limit=5&countrycodes=in&accept-language=en`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query as string)}&format=json&limit=5&countrycodes=in&accept-language=en&addressdetails=1`;
         const geoRes = await axios.get(url, {
           headers: { 'User-Agent': 'KrishiMitra-AI-Agent/1.0' }
         });
         if (geoRes.data && geoRes.data.length > 0) {
           const suggestions = geoRes.data.map((item: any) => {
-            const parts = item.display_name.split(',');
-            const city = parts[0] || 'Unknown';
-            const state = parts[parts.length - 3]?.trim() || parts[parts.length - 2]?.trim() || '';
+            const address = item.address || {};
+            const city = address.city || address.town || address.municipality || '';
+            const village = address.village || address.suburb || address.hamlet || '';
+            const district = address.county || address.state_district || '';
+            const state = address.state || '';
+            const postcode = address.postcode || '';
             return {
+              display_name: item.display_name,
+              village,
               city,
+              district,
               state,
-              country: 'IN',
+              postcode,
+              country: address.country_code?.toUpperCase() || 'IN',
               lat: Number(item.lat),
               lon: Number(item.lon)
             };
@@ -175,7 +198,17 @@ export class WeatherController {
 
       return res.json({
         success: true,
-        suggestions: filtered.map(item => ({ ...item, country: 'IN' }))
+        suggestions: filtered.map(item => ({
+          display_name: `${item.city}, ${item.state}, IN`,
+          village: '',
+          city: item.city,
+          district: '',
+          state: item.state,
+          postcode: '',
+          country: 'IN',
+          lat: item.lat,
+          lon: item.lon
+        }))
       });
     } catch (error) {
       next(error);

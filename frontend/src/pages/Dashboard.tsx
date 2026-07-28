@@ -85,6 +85,8 @@ export const Dashboard: React.FC = () => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [diseaseHistory, setDiseaseHistory] = useState<any[]>([]);
+  const [schemes, setSchemes] = useState<any[]>([]);
 
   const lat = activeLocation.latitude || 20.5937;
   const lon = activeLocation.longitude || 78.9629;
@@ -217,6 +219,26 @@ export const Dashboard: React.FC = () => {
         console.error('Error loading mandi prices dashboard:', err);
       } finally {
         setLoadingMandi(false);
+      }
+
+      // 3. Fetch Disease History
+      try {
+        const res = await api.get('/diseases/list');
+        if (res.data && res.data.success) {
+          setDiseaseHistory(res.data.history || []);
+        }
+      } catch (err) {
+        console.warn('Failed to load disease history for alerts:', err);
+      }
+
+      // 4. Fetch Schemes List
+      try {
+        const res = await api.get('/schemes/list');
+        if (res.data && res.data.success) {
+          setSchemes(res.data.schemes || []);
+        }
+      } catch (err) {
+        console.warn('Failed to load schemes list for alerts:', err);
       }
     };
 
@@ -375,11 +397,139 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Mock static alerts for farmer dashboard
-  const staticAlerts = [
-    { id: 1, type: 'warning', title: 'Heavy Rain Forecast', message: 'Heavy shower predicted in 48 hours. Clear drainage channels.', date: 'Today' },
-    { id: 2, type: 'info', title: 'Subsidy Deadline Approaching', message: 'PMFBY Kharif Crop insurance application closes next week.', date: 'Yesterday' },
-  ];
+  // Dynamic alerts generation engine
+  const getIntelligentAlerts = () => {
+    const alerts: any[] = [];
+
+    // 1. Weather alerts
+    if (weather?.current) {
+      const { temp, windSpeed, humidity, rainProb, condition } = weather.current;
+      
+      // Heavy Rain
+      if (rainProb >= 70 || ['Rain', 'Drizzle', 'Thunderstorm'].includes(condition)) {
+        alerts.push({
+          id: 'w_rain',
+          type: 'critical',
+          title: 'Heavy Rain Forecast',
+          message: `High rain probability (${rainProb}%). Protect ripe crops and clear farm drainage channels.`
+        });
+      }
+      
+      // Extreme Heat
+      if (temp > 40) {
+        alerts.push({
+          id: 'w_heat',
+          type: 'critical',
+          title: 'Extreme Heat Wave Alert',
+          message: `Intense temperature detected (${temp}°C). Irrigate early mornings to prevent plant heat stress.`
+        });
+      }
+
+      // Cold Wave
+      if (temp < 8) {
+        alerts.push({
+          id: 'w_cold',
+          type: 'warning',
+          title: 'Cold Wave Warning',
+          message: `Low temperature (${temp}°C) detected. Guard young crop seedlings against frost damage.`
+        });
+      }
+
+      // Strong Wind
+      if (windSpeed > 11) {
+        alerts.push({
+          id: 'w_wind',
+          type: 'warning',
+          title: 'Strong Wind Velocity Warning',
+          message: `High winds detected (${windSpeed} m/s). Avoid spraying pesticides or fertilizers.`
+        });
+      }
+
+      // Dense Fog
+      if (humidity > 90 && ['Mist', 'Fog', 'Haze'].includes(condition)) {
+        alerts.push({
+          id: 'w_fog',
+          type: 'info',
+          title: 'Dense Fog Blight Blocker',
+          message: 'Dense fog reduces visibility. Inspect crops for moisture blights.'
+        });
+      }
+    }
+
+    // 2. Farm configurations & Soil
+    if (!activeLocation.latitude || !activeLocation.longitude) {
+      alerts.push({
+        id: 'f_nolocation',
+        type: 'critical',
+        title: 'Farm Coordinates Missing',
+        message: 'Farm location not configured. Search village/city above or enable GPS to load local datasets.'
+      });
+    }
+
+    if (boundary.length === 0) {
+      alerts.push({
+        id: 'f_noboundary',
+        type: 'info',
+        title: 'Farm Boundary Empty',
+        message: 'No boundary polygon drawn yet. Map your farm borders below to compute accurate field sizes.'
+      });
+    }
+
+    // 3. Crop disease history alerts
+    if (diseaseHistory.length > 0) {
+      const latest = diseaseHistory[0];
+      alerts.push({
+        id: 'c_disease',
+        type: 'critical',
+        title: `Active Pathogen: ${latest.diseaseName}`,
+        message: `Diagnosed on ${new Date(latest.createdAt).toLocaleDateString()}. Action: ${latest.treatment?.split('.')[0] || 'Apply treatments'}.`
+      });
+    }
+
+    // 4. Mandi market trends
+    if (mandiPrices.length > 0) {
+      const best = mandiPrices.reduce((prev, curr) => (prev.maxPrice > curr.maxPrice) ? prev : curr);
+      alerts.push({
+        id: 'm_best',
+        type: 'success',
+        title: `Best Local Mandi Pricing: ${best.market}`,
+        message: `Top rates for ${best.commodity} at ₹${best.maxPrice}/quintal discovered in nearby APMC market.`
+      });
+    }
+
+    // 5. Government schemes
+    if (schemes.length > 0) {
+      const upcoming = schemes[0];
+      alerts.push({
+        id: 'g_scheme',
+        type: 'info',
+        title: `Agriculture Scheme: ${upcoming.name}`,
+        message: `Enrollment window is open. Scheme eligibility: ${upcoming.eligibility || 'Indian Farmers'}.`
+      });
+    }
+
+    // 6. Sowing season window alert
+    const month = new Date().getMonth();
+    if (month === 5 || month === 6) {
+      alerts.push({
+        id: 'c_sow_kharif',
+        type: 'success',
+        title: 'Kharif Sowing Window Active',
+        message: 'Optimal climate for rice, cotton, and maize nurseries preparation.'
+      });
+    } else if (month === 9 || month === 10) {
+      alerts.push({
+        id: 'c_sow_rabi',
+        type: 'success',
+        title: 'Rabi Sowing Window Active',
+        message: 'Season temperature suits wheat, mustard, and barley seeding. Start seed bed treatments.'
+      });
+    }
+
+    return alerts;
+  };
+
+  const dynamicAlerts = getIntelligentAlerts();
 
   const chartData = financials?.chartData || [
     { name: 'Seeds', value: 4500 },
@@ -677,19 +827,43 @@ export const Dashboard: React.FC = () => {
         <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2 mb-4 border-b border-gray-50 dark:border-dark-800 pb-4">
           <AlertTriangle className="text-red-500" size={20} /> {t('dashboard.recent_alerts')}
         </h3>
-
         <div className="space-y-3">
-          {staticAlerts.map((item) => (
-            <div key={item.id} className="flex gap-3 p-3.5 bg-gray-50 dark:bg-dark-800/50 border border-gray-200/50 dark:border-dark-800 rounded-2xl items-start">
-              <div className={`p-2 rounded-xl text-white ${item.type === 'warning' ? 'bg-red-500' : 'bg-brand-500'}`}>
-                <AlertTriangle size={15} />
-              </div>
-              <div>
-                <h4 className="font-bold text-xs md:text-sm text-gray-850 dark:text-dark-200">{item.title}</h4>
-                <p className="text-xs text-gray-500 dark:text-dark-400 mt-0.5 leading-relaxed">{item.message}</p>
-              </div>
+          {dynamicAlerts.length > 0 ? (
+            dynamicAlerts.map((item) => {
+              const bgColors: Record<string, string> = {
+                critical: 'bg-red-500',
+                warning: 'bg-amber-500',
+                info: 'bg-blue-500',
+                success: 'bg-emerald-500'
+              };
+
+              const borderColors: Record<string, string> = {
+                critical: 'border-red-200/60 dark:border-red-900/30',
+                warning: 'border-amber-200/60 dark:border-amber-900/30',
+                info: 'border-blue-200/60 dark:border-blue-900/30',
+                success: 'border-emerald-200/60 dark:border-emerald-900/30'
+              };
+
+              return (
+                <div 
+                  key={item.id} 
+                  className={`flex gap-3 p-3.5 bg-gray-50/50 dark:bg-dark-850/10 border ${borderColors[item.type] || 'border-gray-200/50'} rounded-2xl items-start transition-all`}
+                >
+                  <div className={`p-2 rounded-xl text-white shrink-0 ${bgColors[item.type] || 'bg-brand-500'}`}>
+                    <AlertTriangle size={15} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs md:text-sm text-gray-850 dark:text-dark-200">{item.title}</h4>
+                    <p className="text-xs text-gray-550 dark:text-dark-400 mt-0.5 leading-relaxed font-semibold">{item.message}</p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-6 text-center text-xs text-gray-400 font-bold bg-gray-50 rounded-2xl border border-gray-150">
+              No important alerts at this time.
             </div>
-          ))}
+          )}
         </div>
       </div>
 

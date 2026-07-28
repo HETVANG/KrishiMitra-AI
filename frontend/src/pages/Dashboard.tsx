@@ -19,6 +19,7 @@ import {
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
+import { getTranslationsForLang } from '../config/alertTranslations';
 
 export const Dashboard: React.FC = () => {
   console.log('[KrishiMitra Startup Log] Loading Dashboard');
@@ -409,54 +410,88 @@ export const Dashboard: React.FC = () => {
     const alerts: any[] = [];
     const season = getSeason();
     const month = new Date().getMonth();
+    const lang = i18n.language || 'en';
+    const trans = getTranslationsForLang(lang);
+
+    const getT = (key: string, vars: Record<string, any> = {}) => {
+      const item = trans[key] || trans['en']?.[key] || { title: key, message: '' };
+      let title = item.title || '';
+      let message = item.message || '';
+      
+      // Perform safe replacements
+      for (const k in vars) {
+        const val = vars[k] !== undefined && vars[k] !== null ? String(vars[k]) : '';
+        title = title.replaceAll(`$${k}`, val);
+        message = message.replaceAll(`$${k}`, val);
+      }
+      
+      return { title, message };
+    };
 
     // 1. Weather alerts
     if (weather?.current) {
       const { temp, windSpeed, humidity, rainProb, condition } = weather.current;
 
+      // Cyclone warning (wind speed > 18 m/s or explicit cyclonic state)
+      if (windSpeed > 18 || ['Squall', 'Tornado'].includes(condition)) {
+        const cycloneInfo = getT('w_cyclone');
+        alerts.push({
+          id: 'w_cyclone',
+          type: 'critical',
+          title: cycloneInfo.title,
+          message: cycloneInfo.message
+        });
+      }
+
       // MONSOON ALERTS
       const hasHeavyRainPredict = rainProb >= 70 || ['Rain', 'Drizzle', 'Thunderstorm'].includes(condition);
       if (season === 'MONSOON' || hasHeavyRainPredict) {
         if (hasHeavyRainPredict) {
+          const rainInfo = getT('m_heavy_rain', { rainProb: rainProb || 70 });
           alerts.push({
             id: 'm_heavy_rain',
             type: 'critical',
-            title: '🔴 Heavy Rain Warning',
-            message: `Heavy rain expected (probability: ${rainProb}%). Avoid pesticide spraying and protect harvested crops.`
+            title: rainInfo.title,
+            message: rainInfo.message
           });
+          const waterloggingInfo = getT('m_waterlogging');
           alerts.push({
             id: 'm_waterlogging',
             type: 'critical',
-            title: '🔴 Waterlogging & Flood Risk',
-            message: 'High risk of water accumulation in fields. Improve drainage and drain excess water immediately.'
+            title: waterloggingInfo.title,
+            message: waterloggingInfo.message
           });
           if (condition === 'Thunderstorm') {
+            const lightningInfo = getT('m_lightning');
             alerts.push({
               id: 'm_lightning',
               type: 'critical',
-              title: '🔴 Lightning & Thunderstorm Alert',
-              message: 'Severe lightning detected. Stay indoors and avoid contact with electrical fixtures.'
+              title: lightningInfo.title,
+              message: lightningInfo.message
             });
           }
+          const delayFertInfo = getT('m_delay_fert');
           alerts.push({
             id: 'm_delay_fert',
             type: 'warning',
-            title: '🟠 Delay Fertilizer Application',
-            message: 'Imminent rainfall detected. Postpone applying solid urea or NPK to prevent nutrient runoff.'
+            title: delayFertInfo.title,
+            message: delayFertInfo.message
           });
+          const avoidPestInfo = getT('m_avoid_pest');
           alerts.push({
             id: 'm_avoid_pest',
             type: 'warning',
-            title: '🟠 Avoid Pesticide Spraying',
-            message: 'Rainwater will wash off pesticide coatings. Hold spraying until dry weather clears.'
+            title: avoidPestInfo.title,
+            message: avoidPestInfo.message
           });
         }
         if (windSpeed > 10) {
+          const strongWindInfo = getT('m_strong_wind', { windSpeed: windSpeed || 10 });
           alerts.push({
             id: 'm_strong_wind',
             type: 'warning',
-            title: '🟠 Strong Wind Alert',
-            message: `Wind speed is ${windSpeed} m/s. Support tall crops and avoid spraying dust formulations.`
+            title: strongWindInfo.title,
+            message: strongWindInfo.message
           });
         }
       }
@@ -464,170 +499,242 @@ export const Dashboard: React.FC = () => {
       // SUMMER ALERTS
       if (season === 'SUMMER' || temp > 35) {
         if (temp > 40) {
+          const heatwaveInfo = getT('s_heatwave', { temp: temp || 40 });
           alerts.push({
             id: 's_heatwave',
             type: 'critical',
-            title: '🔴 Extreme Heat Wave Alert',
-            message: `Heatwave conditions active with temperatures at ${temp}°C. Afternoon field work not recommended.`
+            title: heatwaveInfo.title,
+            message: heatwaveInfo.message
           });
         } else {
+          const highTempInfo = getT('s_high_temp', { temp: temp || 35 });
           alerts.push({
             id: 's_high_temp',
             type: 'warning',
-            title: '🟠 High Temperature Alert',
-            message: `Temperature is high (${temp}°C). Crop heat stress risk is elevated.`
+            title: highTempInfo.title,
+            message: highTempInfo.message
           });
         }
+        const irrInfo = getT('s_irrigation');
         alerts.push({
           id: 's_irrigation',
           type: 'warning',
-          title: '🟠 Irrigation Required',
-          message: 'High evaporation rate. Increase water supply frequency to prevent soil moisture cracking.'
+          title: irrInfo.title,
+          message: irrInfo.message
         });
+        const livestockInfo = getT('s_livestock');
         alerts.push({
           id: 's_livestock',
           type: 'warning',
-          title: '🟠 Livestock Heat Protection',
-          message: 'Ensure livestock sheds are well-ventilated. Supply ample cool drinking water.'
+          title: livestockInfo.title,
+          message: livestockInfo.message
         });
+        const evapInfo = getT('s_evap');
         alerts.push({
           id: 's_evap',
           type: 'info',
-          title: '🔵 High Evaporation Warning',
-          message: 'Rapid soil moisture loss. Mulch root zones to conserve moisture.'
+          title: evapInfo.title,
+          message: evapInfo.message
         });
       }
 
       // WINTER ALERTS
       if (season === 'WINTER' || temp < 15) {
         if (temp < 8) {
+          const coldwaveInfo = getT('w_coldwave', { temp: temp || 8 });
           alerts.push({
             id: 'w_coldwave',
             type: 'critical',
-            title: '🔴 Cold Wave Warning',
-            message: `Cold wave active with low temperature (${temp}°C). Frost risk detected.`
+            title: coldwaveInfo.title,
+            message: coldwaveInfo.message
           });
+          const frostInfo = getT('w_frost');
           alerts.push({
             id: 'w_frost',
             type: 'critical',
-            title: '🔴 Frost Risk Warning',
-            message: 'Frost hazard to young seedlings. Supply light evening sprinkler irrigation to shield roots.'
+            title: frostInfo.title,
+            message: frostInfo.message
           });
         } else {
+          const lowTempInfo = getT('w_low_temp', { temp: temp || 15 });
           alerts.push({
             id: 'w_low_temp',
             type: 'warning',
-            title: '🟠 Low Temperature Warning',
-            message: `Low temp is ${temp}°C. Protect delicate winter vegetable crops.`
+            title: lowTempInfo.title,
+            message: lowTempInfo.message
           });
         }
 
         if (humidity > 90 && ['Mist', 'Fog', 'Haze'].includes(condition)) {
+          const denseFogInfo = getT('w_dense_fog');
           alerts.push({
             id: 'w_dense_fog',
             type: 'warning',
-            title: '🟠 Dense Fog Alert',
-            message: 'Dense fog expected tomorrow morning. Delay early morning irrigation to avoid leaf rot.'
+            title: denseFogInfo.title,
+            message: denseFogInfo.message
           });
         }
 
+        const livestockColdInfo = getT('w_livestock_cold');
         alerts.push({
           id: 'w_livestock_cold',
           type: 'info',
-          title: '🔵 Livestock Cold Protection',
-          message: 'Move animals indoors to protect from cold drafts. Use thick straw beds.'
+          title: livestockColdInfo.title,
+          message: livestockColdInfo.message
         });
       }
     }
 
     // 2. Crop & Soil Alerts
     if (!activeLocation.latitude || !activeLocation.longitude) {
+      const locationMissingInfo = getT('f_nolocation');
       alerts.push({
         id: 'f_nolocation',
         type: 'critical',
-        title: '🔴 Farm Location Not Configured',
-        message: 'Search for your village/city or enable GPS to receive localized crop alerts.'
+        title: locationMissingInfo.title,
+        message: locationMissingInfo.message
       });
     }
 
     if (boundary.length === 0) {
+      const boundaryMissingInfo = getT('f_noboundary');
       alerts.push({
         id: 'f_noboundary',
         type: 'info',
-        title: '🔵 Farm Boundary Configuration Missing',
-        message: 'No boundary polygon drawn yet. Map your farm borders below to compute accurate field sizes.'
+        title: boundaryMissingInfo.title,
+        message: boundaryMissingInfo.message
       });
     } else {
       // Crop moisture / nutrient alert based on coordinates seed
       const seed = Math.abs(Math.sin(activeLocation.latitude || 20) * Math.cos(activeLocation.longitude || 78));
-      if (seed < 0.3) {
+      
+      // Low Nitrogen
+      if (seed < 0.25) {
+        const soilN = getT('c_soil_n');
+        alerts.push({
+          id: 'c_soil_n',
+          type: 'warning',
+          title: soilN.title,
+          message: soilN.message
+        });
+      }
+      
+      // Low Phosphorus
+      if (seed > 0.75) {
+        const soilP = getT('c_soil_p');
+        alerts.push({
+          id: 'c_soil_p',
+          type: 'warning',
+          title: soilP.title,
+          message: soilP.message
+        });
+      }
+      
+      // Low Potassium
+      if (seed > 0.4 && seed < 0.6) {
+        const soilK = getT('c_soil_k');
+        alerts.push({
+          id: 'c_soil_k',
+          type: 'warning',
+          title: soilK.title,
+          message: soilK.message
+        });
+      }
+
+      // Soil Moisture Low
+      if (seed < 0.35) {
+        const soilMoistureVal = Math.round(seed * 60 + 10);
+        const soilMoisture = getT('c_soil_moisture', { soilMoisture: soilMoistureVal });
         alerts.push({
           id: 'c_soil_moisture',
           type: 'warning',
-          title: '🟠 Soil Moisture Low',
-          message: 'Estimated soil moisture is below 35%. Plan irrigation cycle.'
+          title: soilMoisture.title,
+          message: soilMoisture.message
         });
-      } else if (seed > 0.7) {
+      }
+
+      // Soil pH
+      const phVal = Number((5.5 + seed * 3.5).toFixed(1));
+      if (phVal > 7.8) {
+        const soilPhHigh = getT('c_soil_ph_high', { ph: phVal });
         alerts.push({
-          id: 'c_soil_nutrient',
+          id: 'c_soil_ph_high',
           type: 'warning',
-          title: '🟠 Soil Nutrient Deficiency',
-          message: 'Low nitrogen content detected. Fertilizer reminder: top-dress nitrogen or compost.'
+          title: soilPhHigh.title,
+          message: soilPhHigh.message
+        });
+      } else if (phVal < 6.2) {
+        const soilPhLow = getT('c_soil_ph_low', { ph: phVal });
+        alerts.push({
+          id: 'c_soil_ph_low',
+          type: 'warning',
+          title: soilPhLow.title,
+          message: soilPhLow.message
         });
       }
     }
 
     // Sowing season window alert
     if (month === 5 || month === 6) { // June/July
+      const sowKharif = getT('c_sow_kharif');
       alerts.push({
         id: 'c_sow_kharif',
         type: 'success',
-        title: '🟢 Ideal Sowing Time',
-        message: 'Kharif sowing window open. Prepare beds for Paddy and Cotton.'
+        title: sowKharif.title,
+        message: sowKharif.message
       });
     } else if (month === 9 || month === 10) { // Oct/Nov
+      const sowRabi = getT('c_sow_rabi');
       alerts.push({
         id: 'c_sow_rabi',
         type: 'success',
-        title: '🟢 Ideal Sowing Time',
-        message: 'Rabi sowing window active. Optimal seeding climate for Wheat and Mustard.'
+        title: sowRabi.title,
+        message: sowRabi.message
       });
     }
 
     // Disease history alerts
     if (diseaseHistory.length > 0) {
       const latest = diseaseHistory[0];
+      const diseaseInfo = getT('c_disease_risk', { diseaseName: latest.diseaseName || 'Fungal Blight' });
       alerts.push({
         id: 'c_disease_risk',
         type: 'warning',
-        title: `🟠 Disease Risk High: ${latest.diseaseName}`,
-        message: `Favorable microclimate for recurrence of ${latest.diseaseName} on crop.`
+        title: diseaseInfo.title,
+        message: diseaseInfo.message
       });
     }
 
     // 3. Mandi market alerts
     if (mandiPrices.length > 0) {
       const best = mandiPrices.reduce((prev, curr) => (prev.maxPrice > curr.maxPrice) ? prev : curr);
+      const bestPriceInfo = getT('m_best_price', { 
+        crop: best.crop || 'Wheat', 
+        price: best.maxPrice || best.avgPrice || 2125, 
+        market: best.mandiName || best.market || 'Nagpur' 
+      });
       alerts.push({
         id: 'm_best_price',
         type: 'success',
-        title: `🟢 Good Market Price Detected`,
-        message: `Best nearby Mandi price for Wheat found at ₹${best.maxPrice}/quintal in ${best.market} Mandi.`
+        title: bestPriceInfo.title,
+        message: bestPriceInfo.message
       });
 
       if (best.maxPrice > 2100) {
+        const priceIncInfo = getT('m_price_increase', { crop: best.crop || 'Wheat' });
         alerts.push({
           id: 'm_price_increase',
           type: 'success',
-          title: '🟢 Crop Price Increased',
-          message: 'Mandi pricing index has increased by 10%. Consider immediate sale.'
+          title: priceIncInfo.title,
+          message: priceIncInfo.message
         });
       } else {
+        const priceDecInfo = getT('m_price_decrease', { crop: best.crop || 'Wheat' });
         alerts.push({
           id: 'm_price_decrease',
           type: 'warning',
-          title: '🟠 Crop Price Decreased',
-          message: 'Mandi rate dropped significantly. Consider storage or look for a better market.'
+          title: priceDecInfo.title,
+          message: priceDecInfo.message
         });
       }
     }
@@ -635,18 +742,28 @@ export const Dashboard: React.FC = () => {
     // 4. Government schemes & alerts
     if (schemes.length > 0) {
       const upcoming = schemes[0];
+      const schemeInfo = getT('g_scheme_info', { scheme: upcoming.name || 'PM-KISAN' });
       alerts.push({
         id: 'g_scheme_info',
         type: 'info',
-        title: '🔵 New Government Scheme Available',
-        message: `Apply online for "${upcoming.name}" before the approaching crop insurance deadline.`
+        title: schemeInfo.title,
+        message: schemeInfo.message
       });
 
+      const pmkisanInfo = getT('g_pmkisan');
       alerts.push({
         id: 'g_pmkisan',
         type: 'info',
-        title: '🔵 PM-KISAN Installment Update',
-        message: 'Latest PM-KISAN installment released to verified farmer bank accounts.'
+        title: pmkisanInfo.title,
+        message: pmkisanInfo.message
+      });
+
+      const pmfbyInfo = getT('g_pmfby');
+      alerts.push({
+        id: 'g_pmfby',
+        type: 'info',
+        title: pmfbyInfo.title,
+        message: pmfbyInfo.message
       });
     }
 

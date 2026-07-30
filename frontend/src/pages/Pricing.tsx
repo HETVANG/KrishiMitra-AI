@@ -83,6 +83,20 @@ export const Pricing: React.FC = () => {
     setDiscountMessage(messages.join(' | '));
   }, [billingCycle, coupon, referral, isStudent, sponsorType]);
 
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -103,7 +117,8 @@ export const Pricing: React.FC = () => {
 
       if (res.data?.success) {
         const orderData = res.data.order;
-        if (!(window as any).Razorpay) {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded || !(window as any).Razorpay) {
           throw new Error('Razorpay SDK is not loaded. Please check your internet connection and try again.');
         }
 

@@ -10,6 +10,7 @@ export interface MarketApiRecord {
   avgPrice?: number | string;
   arrivalQuantity?: number | string;
   unit?: string;
+  isTrulyZero?: boolean;
   date?: string | Date;
   source?: string;
 }

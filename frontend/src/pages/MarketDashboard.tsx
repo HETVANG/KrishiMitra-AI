@@ -151,7 +151,10 @@ export const MarketDashboard: React.FC = () => {
   };
 
   const metrics = useMemo(() => {
-    const items = prices || [];
+    const items = (prices || []).filter((p) => {
+      const priceVal = Number(p.avgPrice || p.modalPrice || 0);
+      return priceVal > 0 || p.isTrulyZero === true;
+    });
     const minPrice = items.length > 0 ? Math.min(...items.map((p) => Number(p.minPrice || 0))) : 0;
     const maxPrice = items.length > 0 ? Math.max(...items.map((p) => Number(p.maxPrice || 0))) : 0;
     const avgPrice = items.length > 0 ? Math.round(items.reduce((acc, p) => acc + Number(p.avgPrice || p.modalPrice || 0), 0) / items.length) : 0;
@@ -170,11 +173,12 @@ export const MarketDashboard: React.FC = () => {
     return trending.slice(0, 4).map((item) => {
       const diff = Number(item.maxPrice || 0) - Number(item.minPrice || 0);
       const pct = Number(item.minPrice || 0) > 0 ? (diff / Number(item.minPrice)) * 100 : 2.5;
+      const priceVal = Number(item.avgPrice || item.modalPrice || 0);
       return {
         name: item.crop,
         growth: `+${pct.toFixed(1)}%`,
         trend: 'up',
-        price: `₹${item.avgPrice || item.modalPrice || 0}/Qtl`
+        price: priceVal === 0 && !item.isTrulyZero ? 'Price Not Available' : `₹${priceVal}/Qtl`
       };
     });
   }, [trending]);
@@ -250,10 +254,26 @@ export const MarketDashboard: React.FC = () => {
       {analytics && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {[
-            { label: 'Today', value: `₹${analytics.todayPrice || 0}`, tone: 'text-amber-600' },
-            { label: 'Yesterday', value: `₹${analytics.yesterdayPrice || 0}`, tone: 'text-gray-700' },
-            { label: 'Difference', value: `${analytics.difference >= 0 ? '+' : ''}${analytics.difference}`, tone: analytics.difference >= 0 ? 'text-emerald-600' : 'text-red-500' },
-            { label: 'Change %', value: `${analytics.percentageChange >= 0 ? '+' : ''}${analytics.percentageChange.toFixed(1)}%`, tone: analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-red-500' },
+            { 
+              label: 'Today', 
+              value: analytics.todayPrice === 0 && !analytics.isTrulyZero ? 'Price Not Available' : `₹${analytics.todayPrice}`, 
+              tone: 'text-amber-600' 
+            },
+            { 
+              label: 'Yesterday', 
+              value: analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero ? 'Price Not Available' : `₹${analytics.yesterdayPrice}`, 
+              tone: 'text-gray-700' 
+            },
+            { 
+              label: 'Difference', 
+              value: (analytics.todayPrice === 0 && !analytics.isTrulyZero) || (analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero) ? 'N/A' : `${analytics.difference >= 0 ? '+' : ''}${analytics.difference}`, 
+              tone: analytics.difference >= 0 ? 'text-emerald-600' : 'text-red-500' 
+            },
+            { 
+              label: 'Change %', 
+              value: (analytics.todayPrice === 0 && !analytics.isTrulyZero) || (analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero) ? 'N/A' : `${analytics.percentageChange >= 0 ? '+' : ''}${analytics.percentageChange.toFixed(1)}%`, 
+              tone: analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-red-500' 
+            },
           ].map((card) => (
             <div key={card.label} className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-5 rounded-3xl shadow-sm text-left">
               <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">{card.label}</p>
@@ -266,17 +286,26 @@ export const MarketDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
           <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Minimum Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-red-550 block mt-2 text-red-500">₹{metrics.minPrice} <span className="text-xs font-medium text-gray-400">/ Quintal</span></span>
+          <span className="text-2xl md:text-3xl font-extrabold text-red-550 block mt-2 text-red-500">
+            {metrics.minPrice === 0 ? 'Price Not Available' : `₹${metrics.minPrice}`}
+            {metrics.minPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
+          </span>
           <div className="absolute right-6 bottom-6 text-red-100 dark:text-red-950/20"><TrendingDown size={36} /></div>
         </div>
         <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
           <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Average Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-brand-600 dark:text-brand-450 block mt-2">₹{metrics.avgPrice} <span className="text-xs font-medium text-gray-400">/ Quintal</span></span>
+          <span className="text-2xl md:text-3xl font-extrabold text-brand-600 dark:text-brand-450 block mt-2">
+            {metrics.avgPrice === 0 ? 'Price Not Available' : `₹${metrics.avgPrice}`}
+            {metrics.avgPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
+          </span>
           <div className="absolute right-6 bottom-6 text-brand-100 dark:text-brand-950/20"><TrendingUp size={36} /></div>
         </div>
         <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
           <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Maximum Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-emerald-600 block mt-2">₹{metrics.maxPrice} <span className="text-xs font-medium text-gray-400">/ Quintal</span></span>
+          <span className="text-2xl md:text-3xl font-extrabold text-emerald-600 block mt-2">
+            {metrics.maxPrice === 0 ? 'Price Not Available' : `₹${metrics.maxPrice}`}
+            {metrics.maxPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
+          </span>
           <div className="absolute right-6 bottom-6 text-emerald-100 dark:text-emerald-950/20"><TrendingUp size={36} /></div>
         </div>
       </div>
@@ -345,7 +374,9 @@ export const MarketDashboard: React.FC = () => {
                   <div key={pIdx} className="py-3 flex flex-col gap-1 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-gray-800 dark:text-dark-200">{p.market || p.mandiName} Mandi</span>
-                      <span className="font-extrabold text-brand-650 dark:text-brand-400">₹{p.modalPrice || p.avgPrice}</span>
+                      <span className="font-extrabold text-brand-650 dark:text-brand-400">
+                        {(p.modalPrice || p.avgPrice) === 0 && !p.isTrulyZero ? 'Price Not Available' : `₹${p.modalPrice || p.avgPrice}`}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-[9.5px] text-gray-400">
                       <span>{p.district}, {p.state}</span>

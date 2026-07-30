@@ -162,6 +162,13 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
       const historyBulkOps: any[] = [];
       const normalizedRecords: any[] = [];
 
+      const existingPrices = await MarketPrice.find({}).lean();
+      const existingMap = new Map<string, any>();
+      for (const ep of existingPrices) {
+        const key = `${ep.state}_${ep.district}_${ep.market}_${ep.crop}_${ep.variety}_${ep.grade}_${ep.unit}`.toLowerCase();
+        existingMap.set(key, ep);
+      }
+
       for (const item of records) {
         if (!item || typeof item !== 'object') {
           continue;
@@ -172,43 +179,65 @@ ${Object.entries(recordsPerCommodity).map(([k, v]) => `  - ${k}: ${v} records`).
           continue;
         }
 
+        const key = `${normalized.state}_${normalized.district}_${normalized.market}_${normalized.crop}_${normalized.variety}_${normalized.grade}_${normalized.unit}`.toLowerCase();
+        const existing = existingMap.get(key);
+
+        const finalNormalized = { ...normalized };
+        if (existing) {
+          if (normalized.avgPrice === 0 && existing.avgPrice > 0) {
+            finalNormalized.avgPrice = existing.avgPrice;
+          }
+          if (normalized.modalPrice === 0 && existing.modalPrice > 0) {
+            finalNormalized.modalPrice = existing.modalPrice;
+          }
+          if (normalized.minPrice === 0 && existing.minPrice > 0) {
+            finalNormalized.minPrice = existing.minPrice;
+          }
+          if (normalized.maxPrice === 0 && existing.maxPrice > 0) {
+            finalNormalized.maxPrice = existing.maxPrice;
+          }
+          if (existing.isTrulyZero) {
+            finalNormalized.isTrulyZero = true;
+          }
+        }
+
         const filter = {
-          state: normalized.state,
-          district: normalized.district,
-          market: normalized.market,
-          crop: normalized.crop,
-          variety: normalized.variety,
-          grade: normalized.grade,
-          unit: normalized.unit
+          state: finalNormalized.state,
+          district: finalNormalized.district,
+          market: finalNormalized.market,
+          crop: finalNormalized.crop,
+          variety: finalNormalized.variety,
+          grade: finalNormalized.grade,
+          unit: finalNormalized.unit
         };
 
         priceBulkOps.push({
           updateOne: {
             filter,
-            update: { $set: { ...normalized, lastUpdated: new Date() } },
+            update: { $set: { ...finalNormalized, lastUpdated: new Date() } },
             upsert: true
           }
         });
 
-        const dayStart = getStartOfDay(normalized.date);
+        const dayStart = getStartOfDay(finalNormalized.date);
         const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
         historyBulkOps.push({
           updateOne: {
             filter: {
-              crop: normalized.crop,
-              variety: normalized.variety,
-              grade: normalized.grade,
-              state: normalized.state,
-              district: normalized.district,
-              market: normalized.market,
+              crop: finalNormalized.crop,
+              variety: finalNormalized.variety,
+              grade: finalNormalized.grade,
+              state: finalNormalized.state,
+              district: finalNormalized.district,
+              market: finalNormalized.market,
               date: { $gte: dayStart, $lt: dayEnd }
             },
-            update: { $setOnInsert: { ...normalized, date: normalized.date, lastUpdated: new Date() } },
+            update: { $setOnInsert: { ...finalNormalized, date: finalNormalized.date, lastUpdated: new Date() } },
             upsert: true
           }
         });
 
-        normalizedRecords.push(normalized);
+        normalizedRecords.push(finalNormalized);
       }
 
       let recordsInserted = 0;

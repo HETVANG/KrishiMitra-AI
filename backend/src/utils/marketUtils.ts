@@ -37,6 +37,7 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
   const avgPrice = Math.max(toNumber(rawAvg), modalPrice, Math.round((minPrice + maxPrice) / 2));
   const arrivalQuantity = Math.max(toNumber(rawArrival), 0);
   const unit = normalizeText(record.unit || record.Unit) || 'Qtl';
+  const isTrulyZero = record.isTrulyZero === true || record.isTrulyZero === 'true';
   
   const rawDate = record.date || record.arrival_date || record.date_arrival || record.Arrival_Date;
   const parsedDate = rawDate ? new Date(rawDate) : fallbackDate;
@@ -55,6 +56,7 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
     modalPrice,
     arrivalQuantity,
     unit,
+    isTrulyZero,
     date: Number.isNaN(parsedDate.getTime()) ? fallbackDate : parsedDate,
     source: normalizeText(record.source) || 'live-api',
     lastUpdated: fallbackDate

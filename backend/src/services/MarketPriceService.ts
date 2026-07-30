@@ -239,9 +239,29 @@ class MarketPriceService {
       unit: normalized.unit
     };
 
+    const existing = await MarketPrice.findOne(filter).lean();
+    const finalNormalized = { ...normalized };
+    if (existing) {
+      if (normalized.avgPrice === 0 && existing.avgPrice > 0) {
+        finalNormalized.avgPrice = existing.avgPrice;
+      }
+      if (normalized.modalPrice === 0 && existing.modalPrice > 0) {
+        finalNormalized.modalPrice = existing.modalPrice;
+      }
+      if (normalized.minPrice === 0 && existing.minPrice > 0) {
+        finalNormalized.minPrice = existing.minPrice;
+      }
+      if (normalized.maxPrice === 0 && existing.maxPrice > 0) {
+        finalNormalized.maxPrice = existing.maxPrice;
+      }
+      if (existing.isTrulyZero) {
+        finalNormalized.isTrulyZero = true;
+      }
+    }
+
     const result = await MarketPrice.findOneAndUpdate(
       filter,
-      { $set: { ...normalized, lastUpdated: new Date() } },
+      { $set: { ...finalNormalized, lastUpdated: new Date() } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
@@ -251,13 +271,13 @@ class MarketPriceService {
     
     await MarketPriceHistory.findOneAndUpdate(
       {
-        crop: normalized.crop,
-        state: normalized.state,
-        district: normalized.district,
-        market: normalized.market,
+        crop: finalNormalized.crop,
+        state: finalNormalized.state,
+        district: finalNormalized.district,
+        market: finalNormalized.market,
         date: { $gte: dayStart, $lt: dayEnd }
       },
-      { $setOnInsert: { ...normalized, date: today, lastUpdated: new Date() } },
+      { $setOnInsert: { ...finalNormalized, date: today, lastUpdated: new Date() } },
       { upsert: true }
     );
 
@@ -275,12 +295,16 @@ class MarketPriceService {
         highestPrice: 0,
         lowestPrice: 0,
         averagePrice: 0,
-        arrivalQuantity: 0
+        arrivalQuantity: 0,
+        isTrulyZero: false,
+        yesterdayIsTrulyZero: false
       };
     }
 
     const todayPrice = prices[0]?.avgPrice || prices[0]?.modalPrice || 0;
     const yesterdayPrice = latestHistory?.avgPrice || 0;
+    const isTrulyZero = prices[0]?.isTrulyZero || false;
+    const yesterdayIsTrulyZero = latestHistory?.isTrulyZero || false;
     const difference = todayPrice - yesterdayPrice;
     const percentageChange = yesterdayPrice > 0 ? (difference / yesterdayPrice) * 100 : 0;
 
@@ -297,7 +321,9 @@ class MarketPriceService {
       highestPrice,
       lowestPrice,
       averagePrice,
-      arrivalQuantity
+      arrivalQuantity,
+      isTrulyZero,
+      yesterdayIsTrulyZero
     };
   }
 }

@@ -225,6 +225,7 @@ export const resolveCropToApiName = (query: string): string => {
   matched = ALL_COMMODITIES.find(c => c.aliases.some(a => a.toLowerCase() === clean));
   if (matched) return matched.apiCommodity;
 
+  console.warn(`[Commodity Mapping Warning] Failed to resolve crop search query "${query}" to any registered apiCommodity name.`);
   return query; // fallback to original input if not in catalog
 };
 
@@ -253,5 +254,6 @@ export const resolveCropToDisplayName = (query: string): string => {
   matched = ALL_COMMODITIES.find(c => c.aliases.some(a => a.toLowerCase() === clean));
   if (matched) return matched.displayName;
 
+  console.warn(`[Commodity Mapping Warning] Failed to resolve crop search query "${query}" to any registered displayName.`);
   return query;
 };

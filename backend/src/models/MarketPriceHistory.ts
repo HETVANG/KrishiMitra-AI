@@ -15,6 +15,7 @@ const MarketPriceHistorySchema = new Schema(
     modalPrice: { type: Number, required: true },
     arrivalQuantity: { type: Number, default: 0 },
     unit: { type: String, default: 'Qtl' },
+    isTrulyZero: { type: Boolean, default: false },
     date: { type: Date, required: true, default: Date.now },
     source: { type: String, default: 'live-api' },
     lastUpdated: { type: Date, default: Date.now }

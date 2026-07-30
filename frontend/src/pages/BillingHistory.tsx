@@ -17,6 +17,7 @@ interface PaymentItem {
 export const BillingHistory: React.FC = () => {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingIds, setDownloadingIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +35,37 @@ export const BillingHistory: React.FC = () => {
 
     load();
   }, []);
+
+  const handleDownloadInvoice = async (paymentId: string) => {
+    try {
+      setDownloadingIds((prev) => ({ ...prev, [paymentId]: true }));
+      
+      // Call backend to fetch invoice file as blob
+      const response = await api.get(`/billing/${paymentId}/invoice`, {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const paymentItem = payments.find((p) => p._id === paymentId);
+      const invSerial = paymentId.slice(-6).toUpperCase();
+      const invYear = paymentItem ? new Date(paymentItem.createdAt).getFullYear() : new Date().getFullYear();
+      link.setAttribute('download', `KrishiMitra_Invoice_KM-INV-${invYear}-${invSerial}.pdf`);
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Invoice download failed', err);
+      alert('Failed to generate or download the invoice. Please try again.');
+    } finally {
+      setDownloadingIds((prev) => ({ ...prev, [paymentId]: false }));
+    }
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -53,15 +85,36 @@ export const BillingHistory: React.FC = () => {
               <div key={payment._id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2 font-semibold text-slate-900">
-                    <ReceiptText size={16} className="text-brand-600" /> {payment.planName}
+                    <ReceiptText size={16} className="text-brand-650" /> {payment.planName}
                   </div>
                   <p className="mt-1 text-sm text-slate-600">Order: {payment.orderId}</p>
                 </div>
-                <div className="text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <CircleDollarSign size={16} /> {payment.amount} {payment.currency}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-left sm:text-right">
+                  <div className="text-sm text-slate-600">
+                    <div className="flex items-center gap-2 sm:justify-end">
+                      <CircleDollarSign size={16} /> {payment.amount} {payment.currency}
+                    </div>
+                    <div className="mt-1">{payment.status} • {payment.provider} • {payment.mode}</div>
                   </div>
-                  <div className="mt-1">{payment.status} • {payment.provider} • {payment.mode}</div>
+                  {payment.status === 'succeeded' && (
+                    <button
+                      onClick={() => handleDownloadInvoice(payment._id)}
+                      disabled={downloadingIds[payment._id]}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 rounded-xl transition-all shadow-sm h-8"
+                    >
+                      {downloadingIds[payment._id] ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                          <span>Downloading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ReceiptText size={14} />
+                          <span>Download Invoice</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

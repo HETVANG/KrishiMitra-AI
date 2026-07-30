@@ -6,5 +6,6 @@ const router = Router();
 
 router.post('/checkout', authenticate, BillingController.createSession);
 router.post('/webhook/:provider', BillingController.handleWebhook);
+router.get('/:paymentId/invoice', authenticate, BillingController.downloadInvoice);
 
 export default router;

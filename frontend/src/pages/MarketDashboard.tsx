@@ -39,6 +39,9 @@ export const MarketDashboard: React.FC = () => {
         }
       }
     }
+    if (categories.length > 0) {
+      console.warn(`[Crop Translation Warning] Failed to translate crop "${englishName}" (language: ${i18n.language}). No matching commodity found in loaded catalog.`);
+    }
     return englishName;
   };
 

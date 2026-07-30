@@ -257,3 +257,143 @@ export const resolveCropToDisplayName = (query: string): string => {
   console.warn(`[Commodity Mapping Warning] Failed to resolve crop search query "${query}" to any registered displayName.`);
   return query;
 };
+
+const COMMON_MISMATCH_MAP: Record<string, string> = {
+  'ground nut': 'Groundnut',
+  'groundnut': 'Groundnut',
+  'groundnut (split)': 'Groundnut',
+  'groundnut (whole)': 'Groundnut',
+  'groundnut pod': 'Groundnut',
+  'groundnut seeds': 'Groundnut',
+  'bengal gram': 'Bengal Gram(Gram-Chana)',
+  'chana': 'Bengal Gram(Gram-Chana)',
+  'bengal gram(gram-chana)': 'Bengal Gram(Gram-Chana)',
+  'green gram': 'Green Gram (Moong)',
+  'moong': 'Green Gram (Moong)',
+  'green gram (moong)': 'Green Gram (Moong)',
+  'black gram': 'Black Gram (Urd Beans)',
+  'urad': 'Black Gram (Urd Beans)',
+  'black gram (urd beans)': 'Black Gram (Urd Beans)',
+  'red gram': 'Arhar (Tur-Red Gram)',
+  'pigeon pea': 'Arhar (Tur-Red Gram)',
+  'tur': 'Arhar (Tur-Red Gram)',
+  'arhar': 'Arhar (Tur-Red Gram)',
+  'arhar (tur-red gram)': 'Arhar (Tur-Red Gram)',
+  'lentil': 'Masur(Lentil)',
+  'masoor': 'Masur(Lentil)',
+  'masur(lentil)': 'Masur(Lentil)',
+  'peas': 'Green Peas',
+  'green peas': 'Green Peas',
+  'ladies finger': 'Bhindi(Ladies Finger)',
+  'Ladies Finger': 'Bhindi(Ladies Finger)',
+  'okra': 'Bhindi(Ladies Finger)',
+  'bhindi(ladies finger)': 'Bhindi(Ladies Finger)',
+  'cucumber': 'Cucumber(Kheera)',
+  'karela': 'Bitter Gourd(Karela)',
+  'bitter gourd': 'Bitter Gourd(Karela)',
+  'bitter gourd(karela)': 'Bitter Gourd(Karela)',
+  'ginger': 'Ginger(Green)',
+  'ginger(green)': 'Ginger(Green)',
+  'sweet lime': 'Mosambi(Sweet Lime)',
+  'mosambi(sweet lime)': 'Mosambi(Sweet Lime)',
+  'muskmelon': 'Kharbuja(Muskmelon)',
+  'kharbuja(muskmelon)': 'Kharbuja(Muskmelon)',
+  'sapota': 'Sapota(Chikoo)',
+  'sapota(chikoo)': 'Sapota(Chikoo)',
+  'amla': 'Amla(Nelli)',
+  'amla(nelli)': 'Amla(Nelli)',
+  'ber': 'Ber(Zizyphus/Bore)',
+  'ber(zizyphus/bore)': 'Ber(Zizyphus/Bore)',
+  'red chilli': 'Chilli Red',
+  'dry chilli': 'Chilli Red',
+  'chilli red': 'Chilli Red',
+  'coriander leaves': 'Coriander(Leaves)',
+  'coriander(leaves)': 'Coriander(Leaves)',
+  'cumin': 'Cummin(Jeera)',
+  'cummin(jeera)': 'Cummin(Jeera)',
+  'fenugreek': 'Methi(Fenugreek)',
+  'methi(fenugreek)': 'Methi(Fenugreek)',
+  'arecanut': 'Arecanut(Betelnut)',
+  'arecanut(betelnut)': 'Arecanut(Betelnut)',
+  'cashew nut': 'Cashewnuts',
+  'cashewnuts': 'Cashewnuts',
+  'rose': 'Rose(Local)',
+  'rose(local)': 'Rose(Local)',
+  'marigold': 'Marigold(Loose)',
+  'marigold(loose)': 'Marigold(Loose)',
+  'tuberose': 'Tuberose(Loose)',
+  'tuberose(loose)': 'Tuberose(Loose)',
+  'lucerne': 'Lucerne(Alfalfa)',
+  'lucerne(alfalfa)': 'Lucerne(Alfalfa)',
+  'almond': 'Almonds',
+  'almonds': 'Almonds',
+  'raisin': 'Raisins',
+  'raisins': 'Raisins',
+  'onion': 'Onion',
+  'potato': 'Potato',
+  'tomato': 'Tomato',
+  'wheat': 'Wheat',
+  'rice': 'Rice',
+  'paddy': 'Paddy',
+  'maize': 'Maize',
+  'barley': 'Barley(Jau)',
+  'jowar': 'Jowar(Sorghum)',
+  'bajra': 'Bajra(Pearl Millet)',
+  'ragi': 'Ragi',
+  'cotton': 'Cotton'
+};
+
+export const resolveApiNameToCommodity = (apiName: string): Commodity | null => {
+  if (!apiName) return null;
+  const clean = apiName.trim().toLowerCase();
+
+  // 1. Direct check in mismatch map
+  if (COMMON_MISMATCH_MAP[clean]) {
+    const canonicalApiName = COMMON_MISMATCH_MAP[clean];
+    const match = ALL_COMMODITIES.find(c => c.apiCommodity.toLowerCase() === canonicalApiName.toLowerCase());
+    if (match) return match;
+  }
+
+  const cleanString = (s: string) => s.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  
+  const getBaseName = (s: string) => {
+    const idx = s.indexOf('(');
+    return idx !== -1 ? s.substring(0, idx).trim() : s;
+  };
+
+  const cleanApiName = cleanString(apiName);
+  const cleanBaseApiName = cleanString(getBaseName(apiName));
+
+  // 2. Direct match on apiCommodity or displayName or id after cleaning
+  let matched = ALL_COMMODITIES.find(c => 
+    cleanString(c.apiCommodity) === cleanApiName ||
+    cleanString(c.displayName) === cleanApiName ||
+    c.id.toLowerCase() === clean
+  );
+  if (matched) return matched;
+
+  // 3. Match on base name before parenthesis
+  matched = ALL_COMMODITIES.find(c => 
+    cleanString(getBaseName(c.apiCommodity)) === cleanBaseApiName ||
+    cleanString(getBaseName(c.displayName)) === cleanBaseApiName
+  );
+  if (matched) return matched;
+
+  // 4. Match on aliases
+  matched = ALL_COMMODITIES.find(c => 
+    c.aliases.some(a => cleanString(a) === cleanApiName || cleanString(getBaseName(a)) === cleanBaseApiName)
+  );
+  if (matched) return matched;
+
+  // 5. Word-by-word token matching (e.g. "Ground Nut" matching "Groundnut")
+  matched = ALL_COMMODITIES.find(c => {
+    const cClean = cleanString(c.displayName);
+    const cApiClean = cleanString(c.apiCommodity);
+    return cleanApiName.includes(cClean) || cClean.includes(cleanApiName) ||
+           cleanApiName.includes(cApiClean) || cApiClean.includes(cleanApiName) ||
+           cleanBaseApiName.includes(cleanString(getBaseName(c.apiCommodity)));
+  });
+  if (matched) return matched;
+
+  return null;
+};

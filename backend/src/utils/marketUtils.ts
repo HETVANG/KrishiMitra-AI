@@ -1,4 +1,5 @@
 import type { MarketApiRecord, MarketQueryOptions } from '../interfaces/market';
+import { resolveApiNameToCommodity } from '../config/commodities';
 
 const normalizeText = (value?: string): string => (typeof value === 'string' ? value.trim() : '');
 
@@ -18,7 +19,12 @@ const escapeRegex = (str: string): string => {
 };
 
 export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date()) => {
-  const crop = normalizeText(record.crop || record.commodity || record.Commodity || record.cropName) || 'Unknown Crop';
+  const rawCrop = normalizeText(record.crop || record.commodity || record.Commodity || record.cropName) || 'Unknown Crop';
+  
+  // Resolve raw crop name to our catalog commodity apiCommodity
+  const matchedCommodity = resolveApiNameToCommodity(rawCrop);
+  const crop = matchedCommodity ? matchedCommodity.apiCommodity : rawCrop;
+  
   const variety = normalizeText(record.variety || record.Variety) || 'FAQ';
   const grade = normalizeText(record.grade || record.Grade || record.GradeName) || 'FAQ';
   const state = normalizeText(record.state || record.State) || 'Unknown State';
@@ -41,6 +47,13 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
   
   const rawDate = record.date || record.arrival_date || record.date_arrival || record.Arrival_Date;
   const parsedDate = rawDate ? new Date(rawDate) : fallbackDate;
+
+  console.info(`[Mandi Price Logger]
+  - Requested API Commodity Name: "${rawCrop}"
+  - Final Mapped Commodity: "${crop}"
+  - Market Returned: "${market}, ${state}"
+  - Raw API Prices: Min=${rawMin}, Max=${rawMax}, Modal=${rawModal}, Avg=${rawAvg}
+  - Final Mapped Prices: Min=${minPrice}, Max=${maxPrice}, Modal=${modalPrice}, Avg=${avgPrice}`);
 
   return {
     crop,

@@ -5,7 +5,7 @@ import { MarketSyncMetadata } from '../models/MarketSyncMetadata';
 import type { MarketApiRecord, MarketSyncResult } from '../interfaces/market';
 import { getStartOfDay, normalizeMarketRecord } from '../utils/marketUtils';
 import cron from 'node-cron';
-import { ALL_COMMODITIES } from '../config/commodities';
+import { ALL_COMMODITIES, resolveApiNameToCommodity } from '../config/commodities';
 
 class MarketSyncService {
   private cache: { records: any[]; expiresAt: number } | null = null;
@@ -65,10 +65,56 @@ class MarketSyncService {
     let records: any[] = [];
 
     try {
+      // 1. Try to fetch recent prices in bulk first (to avoid HTTP 429 rate limit issues)
+      console.info('[Market Sync] Attempting to fetch recent prices in bulk to optimize API utilization...');
+      const bulkLimit = 2500;
+      // We query the Agmarknet endpoint which supports sorting by date descending
+      const bulkUrl = `https://api.data.gov.in/resource/35985678-0d79-46b4-9ed6-6f13308a1d24?api-key=${apiKey}&format=json&limit=${bulkLimit}&sort[Arrival_Date]=desc`;
+      
+      let bulkRecords: any[] = [];
+      try {
+        const bulkRes = await axios.get(bulkUrl, { timeout: this.timeoutMs });
+        const payload = bulkRes.data;
+        bulkRecords = Array.isArray(payload?.records) ? payload.records : [];
+        console.info(`[Market Sync] Bulk fetch successful. Retrieved ${bulkRecords.length} records.`);
+      } catch (bulkErr: any) {
+        console.warn('[Market Sync Warning] Bulk fetch failed or timed out. Falling back to targeted crop queries...', bulkErr.message);
+        warnings.push(`Bulk fetch failed: ${bulkErr.message}`);
+      }
+
+      // Catalog which commodities have been found in the bulk dataset
+      const foundCommoditiesMap = new Set<string>();
+      if (bulkRecords.length > 0) {
+        records.push(...bulkRecords);
+        for (const r of bulkRecords) {
+          const rawName = r.crop || r.commodity || r.Commodity || r.cropName;
+          const match = resolveApiNameToCommodity(rawName);
+          if (match) {
+            foundCommoditiesMap.add(match.apiCommodity.toLowerCase());
+          }
+        }
+        console.info(`[Market Sync] Found ${foundCommoditiesMap.size} distinct crops in bulk dataset.`);
+      }
+
+      // 2. Query remaining missing crops individually
       for (const crop of ALL_COMMODITIES) {
+        const isAlreadyFound = foundCommoditiesMap.has(crop.apiCommodity.toLowerCase());
+        if (isAlreadyFound) {
+          successfulImports++;
+          // Estimate record count from bulk data
+          const cropRecordsCount = bulkRecords.filter(r => {
+            const rawName = r.crop || r.commodity || r.Commodity || r.cropName;
+            const match = resolveApiNameToCommodity(rawName);
+            return match && match.apiCommodity === crop.apiCommodity;
+          }).length;
+          recordsPerCommodity[crop.displayName] = cropRecordsCount;
+          totalImported += cropRecordsCount;
+          continue;
+        }
+
         const cropUrl = `${apiUrl}${apiUrl.includes('?') ? '&' : '?'}filters[Commodity]=${encodeURIComponent(crop.apiCommodity)}`;
         try {
-          console.info(`[Market Sync] Querying live daily rates for commodity: "${crop.displayName}" (API: "${crop.apiCommodity}")`);
+          console.info(`[Market Sync] Querying live daily rates for missing commodity: "${crop.displayName}" (API: "${crop.apiCommodity}")`);
           let response = await this.fetchWithRetry(cropUrl, apiKey);
           let payload = response.data;
           let cropRecords = Array.isArray(payload)
@@ -110,7 +156,7 @@ class MarketSyncService {
           warnings.push(`Failed to fetch crop "${crop.displayName}": ${err.message}`);
         }
         // Stagger queries to prevent OGD Gateway rate-limit blocking (HTTP 429)
-        await new Promise((resolve) => setTimeout(resolve, 450));
+        await new Promise((resolve) => setTimeout(resolve, 800));
       }
 
       const executionTimeMs = Date.now() - startTime;

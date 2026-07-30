@@ -102,25 +102,99 @@ export const Pricing: React.FC = () => {
       });
 
       if (res.data?.success) {
-        const verifyRes = await api.post('/payments/verify', {
-          orderId: res.data.order.id,
-          status: 'captured',
-          provider: provider === 'razorpay' ? 'razorpay' : 'mock'
-        });
+        const orderData = res.data.order;
+        if (provider === 'razorpay' && !orderData.mockMode) {
+          if (!(window as any).Razorpay) {
+            throw new Error('Razorpay SDK is not loaded. Please check your internet connection and try again.');
+          }
 
-        if (verifyRes.data?.success) {
-          updateUser({
-            ...user,
-            plan: 'premium',
-            subscriptionStatus: 'active',
-            subscriptionType: billingCycle,
-            paymentProvider: provider === 'razorpay' ? 'razorpay' : 'mock'
+          const options = {
+            key: orderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+            amount: Math.round(orderData.amount * 100),
+            currency: orderData.currency || 'INR',
+            name: 'KrishiMitra AI',
+            description: `${billingCycle.toUpperCase()} Premium Plan Upgrade`,
+            image: 'https://krishimitra-ai.vercel.app/favicon.svg',
+            order_id: orderData.id,
+            handler: async function (response: any) {
+              try {
+                setLoading(true);
+                const verifyRes = await api.post('/payments/verify', {
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  signature: response.razorpay_signature,
+                  provider: 'razorpay',
+                  status: 'captured'
+                });
+
+                if (verifyRes.data?.success) {
+                  updateUser({
+                    ...user,
+                    plan: 'premium',
+                    subscriptionStatus: 'active',
+                    subscriptionType: billingCycle,
+                    paymentProvider: 'razorpay'
+                  });
+                  setSuccess(true);
+                  toast.success('Subscription activated successfully');
+                } else {
+                  throw new Error('Unable to complete payment verification');
+                }
+              } catch (err: any) {
+                console.error('Razorpay verification error:', err);
+                const message = err.response?.data?.message || 'Payment verification failed.';
+                setError(message);
+                toast.error(message);
+              } finally {
+                setLoading(false);
+              }
+            },
+            prefill: {
+              name: user?.name || '',
+              email: user?.email || '',
+              contact: user?.phone || ''
+            },
+            theme: {
+              color: '#059669' // Emerald-600
+            },
+            modal: {
+              ondismiss: function () {
+                setLoading(false);
+                setError('Payment cancelled or failed.');
+                toast.error('Payment cancelled or failed.');
+              }
+            }
+          };
+
+          const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (response: any) {
+            setLoading(false);
+            setError(response.error.description || 'Payment failed.');
+            toast.error(response.error.description || 'Payment failed.');
+          });
+          rzp.open();
+        } else {
+          // Mock verification flow
+          const verifyRes = await api.post('/payments/verify', {
+            orderId: orderData.id,
+            status: 'captured',
+            provider: provider === 'razorpay' ? 'razorpay' : 'mock'
           });
 
-          setSuccess(true);
-          toast.success('Subscription activated successfully');
-        } else {
-          throw new Error('Unable to complete payment verification');
+          if (verifyRes.data?.success) {
+            updateUser({
+              ...user,
+              plan: 'premium',
+              subscriptionStatus: 'active',
+              subscriptionType: billingCycle,
+              paymentProvider: provider === 'razorpay' ? 'razorpay' : 'mock'
+            });
+
+            setSuccess(true);
+            toast.success('Subscription activated successfully');
+          } else {
+            throw new Error('Unable to complete payment verification');
+          }
         }
       }
     } catch (err: any) {
@@ -129,7 +203,10 @@ export const Pricing: React.FC = () => {
       setError(message);
       toast.error(message);
     } finally {
-      setLoading(false);
+      // For Razorpay, loading state is set to false either inside handler/dismiss or keep it here for mock
+      if (provider !== 'razorpay') {
+        setLoading(false);
+      }
     }
   };
 

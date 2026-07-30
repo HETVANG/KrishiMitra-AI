@@ -10,85 +10,10 @@ export class BillingController {
    */
   static async createSession(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { planType, paymentProvider, couponCode, referralCode, discountType } = req.body;
-
-      if (!planType || !['monthly', 'yearly'].includes(planType)) {
-        return res.status(400).json({ success: false, message: 'Valid planType (monthly or yearly) is required.' });
-      }
-
-      if (!paymentProvider || !['stripe', 'razorpay', 'upi'].includes(paymentProvider)) {
-        return res.status(400).json({ success: false, message: 'Valid paymentProvider (stripe, razorpay, upi) is required.' });
-      }
-
-      const billingService = BillingServiceFactory.getService(paymentProvider);
-      
-      const sessionResult = await billingService.createCheckoutSession({
-        userId: req.user._id,
-        planType,
-        paymentProvider,
-        couponCode,
-        referralCode,
-        discountType
+      return res.status(400).json({
+        success: false,
+        message: 'Direct session upgrades are disabled. Please use the /payments/create-order endpoint and checkout via Razorpay popup.'
       });
-
-      if (sessionResult.success) {
-        // Calculate subscription expiry (1 month vs 1 year)
-        const expiryDate = new Date();
-        if (planType === 'monthly') {
-          expiryDate.setMonth(expiryDate.getMonth() + 1);
-        } else {
-          expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-        }
-
-        // Live Mongoose mode
-        const updatedUser = await User.findByIdAndUpdate(
-          req.user._id,
-          {
-            plan: 'premium',
-            subscriptionStatus: 'active',
-            subscriptionType: planType,
-            subscriptionExpiry: expiryDate,
-            paymentProvider,
-            lastPaymentDate: new Date(),
-            nextBillingDate: expiryDate
-          },
-          { new: true }
-        );
-
-        // Update or create active Subscription log in MongoDB
-        try {
-          await Subscription.findOneAndUpdate(
-            { user: req.user._id },
-            {
-              user: req.user._id,
-              plan: 'premium',
-              status: 'active',
-              expiryDate: expiryDate,
-              $push: {
-                paymentHistory: {
-                  provider: paymentProvider,
-                  transactionId: `txn_mock_${Math.random().toString(36).substring(7).toUpperCase()}`,
-                  amount: sessionResult.amount,
-                  date: new Date()
-                }
-              }
-            },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-          );
-        } catch (subErr) {
-          console.warn('[Subscription Log Warning] Failed to log active subscription:', subErr);
-        }
-
-        return res.json({
-          success: true,
-          checkoutUrl: sessionResult.paymentUrl,
-          amount: sessionResult.amount,
-          user: updatedUser || req.user,
-          message: 'Premium upgraded successfully! Enjoy unlimited agricultural tools.'
-        });
-      }
-
-      return res.status(400).json({ success: false, message: sessionResult.message });
     } catch (error) {
       next(error);
     }

@@ -12,7 +12,7 @@ import crypto from 'crypto';
 
 export class PaymentService {
   static async createOrder(input: CreateOrderInput) {
-    const { userId, planName = 'basic', billingCycle = 'monthly', amount, currency = 'INR', provider = 'mock', metadata = {} } = input;
+    const { userId, planName = 'basic', billingCycle = 'monthly', amount, currency = 'INR', metadata = {} } = input;
     const normalizedPlan = planName as any;
     const normalizedBillingCycle = billingCycle as any;
     
@@ -21,58 +21,55 @@ export class PaymentService {
     const finalAmount = DiscountEngine.calculateFinalPrice(baseAmount, {
       userId,
       planType: normalizedBillingCycle,
-      paymentProvider: provider as any,
+      paymentProvider: 'razorpay',
       couponCode: metadata.coupon,
       referralCode: metadata.referral,
       discountType: metadata.discountType || (metadata.isStudent ? 'student' : metadata.sponsorType !== 'none' ? metadata.sponsorType : 'none')
     });
 
     const razorpayConfig = getRazorpayConfig();
-    const mockMode = provider === 'mock' || getMockPaymentMode() || !razorpayConfig.enabled;
     
-    let orderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    if (!razorpayConfig.keyId || !razorpayConfig.keySecret) {
+      const err = new Error('Razorpay credentials are not configured');
+      (err as any).statusCode = 500;
+      throw err;
+    }
+
+    const amountInPaise = Math.round(finalAmount * 100);
+    if (amountInPaise < 100) {
+      const err = new Error('Amount must be at least 100 paise (₹1)');
+      (err as any).statusCode = 400;
+      throw err;
+    }
+
+    let orderId = '';
     let gatewayOrderResponse: any = null;
 
-    if (provider === 'razorpay' && !mockMode) {
-      if (!razorpayConfig.keyId || !razorpayConfig.keySecret) {
-        const err = new Error('Razorpay credentials are not configured');
-        (err as any).statusCode = 500;
-        throw err;
-      }
+    try {
+      const instance = new Razorpay({
+        key_id: razorpayConfig.keyId,
+        key_secret: razorpayConfig.keySecret
+      });
 
-      const amountInPaise = Math.round(finalAmount * 100);
-      if (amountInPaise < 100) {
-        const err = new Error('Amount must be at least 100 paise (₹1)');
-        (err as any).statusCode = 400;
-        throw err;
-      }
+      const receipt = `receipt_order_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const razorpayOrder = await instance.orders.create({
+        amount: amountInPaise,
+        currency,
+        receipt,
+        notes: {
+          userId,
+          planName: normalizedPlan,
+          billingCycle: normalizedBillingCycle
+        }
+      });
 
-      try {
-        const instance = new Razorpay({
-          key_id: razorpayConfig.keyId,
-          key_secret: razorpayConfig.keySecret
-        });
-
-        const receipt = `receipt_${orderId}`;
-        const razorpayOrder = await instance.orders.create({
-          amount: amountInPaise,
-          currency,
-          receipt,
-          notes: {
-            userId,
-            planName: normalizedPlan,
-            billingCycle: normalizedBillingCycle
-          }
-        });
-
-        orderId = razorpayOrder.id;
-        gatewayOrderResponse = razorpayOrder;
-      } catch (razorError: any) {
-        console.error('Razorpay API Order Error:', razorError);
-        const err = new Error(razorError.description || razorError.message || 'Failed to create Razorpay order');
-        (err as any).statusCode = 500;
-        throw err;
-      }
+      orderId = razorpayOrder.id;
+      gatewayOrderResponse = razorpayOrder;
+    } catch (razorError: any) {
+      console.error('Razorpay API Order Error:', razorError);
+      const err = new Error(razorError.description || razorError.message || 'Failed to create Razorpay order');
+      (err as any).statusCode = 500;
+      throw err;
     }
 
     const payment = await Payment.create({
@@ -82,8 +79,8 @@ export class PaymentService {
       amount: finalAmount,
       currency,
       status: 'pending',
-      provider: mockMode ? 'mock' : provider,
-      mode: mockMode ? 'mock' : 'live',
+      provider: 'razorpay',
+      mode: 'live',
       orderId,
       receipt: gatewayOrderResponse?.receipt || `receipt_${orderId}`,
       gatewayResponse: gatewayOrderResponse || {},
@@ -95,7 +92,7 @@ export class PaymentService {
       paymentId: payment._id,
       type: 'order_created',
       status: 'initiated',
-      provider: payment.provider,
+      provider: 'razorpay',
       amount: finalAmount,
       currency,
       metadata: { orderId }
@@ -110,10 +107,10 @@ export class PaymentService {
         receipt: payment.receipt,
         plan: normalizedPlan,
         billingCycle: normalizedBillingCycle,
-        provider: payment.provider,
-        mode: payment.mode,
+        provider: 'razorpay',
+        mode: 'live',
         keyId: razorpayConfig.keyId || null,
-        mockMode,
+        mockMode: false,
         planDetails: getPlanDefinition(normalizedPlan)
       },
       paymentId: payment._id
@@ -121,7 +118,7 @@ export class PaymentService {
   }
 
   static async verifyPayment(input: VerifyPaymentInput) {
-    const { userId, orderId, paymentId, signature, status = 'captured', provider = 'mock' } = input;
+    const { userId, orderId, paymentId, signature, status = 'captured' } = input;
 
     const payment = await Payment.findOne({ orderId });
     if (!payment) {
@@ -131,63 +128,60 @@ export class PaymentService {
     }
 
     const razorpayConfig = getRazorpayConfig();
-    const isMock = payment.provider === 'mock' || getMockPaymentMode() || !razorpayConfig.enabled;
 
-    if (payment.provider === 'razorpay' && !isMock) {
-      if (!signature || !paymentId) {
-        const err = new Error('Signature and payment ID are required for verification');
-        (err as any).statusCode = 400;
-        throw err;
-      }
+    if (!signature || !paymentId) {
+      const err = new Error('Signature and payment ID are required for verification');
+      (err as any).statusCode = 400;
+      throw err;
+    }
 
-      if (!razorpayConfig.keySecret) {
-        const err = new Error('Razorpay secret key is not configured');
-        (err as any).statusCode = 500;
-        throw err;
-      }
+    if (!razorpayConfig.keySecret) {
+      const err = new Error('Razorpay secret key is not configured');
+      (err as any).statusCode = 500;
+      throw err;
+    }
 
-      const generatedSignature = crypto
-        .createHmac('sha256', razorpayConfig.keySecret)
-        .update(`${orderId}|${paymentId}`)
-        .digest('hex');
+    const generatedSignature = crypto
+      .createHmac('sha256', razorpayConfig.keySecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
 
-      if (generatedSignature !== signature) {
-        payment.status = 'failed';
-        payment.paymentId = paymentId;
-        payment.gatewayResponse = {
-          verified: false,
-          signature,
-          error: 'Signature mismatch'
-        };
-        await payment.save();
+    if (generatedSignature !== signature) {
+      payment.status = 'failed';
+      payment.paymentId = paymentId;
+      payment.gatewayResponse = {
+        verified: false,
+        signature,
+        error: 'Signature mismatch'
+      };
+      await payment.save();
 
-        await Transaction.create({
-          userId: new Types.ObjectId(userId),
-          paymentId: payment._id,
-          type: 'payment_failed',
-          status: 'failed',
-          provider: payment.provider,
-          amount: payment.amount,
-          currency: payment.currency,
-          gatewayResponse: payment.gatewayResponse
-        });
+      await Transaction.create({
+        userId: new Types.ObjectId(userId),
+        paymentId: payment._id,
+        type: 'payment_failed',
+        status: 'failed',
+        provider: 'razorpay',
+        amount: payment.amount,
+        currency: payment.currency,
+        gatewayResponse: payment.gatewayResponse
+      });
 
-        const err = new Error('Payment signature verification failed');
-        (err as any).statusCode = 400;
-        throw err;
-      }
+      const err = new Error('Payment signature verification failed');
+      (err as any).statusCode = 400;
+      throw err;
     }
 
     const finalStatus = 'succeeded';
 
     payment.status = finalStatus;
-    payment.paymentId = paymentId || `mock_${Date.now()}`;
+    payment.paymentId = paymentId;
     payment.gatewayResponse = {
       verified: true,
       signature,
-      provider: payment.provider,
+      provider: 'razorpay',
       status,
-      mockMode: isMock
+      mockMode: false
     };
     await payment.save();
 
@@ -196,7 +190,7 @@ export class PaymentService {
       paymentId: payment._id,
       type: 'payment_verified',
       status: 'succeeded',
-      provider: payment.provider,
+      provider: 'razorpay',
       amount: payment.amount,
       currency: payment.currency,
       gatewayResponse: payment.gatewayResponse
@@ -208,7 +202,7 @@ export class PaymentService {
       user.plan = payment.planName === 'free' ? 'free' : 'premium';
       user.subscriptionStatus = 'active';
       user.subscriptionType = payment.billingCycle;
-      user.paymentProvider = payment.provider === 'mock' ? 'razorpay' : payment.provider;
+      user.paymentProvider = 'razorpay';
       user.subscriptionExpiry = expiryDate;
       user.lastPaymentDate = new Date();
       user.nextBillingDate = expiryDate;
@@ -222,8 +216,8 @@ export class PaymentService {
         status: 'active',
         startDate: new Date(),
         endDate: expiryDate,
-        provider: payment.provider,
-        notes: `Subscription activated in ${isMock ? 'mock' : 'live'} mode`
+        provider: 'razorpay',
+        notes: `Subscription activated via verified Razorpay checkout`
       });
     }
 
@@ -235,9 +229,9 @@ export class PaymentService {
         orderId: payment.orderId,
         amount: payment.amount,
         currency: payment.currency,
-        provider: payment.provider,
-        mode: payment.mode,
-        mockMode: isMock,
+        provider: 'razorpay',
+        mode: 'live',
+        mockMode: false,
         subscriptionActivated: true
       }
     };

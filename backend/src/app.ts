@@ -21,6 +21,8 @@ import billingRoutes from './routes/billingRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import videoConsultationRoutes from './routes/videoConsultationRoutes';
+import { authenticate } from './middleware/auth';
+import { PaymentController } from './controllers/PaymentController';
 
 const app = express();
 
@@ -61,6 +63,8 @@ app.use('/api/schemes', schemeRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.post('/api/create-order', authenticate, PaymentController.createOrder);
+app.post('/api/verify-payment', authenticate, PaymentController.verify);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video-consultation', videoConsultationRoutes);
 

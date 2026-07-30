@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "razorpay": "^2.9.8",
     "react-toastify": "^11.1.0"
   }
 }

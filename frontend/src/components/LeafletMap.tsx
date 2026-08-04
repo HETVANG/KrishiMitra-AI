@@ -546,7 +546,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* SEARCH BOX OVERLAY */}
       {!readOnly && (
-        <div className="absolute top-3 left-3 z-[1000] w-72 md:w-80 pointer-events-auto">
+        <div className="absolute top-3 left-3 z-[1000] w-72 md:w-80 pointer-events-auto map-search-overlay">
           <div className="relative bg-white dark:bg-dark-900 rounded-xl border border-gray-150 dark:border-dark-800 shadow-lg flex flex-col p-1.5 gap-1.5">
             <div className="relative flex items-center">
               <input
@@ -603,7 +603,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* MAP DETAILS PANEL */}
       {!readOnly && selectedLoc && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-sm w-full flex flex-col gap-3 pointer-events-auto transition-all">
+        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-sm w-full flex flex-col gap-3 pointer-events-auto transition-all map-details-overlay">
           <div className="flex items-start justify-between pb-2 border-b border-gray-100 dark:border-dark-805 text-left">
             <div>
               <span className="block text-[8px] uppercase tracking-wider text-brand-600 dark:text-brand-400 font-extrabold">Active Farm Location</span>
@@ -655,19 +655,19 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* NO LOCATION SET ALERTER */}
       {!readOnly && !selectedLoc && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-sm w-full flex items-center gap-3 pointer-events-auto text-left">
+        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-sm w-full flex items-center gap-3 pointer-events-auto text-left map-alert-overlay">
           <div className="p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl text-yellow-600 shrink-0">
             <MapPin size={18} />
           </div>
           <div>
-            <h4 className="font-extrabold text-[10px] text-gray-800 dark:text-dark-100">Select Farm Location First</h4>
+            <h4 className="font-extrabold text-[10px] text-gray-805 dark:text-dark-100">Select Farm Location First</h4>
             <p className="text-[9px] text-gray-405 font-semibold mt-0.5 leading-normal">Search for your village, city, or tap the GPS button to target your land region.</p>
           </div>
         </div>
       )}
 
       {/* Floating View Control Overlays */}
-      <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-2 pointer-events-auto">
+      <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-2 pointer-events-auto map-controls-overlay">
         <button
           onClick={resetNorth}
           className="p-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-lg text-gray-700 shadow-sm"

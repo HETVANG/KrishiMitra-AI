@@ -49,12 +49,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[99998] bg-black/40 backdrop-blur-sm lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col w-64 bg-white dark:bg-dark-900 border-r border-gray-105 dark:border-dark-800/50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 bottom-0 left-0 z-[99999] flex flex-col w-64 bg-white dark:bg-dark-900 border-r border-gray-105 dark:border-dark-800/50 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Brand Logo */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100 dark:border-dark-800/50">
           <div className="flex items-center justify-center w-9 h-9 bg-brand-500 rounded-xl text-white shadow-md shadow-brand-500/20">

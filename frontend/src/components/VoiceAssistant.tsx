@@ -341,7 +341,7 @@ export const VoiceAssistant: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none voice-assistant-overlay">
       {/* Transcript / Result Overlay */}
       {transcript && (
         <div className="max-w-xs md:max-w-sm px-4 py-3 bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 shadow-xl rounded-2xl rounded-br-none text-xs md:text-sm text-gray-700 dark:text-dark-200 animate-slide-up pointer-events-auto">

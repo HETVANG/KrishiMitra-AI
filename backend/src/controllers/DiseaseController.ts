@@ -17,7 +17,7 @@ export class DiseaseController {
         return res.status(400).json({ success: false, message: 'Please upload a leaf image file.' });
       }
 
-      const lang = req.query.lang || req.user?.settings?.language || 'en';
+      const lang = req.query.lang || (req.user && req.user.settings && req.user.settings.language) || 'en';
 
       // Upload image to Cloudinary
       let imageUri = '';
@@ -35,28 +35,30 @@ export class DiseaseController {
         lang as string
       );
 
-      // Save to database cache history & user scan counts
+      // Save to database cache history & user scan counts if authenticated
       try {
-        // Increment scan usage count
-        await User.findByIdAndUpdate(req.user._id, { $inc: { scansUsedToday: 1 } });
-        req.user.scansUsedToday = (req.user.scansUsedToday || 0) + 1;
+        if (req.user) {
+          // Increment scan usage count
+          await User.findByIdAndUpdate(req.user._id, { $inc: { scansUsedToday: 1 } });
+          req.user.scansUsedToday = (req.user.scansUsedToday || 0) + 1;
 
-        // Save scan history log to MongoDB
-        await DiseaseHistory.create({
-          user: req.user._id,
-          diseaseName: diagnosis.name,
-          scientificName: diagnosis.scientificName,
-          confidenceScore: diagnosis.confidenceScore,
-          imageUri, // Saved Cloudinary image URI
-          symptoms: diagnosis.symptoms,
-          causes: diagnosis.causes,
-          organicTreatment: diagnosis.organicTreatment,
-          chemicalTreatment: diagnosis.chemicalTreatment,
-          preventiveTips: diagnosis.preventiveTips,
-          pesticideDetails: diagnosis.pesticideDetails
-        });
+          // Save scan history log to MongoDB
+          await DiseaseHistory.create({
+            user: req.user._id,
+            diseaseName: diagnosis.name,
+            scientificName: diagnosis.scientificName,
+            confidenceScore: diagnosis.confidenceScore,
+            imageUri,
+            symptoms: diagnosis.symptoms,
+            causes: diagnosis.causes,
+            organicTreatment: diagnosis.organicTreatment,
+            chemicalTreatment: diagnosis.chemicalTreatment,
+            preventiveTips: diagnosis.preventiveTips,
+            pesticideDetails: diagnosis.pesticideDetails
+          });
+        }
 
-        // Upsert general disease entry for search list
+        // Upsert general disease entry for search list (both guest and user)
         await Disease.findOneAndUpdate(
           { name: diagnosis.name },
           {

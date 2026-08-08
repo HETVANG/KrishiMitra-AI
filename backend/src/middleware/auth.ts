@@ -54,3 +54,30 @@ export const authorize = (...roles: string[]) => {
     next();
   };
 };
+
+export const optionalAuthenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    let authHeader = req.headers.authorization;
+    
+    if (!authHeader && req.query.Authorization) {
+      authHeader = req.query.Authorization as string;
+    }
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_krishimitra_token_12345');
+
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (user && !user.isBlocked) {
+      req.user = user;
+    }
+    next();
+  } catch (error) {
+    // Fail silently and proceed as a guest user session
+    next();
+  }
+};

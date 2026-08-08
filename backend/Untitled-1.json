@@ -1,0 +1,25 @@
+
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNWE2Nzg5YWE0NDQ1MGNlYjMwMTIyOSIsImlhdCI6MTc4NDMwOTY0MiwiZXhwIjoxNzg0OTE0NDQyfQ.ELh6QCBi1i5NS683ds8K9hdoz4mXU-0CNr_nU6oe3Q4",
+  "user": {
+    "id": "6a5a6789aa44450ceb301229",
+    "name": "Rajesh Kumar",
+    "email": "rajesh@gmail.com",
+    "role": "farmer",
+    "phone": "9876543210",
+    "settings": {
+      "language": "en",
+      "theme": "light"
+    },
+    "farmLocation": {},
+    "plan": "free",
+    "subscriptionStatus": "trialing",
+    "subscriptionType": "trial",
+    "trialStartDate": "2026-07-17T17:34:01.291Z",
+    "trialEndDate": "2026-10-15T17:34:01.291Z",
+    "subscriptionExpiry": "2026-10-15T17:34:01.291Z",
+    "scansUsedToday": 0,
+    "chatMessagesToday": 0
+  }
+}

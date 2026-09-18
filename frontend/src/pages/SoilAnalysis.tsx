@@ -408,10 +408,10 @@ export const SoilAnalysis: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-405">
+            <div className="flex flex-col items-center justify-center py-20 text-gray-450">
               <FileText size={48} className="text-gray-300 dark:text-dark-800 mb-3" />
-              <p className="font-bold text-sm">No evaluated chemistry reports</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">Please fill parameters on the left and submit.</p>
+              <p className="font-bold text-sm">No soil analysis reports yet</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Please input NPK soil levels on the left panel to calculate optimal fertilizer balances.</p>
             </div>
           )}
         </div>

@@ -82,6 +82,13 @@ export const Dashboard: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showExpiryModal, setShowExpiryModal] = useState(() => {
+    if (user?.subscriptionStatus === 'expired') {
+      const dismissed = localStorage.getItem('premium-expiry-dismissed');
+      return !dismissed;
+    }
+    return false;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
@@ -810,7 +817,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex gap-2">
           <Link 
             to="/reports" 
-            className="px-4 py-2.5 bg-white text-brand-850 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
+            className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
           >
             <Layers size={16} /> {t('common.download')} PDF Reports
           </Link>
@@ -840,7 +847,7 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Weather Card (7 cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-805 pb-4 mb-4">
+          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-800 pb-4 mb-4">
             <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
               <CloudSun className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.weather')}
             </h3>
@@ -893,7 +900,7 @@ export const Dashboard: React.FC = () => {
                     {weather?.current?.temp}°C
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-gray-750 dark:text-dark-200 uppercase tracking-wide">
+                    <h4 className="font-bold text-sm text-gray-700 dark:text-dark-200 uppercase tracking-wide">
                       {weather?.current?.condition}
                     </h4>
                     <p className="text-xs text-gray-400 dark:text-dark-500 capitalize">
@@ -969,7 +976,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="bg-red-50/50 dark:bg-red-950/10 p-3 rounded-xl border border-red-100/40 text-left">
                 <span className="block text-[10px] text-gray-400 font-bold uppercase">Expenses</span>
-                <span className="block text-base font-extrabold text-red-550 mt-1">₹{financials?.totalExpense || 0}</span>
+                <span className="block text-base font-extrabold text-red-600 mt-1">₹{financials?.totalExpense || 0}</span>
               </div>
             </div>
 
@@ -998,7 +1005,7 @@ export const Dashboard: React.FC = () => {
               </h3>
               <p className="text-[11px] text-gray-400 dark:text-dark-500 mt-0.5 font-medium">Click to draw farm boundary bounds.</p>
             </div>
-            <span className="text-xs font-semibold text-gray-405">
+            <span className="text-xs font-semibold text-gray-400">
               GPS Enabled
             </span>
           </div>
@@ -1043,13 +1050,13 @@ export const Dashboard: React.FC = () => {
                   <div key={idx} className="py-2.5 flex items-center justify-between">
                     <div className="text-left">
                       <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200">{item.crop}</h4>
-                      <p className="text-[10px] text-gray-400 dark:text-dark-505">{item.mandiName} | {item.state}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-dark-500">{item.mandiName} | {item.state}</p>
                     </div>
                     <div className="text-right">
                       <span className="block font-extrabold text-xs md:text-sm text-gray-800 dark:text-dark-200">
-                        ₹{item.avgPrice}
+                        {(!item.avgPrice && item.avgPrice !== 0) || (item.avgPrice === 0 && !item.isTrulyZero) ? 'Price Not Available' : `₹${item.avgPrice}`}
                       </span>
-                      <span className="text-[9px] text-emerald-650 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded uppercase">
+                      <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded uppercase">
                         MSP Linked
                       </span>
                     </div>
@@ -1228,6 +1235,50 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PREMIUM EXPIRY MODAL */}
+      {showExpiryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in text-left">
+          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative flex flex-col gap-4">
+            <h2 className="text-lg font-extrabold text-red-650 dark:text-red-400 tracking-tight flex items-center gap-2">
+              ⚠️ Your Premium Plan Has Expired
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-dark-300 leading-relaxed font-medium">
+              Your Premium plan expired on <span className="font-extrabold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>. Renew your plan to continue enjoying premium features.
+            </p>
+            <div className="bg-slate-50 dark:bg-dark-950 p-4 rounded-2xl border border-slate-100 dark:border-dark-850 text-xs text-slate-655 dark:text-dark-300 space-y-2">
+              <div className="flex justify-between font-medium">
+                <span>Previous Plan:</span>
+                <span className="font-bold text-slate-805 dark:text-dark-100 uppercase">Premium</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>Expiry Date:</span>
+                <span className="font-bold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>
+              </div>
+            </div>
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={() => {
+                  setShowExpiryModal(false);
+                  localStorage.setItem('premium-expiry-dismissed', 'true');
+                }}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-200 text-xs font-bold rounded-xl transition-all min-h-[38px]"
+              >
+                Maybe Later
+              </button>
+              <a
+                href="/pricing"
+                onClick={() => {
+                  setShowExpiryModal(false);
+                }}
+                className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl text-center shadow-md shadow-brand-600/20 transition-all min-h-[38px] flex items-center justify-center"
+              >
+                Renew Now
+              </a>
             </div>
           </div>
         </div>

@@ -18,9 +18,11 @@ import {
   ScanEye
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 export const DiseaseDetection: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { token } = useAuth();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -159,7 +161,11 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleDownloadPdf = () => {
     if (!result) return;
-    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please create a free account to download PDF reports.');
+      window.location.href = '/register';
+      return;
+    }
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}/reports/download?type=disease&diseaseName=${encodeURIComponent(result.name)}&lang=${i18n.language}&Authorization=Bearer ${token}`;
     window.open(url, '_blank');
@@ -459,6 +465,22 @@ export const DiseaseDetection: React.FC = () => {
                   ))}
                 </ul>
               </div>
+
+              {/* Signup conversion banner hook for guests */}
+              {!token && (
+                <div className="mt-6 p-5 bg-gradient-to-r from-emerald-500 to-teal-700 rounded-3xl text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-left">
+                    <h5 className="font-extrabold text-sm md:text-base">Save your Crop Diagnosis</h5>
+                    <p className="text-[11px] text-emerald-100 mt-1 leading-normal font-medium max-w-md">Create a free account to log history, track crop health metrics, and download detailed PDF reports.</p>
+                  </div>
+                  <a
+                    href="/register"
+                    className="px-5 py-2.5 bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-xs rounded-xl shadow-md transition-all whitespace-nowrap min-h-[38px] flex items-center justify-center"
+                  >
+                    Create Free Account
+                  </a>
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2 justify-end border-t border-gray-50 dark:border-dark-850 pt-4 print:hidden">

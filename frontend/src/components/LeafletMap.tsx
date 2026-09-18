@@ -546,48 +546,49 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* SEARCH BOX OVERLAY */}
       {!readOnly && (
-        <div className="absolute top-3 left-3 z-[1000] w-72 md:w-80 pointer-events-auto map-search-overlay">
-          <div className="relative bg-white dark:bg-dark-900 rounded-xl border border-gray-150 dark:border-dark-800 shadow-lg flex flex-col p-1.5 gap-1.5">
-            <div className="relative flex items-center">
+        <div className="absolute top-3 left-3 z-[1000] w-[calc(100%-90px)] sm:w-64 md:w-72 max-w-[260px] pointer-events-auto map-search-overlay">
+          <div className="relative bg-white/95 dark:bg-dark-900/95 backdrop-blur-md rounded-xl border border-gray-200/80 dark:border-dark-800 shadow-md flex flex-col p-1 transition-all">
+            <div className="relative flex items-center h-8 md:h-9">
+              <span className="pl-2 text-gray-400 shrink-0">
+                <Search size={13} />
+              </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search village, city, pin..."
-                className="w-full text-xs pl-8 py-2 bg-gray-50 dark:bg-dark-850 border border-transparent focus:border-brand-500 rounded-lg text-gray-700 dark:text-dark-200 focus:outline-none"
+                className="w-full text-[11px] md:text-xs pl-2 pr-14 bg-transparent text-gray-800 dark:text-dark-100 placeholder-gray-400 focus:outline-none font-medium"
               />
-              <span className="absolute left-2.5 text-gray-400">
-                <Search size={14} />
-              </span>
               
-              <div className="absolute right-1.5 flex items-center gap-1">
+              <div className="absolute right-1 flex items-center gap-0.5 shrink-0">
                 {searchQuery.trim() && (
                   <button
                     onClick={() => { setSearchQuery(''); setSuggestions([]); }}
-                    className="p-1 hover:bg-gray-250 rounded text-gray-400"
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-dark-800 rounded text-gray-400 transition-colors"
+                    title="Clear Search"
                   >
                     ✕
                   </button>
                 )}
                 <button
                   onClick={locateUser}
-                  className={`p-1 rounded text-brand-600 ${gpsLocating ? 'animate-pulse' : ''}`}
+                  className={`p-1 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded text-brand-600 transition-colors ${gpsLocating ? 'animate-pulse' : ''}`}
                   title="Use My GPS Location"
                   disabled={gpsLocating}
                 >
-                  <Locate size={14} />
+                  <Locate size={13} />
                 </button>
               </div>
             </div>
 
             {/* Suggestions dropdown */}
             {suggestions.length > 0 && (
-              <div className="max-h-48 overflow-y-auto bg-white dark:bg-dark-900 border-t border-gray-100 rounded-b-lg divide-y text-left">
+              <div className="absolute top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white/98 dark:bg-dark-900/98 backdrop-blur-md border border-gray-200 dark:border-dark-800 rounded-xl shadow-xl divide-y divide-gray-100 dark:divide-dark-850 text-left z-[1001]">
                 {suggestions.map((sug, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSuggestionSelect(sug)}
-                    className="w-full text-left p-2 hover:bg-gray-50 dark:hover:bg-dark-850 text-[10px] font-bold text-gray-700 dark:text-dark-250 transition-colors"
+                    className="w-full text-left p-2 hover:bg-brand-50/50 dark:hover:bg-dark-850 text-[10px] font-bold text-gray-700 dark:text-dark-250 transition-colors"
                   >
                     {sug.display_name}
                   </button>
@@ -595,29 +596,37 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
               </div>
             )}
             
-            {searching && <div className="p-2 text-center text-[10px] text-gray-400">Searching...</div>}
-            {searchError && <div className="p-2 text-center text-[10px] text-red-500 font-semibold">{searchError}</div>}
+            {searching && (
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-gray-400 z-[1001]">
+                Searching...
+              </div>
+            )}
+            {searchError && (
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-red-500 font-semibold z-[1001]">
+                {searchError}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* MAP DETAILS PANEL */}
       {!readOnly && selectedLoc && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-sm w-full flex flex-col gap-3 pointer-events-auto transition-all map-details-overlay">
-          <div className="flex items-start justify-between pb-2 border-b border-gray-100 dark:border-dark-805 text-left">
+        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-xs sm:max-w-sm w-full flex flex-col gap-2.5 pointer-events-auto transition-all map-details-overlay">
+          <div className="flex items-start justify-between pb-2 border-b border-gray-100 dark:border-dark-800 text-left">
             <div>
               <span className="block text-[8px] uppercase tracking-wider text-brand-600 dark:text-brand-400 font-extrabold">Active Farm Location</span>
-              <h4 className="font-extrabold text-xs text-gray-805 dark:text-dark-100 mt-0.5 line-clamp-1">{selectedLoc.address}</h4>
+              <h4 className="font-extrabold text-xs text-gray-800 dark:text-dark-100 mt-0.5 line-clamp-1">{selectedLoc.address}</h4>
             </div>
             <button
               onClick={handleSearchAgain}
-              className="text-[9px] font-extrabold text-brand-600 hover:text-brand-700 uppercase"
+              className="text-[9px] font-extrabold text-brand-600 hover:text-brand-700 uppercase min-h-[28px] px-1"
             >
               Change Location
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-[10px] text-gray-550 dark:text-dark-350 font-semibold text-left">
+          <div className="grid grid-cols-3 gap-2 text-[10px] text-gray-600 dark:text-dark-350 font-semibold text-left">
             <div>
               <span className="block text-[8px] uppercase text-gray-400 font-bold">Acres</span>
               <span className="block font-extrabold text-gray-800 dark:text-dark-100 mt-0.5">{estimateAcres()} ac</span>
@@ -633,11 +642,11 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-0.5">
             {points.length > 0 && (
               <button
                 onClick={clearBoundary}
-                className="flex-1 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-650 hover:text-red-700 font-extrabold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-600 hover:text-red-700 font-extrabold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 min-h-[32px]"
               >
                 <Trash2 size={12} /> Clear Boundary
               </button>
@@ -645,7 +654,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
             <button
               onClick={handleSaveFarm}
               disabled={saving}
-              className="flex-grow py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white font-extrabold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md"
+              className="flex-grow py-1.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white font-extrabold text-[10px] uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md min-h-[32px]"
             >
               <Save size={12} /> {saving ? 'Saving...' : 'Save Farm'}
             </button>
@@ -655,13 +664,13 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* NO LOCATION SET ALERTER */}
       {!readOnly && !selectedLoc && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-sm w-full flex items-center gap-3 pointer-events-auto text-left map-alert-overlay">
-          <div className="p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl text-yellow-600 shrink-0">
-            <MapPin size={18} />
+        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-xs sm:max-w-sm w-full flex items-center gap-2.5 pointer-events-auto text-left map-alert-overlay">
+          <div className="p-1.5 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl text-yellow-600 shrink-0">
+            <MapPin size={16} />
           </div>
           <div>
-            <h4 className="font-extrabold text-[10px] text-gray-805 dark:text-dark-100">Select Farm Location First</h4>
-            <p className="text-[9px] text-gray-405 font-semibold mt-0.5 leading-normal">Search for your village, city, or tap the GPS button to target your land region.</p>
+            <h4 className="font-extrabold text-[10px] text-gray-800 dark:text-dark-100">Select Farm Location First</h4>
+            <p className="text-[9px] text-gray-400 font-semibold mt-0.5 leading-tight">Search village, city, or tap GPS to target land region.</p>
           </div>
         </div>
       )}

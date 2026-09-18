@@ -159,7 +159,7 @@ export const GovSchemes: React.FC = () => {
                 {selectedScheme.benefits && (
                   <div>
                     <h4 className="font-bold text-gray-800 dark:text-dark-200 uppercase tracking-wide text-[10px] mb-1">Benefits Offered</h4>
-                    <p className="text-brand-750 dark:text-brand-400 font-semibold leading-relaxed bg-brand-50/50 dark:bg-brand-950/10 p-2.5 rounded-xl border border-brand-100/50 dark:border-brand-900/10">{selectedScheme.benefits}</p>
+                    <p className="text-brand-700 dark:text-brand-400 font-semibold leading-relaxed bg-brand-50/50 dark:bg-brand-950/10 p-2.5 rounded-xl border border-brand-100/50 dark:border-brand-900/10">{selectedScheme.benefits}</p>
                   </div>
                 )}
 

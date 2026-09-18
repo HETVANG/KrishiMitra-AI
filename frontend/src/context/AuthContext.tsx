@@ -42,6 +42,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (payload: any) => Promise<void>;
 
+  farmLocation: any;
   logout: () => void;
   updateSettings: (language: string, theme: 'light' | 'dark', farmLocation?: any) => Promise<void>;
   setFarmLocationLocally: (loc: any) => void;
@@ -62,6 +63,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [farmLocation, setFarmLocation] = useState<any>(null);
+
+  // Sync farmLocation whenever user profile loads/updates or from guest storage fallback
+  useEffect(() => {
+    if (user && user.farmLocation) {
+      setFarmLocation(user.farmLocation);
+    } else {
+      const guestLoc = localStorage.getItem('guestFarmLocation');
+      if (guestLoc) {
+        try {
+          setFarmLocation(JSON.parse(guestLoc));
+        } catch {
+          setFarmLocation(null);
+        }
+      } else {
+        setFarmLocation(null);
+      }
+    }
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -130,6 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const setFarmLocationLocally = (loc: any) => {
+    setFarmLocation(loc);
     if (user) {
       const updatedUser = {
         ...user,
@@ -137,6 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+    } else {
+      localStorage.setItem('guestFarmLocation', JSON.stringify(loc));
     }
   };
 
@@ -150,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         token,
+        farmLocation,
         isAuthenticated: !!user,
         isLoading,
         login,

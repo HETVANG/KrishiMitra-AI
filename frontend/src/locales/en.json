@@ -42,5 +42,11 @@
     "stop": "Stop",
     "copied": "Copied to clipboard!",
     "shared": "Advisory shared successfully!"
+  },
+  "empty": {
+    "no_mandi": "No mandi price is currently available for this commodity.",
+    "no_experts": "No experts are currently online. Please check again later.",
+    "no_soil": "No soil analysis reports yet.",
+    "no_location": "Your farm location has not been selected."
   }
 }

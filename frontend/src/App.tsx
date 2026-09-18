@@ -32,6 +32,13 @@ const PaymentPending = React.lazy(() => import('./pages/PaymentPending').then(m 
 const Subscription = React.lazy(() => import('./pages/Subscription').then(m => ({ default: m.Subscription })));
 const BillingHistory = React.lazy(() => import('./pages/BillingHistory').then(m => ({ default: m.BillingHistory })));
 const NotFound = React.lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+const Landing = React.lazy(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
+const About = React.lazy(() => import('./pages/About').then(m => ({ default: m.About })));
+const Contact = React.lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
+const Privacy = React.lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
+const Terms = React.lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
+const RefundPolicy = React.lazy(() => import('./pages/RefundPolicy').then(m => ({ default: m.RefundPolicy })));
+const Support = React.lazy(() => import('./pages/Support').then(m => ({ default: m.Support })));
 
 // Protected Route Guard
 const ProtectedRoute = () => {
@@ -100,7 +107,7 @@ const DashboardLayout = () => {
   // Dynamically set navbar header title matching pathname
   const getHeaderTitle = () => {
     const path = window.location.pathname;
-    if (path === '/') return 'Farmer Intelligence Dashboard';
+    if (path === '/' || path === '/dashboard') return 'Farmer Intelligence Dashboard';
     if (path === '/chat') return 'AI Assistant Consultation';
     if (path === '/disease') return 'AI Leaf Pathology Diagnosis';
     if (path === '/soil') return 'Digital Soil analysis & Fertilizer Planner';
@@ -139,8 +146,54 @@ const DashboardLayout = () => {
   );
 };
 
+const HomeRoute = () => {
+  const { token } = useAuth();
+  return token ? <Navigate to="/dashboard" replace /> : <Landing />;
+};
+
 export const AppContent = () => {
   console.log('[KrishiMitra Startup Log] Loading Routes & React Router');
+
+  React.useEffect(() => {
+    const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+    const clarityId = import.meta.env.VITE_CLARITY_PROJECT_ID;
+
+    if (gaId) {
+      console.log('[Analytics] Google Analytics ID detected:', gaId);
+      const script1 = document.createElement('script');
+      script1.async = true;
+      script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+      document.head.appendChild(script1);
+
+      const script2 = document.createElement('script');
+      script2.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${gaId}');
+      `;
+      document.head.appendChild(script2);
+    } else {
+      console.info('[Analytics] Google Analytics ID is not configured (VITE_GA_MEASUREMENT_ID missing).');
+    }
+
+    if (clarityId) {
+      console.log('[Analytics] Microsoft Clarity ID detected:', clarityId);
+      const script3 = document.createElement('script');
+      script3.type = 'text/javascript';
+      script3.innerHTML = `
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window,document,"clarity","script","${clarityId}");
+      `;
+      document.head.appendChild(script3);
+    } else {
+      console.info('[Analytics] Microsoft Clarity ID is not configured (VITE_CLARITY_PROJECT_ID missing).');
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <React.Suspense fallback={
@@ -154,15 +207,30 @@ export const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
+          {/* Public Trust & Legal Pages */}
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/support" element={<Support />} />
+
+          {/* Guest Accessible Modules (with full Layout frame) */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/disease" element={<DiseaseDetection />} />
+            <Route path="/market" element={<MarketDashboard />} />
+            <Route path="/schemes" element={<GovSchemes />} />
+          </Route>
+
+          {/* Dynamic selector for root path */}
+          <Route path="/" element={<HomeRoute />} />
+
           {/* Protected Dashboard pages */}
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/chat" element={<AIChat />} />
-              <Route path="/disease" element={<DiseaseDetection />} />
               <Route path="/soil" element={<SoilAnalysis />} />
-              <Route path="/market" element={<MarketDashboard />} />
-              <Route path="/schemes" element={<GovSchemes />} />
               <Route path="/forum" element={<Forum />} />
               <Route path="/experts" element={<Experts />} />
               <Route path="/expenses" element={<Expenses />} />

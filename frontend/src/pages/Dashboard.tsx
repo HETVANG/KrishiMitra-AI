@@ -17,7 +17,8 @@ import {
   Search,
   ShieldAlert,
   Activity,
-  Brain
+  Brain,
+  Droplets
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -33,6 +34,7 @@ export const Dashboard: React.FC = () => {
   const [mandiPrices, setMandiPrices] = useState<any[]>([]);
   const [financials, setFinancials] = useState<any>(null);
   const [predictions, setPredictions] = useState<any>(null);
+  const [irrigationData, setIrrigationData] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
@@ -276,9 +278,23 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchIrrigation = async () => {
+      try {
+        const res = await api.get('/irrigation/status');
+        if (res.data && res.data.success) {
+          setIrrigationData(res.data);
+        }
+      } catch (err) {
+        console.warn('Error loading irrigation status:', err);
+      }
+    };
+
     fetchDashboardData();
     fetchFinancials();
-    if (user) fetchPredictions();
+    if (user) {
+      fetchPredictions();
+      fetchIrrigation();
+    }
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
   // GIS calculation helper functions
@@ -1013,6 +1029,39 @@ export const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Smart Irrigation Dashboard Widget Section */}
+        {irrigationData && irrigationData.recommendation && (
+          <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl shrink-0">
+                <Droplets size={24} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Smart Irrigation Intelligence</h3>
+                  <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                    {irrigationData.recommendation.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed max-w-3xl">
+                  {irrigationData.recommendation.summary}
+                </p>
+                <div className="text-[10px] text-gray-400 font-semibold pt-1">
+                  Suggested Action: {irrigationData.recommendation.recommendedActions?.[0]?.title || 'Check soil moisture before watering.'}
+                </div>
+              </div>
+            </div>
+
+            <Link
+              to="/irrigation"
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 shrink-0 transition-colors"
+            >
+              <span>Smart Irrigation Hub</span>
+              <ChevronRight size={14} />
+            </Link>
           </div>
         )}
 

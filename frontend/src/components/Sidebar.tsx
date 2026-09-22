@@ -15,7 +15,8 @@ import {
   CloudSun,
   Sparkles,
   Wallet,
-  Brain
+  Brain,
+  Droplets
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
     { to: '/copilot', label: 'AI Farm Copilot', icon: Brain },
     { to: '/predictive-intelligence', label: 'Predictive Crop Risks', icon: ShieldAlert },
+    { to: '/irrigation', label: 'Smart Irrigation', icon: Droplets },
     { to: '/chat', label: t('nav.chatbot'), icon: MessageSquare },
     { to: '/disease', label: t('nav.disease'), icon: ScanEye },
     { to: '/soil', label: t('nav.soil'), icon: Sprout },

@@ -18,6 +18,7 @@ const Dashboard = React.lazy(() => import('./pages/Dashboard').then(m => ({ defa
 const AIChat = React.lazy(() => import('./pages/AIChat').then(m => ({ default: m.AIChat })));
 const FarmCopilot = React.lazy(() => import('./pages/FarmCopilot').then(m => ({ default: m.FarmCopilot })));
 const PredictiveIntelligence = React.lazy(() => import('./pages/PredictiveIntelligence').then(m => ({ default: m.PredictiveIntelligence })));
+const SmartIrrigation = React.lazy(() => import('./pages/SmartIrrigation').then(m => ({ default: m.SmartIrrigation })));
 const DiseaseDetection = React.lazy(() => import('./pages/DiseaseDetection').then(m => ({ default: m.DiseaseDetection })));
 const SoilAnalysis = React.lazy(() => import('./pages/SoilAnalysis').then(m => ({ default: m.SoilAnalysis })));
 const MarketDashboard = React.lazy(() => import('./pages/MarketDashboard').then(m => ({ default: m.MarketDashboard })));
@@ -111,6 +112,7 @@ const DashboardLayout = () => {
     const path = window.location.pathname;
     if (path === '/' || path === '/dashboard') return 'Farmer Intelligence Dashboard';
     if (path === '/predictive-intelligence') return 'Predictive Crop Intelligence Engine';
+    if (path === '/irrigation') return 'Smart Irrigation Intelligence';
     if (path === '/copilot') return 'AI Farm Copilot Intelligence';
     if (path === '/chat') return 'AI Assistant Consultation';
     if (path === '/disease') return 'AI Leaf Pathology Diagnosis';
@@ -234,6 +236,7 @@ export const AppContent = () => {
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/predictive-intelligence" element={<PredictiveIntelligence />} />
+              <Route path="/irrigation" element={<SmartIrrigation />} />
               <Route path="/copilot" element={<FarmCopilot />} />
               <Route path="/chat" element={<AIChat />} />
               <Route path="/soil" element={<SoilAnalysis />} />

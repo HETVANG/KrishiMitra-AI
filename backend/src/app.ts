@@ -22,6 +22,7 @@ import paymentRoutes from './routes/paymentRoutes';
 import adminRoutes from './routes/adminRoutes';
 import videoConsultationRoutes from './routes/videoConsultationRoutes';
 import copilotRoutes from './routes/copilotRoutes';
+import predictiveRoutes from './routes/predictiveRoutes';
 import { authenticate } from './middleware/auth';
 import { PaymentController } from './controllers/PaymentController';
 
@@ -63,6 +64,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/copilot', copilotRoutes);
+app.use('/api/predictions', predictiveRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.post('/api/create-order', authenticate, PaymentController.createOrder);

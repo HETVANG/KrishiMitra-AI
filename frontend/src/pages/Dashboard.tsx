@@ -14,7 +14,10 @@ import {
   ChevronRight,
   TrendingDown,
   Volume2,
-  Search
+  Search,
+  ShieldAlert,
+  Activity,
+  Brain
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -29,6 +32,7 @@ export const Dashboard: React.FC = () => {
   const [weather, setWeather] = useState<any>(null);
   const [mandiPrices, setMandiPrices] = useState<any[]>([]);
   const [financials, setFinancials] = useState<any>(null);
+  const [predictions, setPredictions] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
@@ -261,8 +265,20 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchPredictions = async () => {
+      try {
+        const res = await api.get('/predictions');
+        if (res.data && res.data.success) {
+          setPredictions(res.data);
+        }
+      } catch (err) {
+        console.warn('Error loading predictive risk data:', err);
+      }
+    };
+
     fetchDashboardData();
     fetchFinancials();
+    if (user) fetchPredictions();
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
   // GIS calculation helper functions
@@ -956,6 +972,49 @@ export const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Predictive Crop Risk Outlook Widget Section */}
+        {predictions && predictions.signals && (
+          <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={20} className="text-brand-600 dark:text-brand-400" />
+                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Predictive Farm Risk Outlook</h3>
+                <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
+                  predictions.overallOutlook === 'high' ? 'bg-red-100 text-red-700' : predictions.overallOutlook === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                }`}>
+                  {predictions.overallOutlook} Risk
+                </span>
+              </div>
+              <Link to="/predictive-intelligence" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                View Risk Intelligence Engine <ChevronRight size={14} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {predictions.signals.map((sig: any) => (
+                <div key={sig.id} className="p-4 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 space-y-1.5 flex flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">{sig.category} Risk</span>
+                    <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                      sig.level === 'high' ? 'bg-red-100 text-red-700' : sig.level === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {sig.level}
+                    </span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-gray-800 dark:text-dark-100 line-clamp-1">{sig.title}</h4>
+                  <p className="text-[11px] text-gray-500 dark:text-dark-400 leading-snug line-clamp-2">{sig.summary}</p>
+                  <div className="pt-2 text-[10px] font-bold text-brand-600 dark:text-brand-400 flex items-center justify-between border-t border-gray-200/50 dark:border-dark-800">
+                    <span>Horizon: {sig.timeframe.replace('_', ' ')}</span>
+                    <Link to="/predictive-intelligence" className="hover:underline flex items-center">
+                      Details <ChevronRight size={12} />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Financial Expense Pie Card (5 cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">

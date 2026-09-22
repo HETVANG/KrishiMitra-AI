@@ -35,6 +35,7 @@ export const Dashboard: React.FC = () => {
   const [financials, setFinancials] = useState<any>(null);
   const [predictions, setPredictions] = useState<any>(null);
   const [irrigationData, setIrrigationData] = useState<any>(null);
+  const [activeCropCycle, setActiveCropCycle] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
@@ -289,11 +290,26 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchCropCycles = async () => {
+      try {
+        const res = await api.get('/crop-cycles');
+        if (res.data && res.data.success && Array.isArray(res.data.data)) {
+          const activeList = res.data.data.filter((c: any) => c.status !== 'COMPLETED' && c.status !== 'CANCELLED');
+          if (activeList.length > 0) {
+            setActiveCropCycle(activeList[0]);
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading active crop cycle for dashboard:', err);
+      }
+    };
+
     fetchDashboardData();
     fetchFinancials();
     if (user) {
       fetchPredictions();
       fetchIrrigation();
+      fetchCropCycles();
     }
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
@@ -871,6 +887,36 @@ export const Dashboard: React.FC = () => {
           <span>ℹ️ Your Premium Trial has ended. You are now on the Free Plan. Upgrade anytime to unlock Premium features.</span>
           <Link to="/pricing" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-extrabold text-xs shadow-sm transition-colors min-h-[36px] flex items-center shrink-0">
             Upgrade to Premium
+          </Link>
+        </div>
+      )}
+
+      {/* Active Farm Lifecycle Card */}
+      {activeCropCycle && (
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold">
+              <Sprout size={24} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-md">
+                  Active Crop Lifecycle
+                </span>
+                <span className="text-xs text-gray-500 dark:text-dark-400 font-medium">
+                  Field: {activeCropCycle.fieldName || 'Main Field'}
+                </span>
+              </div>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mt-0.5">
+                {activeCropCycle.cropName} {activeCropCycle.variety ? `(${activeCropCycle.variety})` : ''} &bull; Stage: <span className="text-emerald-600 dark:text-emerald-400">{activeCropCycle.currentStage}</span>
+              </h3>
+            </div>
+          </div>
+          <Link
+            to="/crop-cycles"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-colors flex items-center gap-1.5 shrink-0"
+          >
+            Manage Lifecycle <ChevronRight size={14} />
           </Link>
         </div>
       )}

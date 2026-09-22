@@ -16,7 +16,8 @@ import {
   Sparkles,
   Wallet,
   Brain,
-  Droplets
+  Droplets,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
   const links = [
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/crop-cycles', label: 'Farm Lifecycle', icon: Activity },
     { to: '/copilot', label: 'AI Farm Copilot', icon: Brain },
     { to: '/predictive-intelligence', label: 'Predictive Crop Risks', icon: ShieldAlert },
     { to: '/irrigation', label: 'Smart Irrigation', icon: Droplets },

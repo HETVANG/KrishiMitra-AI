@@ -120,8 +120,8 @@ export class CropLifecycleService {
     try {
       marketIntel = await MarketIntelligenceService.getCommodityIntelligence(cycle.cropName, {
         userId,
-        state: ctx.farm?.state || undefined,
-        district: ctx.farm?.district || undefined
+        state: ctx.farm?.location?.state || undefined,
+        district: ctx.farm?.location?.district || undefined
       });
     } catch (mErr) {
       console.warn('[CropLifecycleService] Market intelligence fetch warn:', mErr);
@@ -175,7 +175,7 @@ export class CropLifecycleService {
       cycle,
       growthStageInfo: stageInfo,
       weather: ctx.weather,
-      predictiveRisks: ctx.predictiveRisks || [],
+      predictiveRisks: (ctx as any).predictiveRisks || (ctx as any).predictions?.signals || [],
       irrigationStatus: (ctx as any).irrigation || null,
       diseaseDiagnosis: latestDiseaseScan,
       marketIntelligence: marketIntel,

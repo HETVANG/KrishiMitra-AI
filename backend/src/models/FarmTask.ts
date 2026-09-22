@@ -11,7 +11,15 @@ const FarmTaskSchema = new Schema(
     dueDate: { type: String, required: true }, // Format YYYY-MM-DD
     planType: { type: String, enum: ['daily', 'weekly'], default: 'daily', index: true },
     completed: { type: Boolean, default: false },
-    category: { type: String, enum: ['irrigation', 'fertilizer', 'disease_check', 'weather_prep', 'market', 'general'], default: 'general' }
+    category: { type: String, enum: ['irrigation', 'fertilizer', 'disease_check', 'weather_prep', 'market', 'general'], default: 'general' },
+    // Agentic automation extensions
+    status: { type: String, enum: ['TODO', 'IN_PROGRESS', 'COMPLETED', 'DISMISSED', 'WAITING_APPROVAL'], default: 'TODO', index: true },
+    approvalRequired: { type: Boolean, default: false },
+    approvedBy: { type: String, default: null },
+    agentType: { type: String, default: null },
+    cropCycleId: { type: Schema.Types.ObjectId, ref: 'CropCycle', default: null },
+    evidence: { type: Schema.Types.Mixed, default: null },
+    explanation: { type: String, default: null }
   },
   { timestamps: true }
 );

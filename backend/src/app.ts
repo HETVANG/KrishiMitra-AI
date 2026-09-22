@@ -25,8 +25,13 @@ import copilotRoutes from './routes/copilotRoutes';
 import predictiveRoutes from './routes/predictiveRoutes';
 import irrigationRoutes from './routes/irrigationRoutes';
 import cropCycleRoutes from './routes/cropCycleRoutes';
+import agentRoutes from './routes/agentRoutes';
+import { AgentOrchestrator } from './services/agents/agentOrchestrator';
 import { authenticate } from './middleware/auth';
 import { PaymentController } from './controllers/PaymentController';
+
+// Initialize Agent Orchestrator event listeners
+AgentOrchestrator.init();
 
 const app = express();
 
@@ -69,6 +74,7 @@ app.use('/api/copilot', copilotRoutes);
 app.use('/api/predictions', predictiveRoutes);
 app.use('/api/irrigation', irrigationRoutes);
 app.use('/api/crop-cycles', cropCycleRoutes);
+app.use('/api/agents', agentRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.post('/api/create-order', authenticate, PaymentController.createOrder);

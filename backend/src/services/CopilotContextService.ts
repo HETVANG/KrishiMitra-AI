@@ -3,6 +3,9 @@ import { Farm } from '../models/Farm';
 import { SoilAnalysis } from '../models/SoilAnalysis';
 import { DiseaseHistory } from '../models/DiseaseHistory';
 import { MarketPrice } from '../models/MarketPrice';
+import { CropCycle } from '../models/CropCycle';
+import { AgentActivity } from '../models/AgentActivity';
+import { FarmTask } from '../models/FarmTask';
 import { WeatherService } from './WeatherService';
 
 export interface NormalizedFarmContext {
@@ -77,6 +80,25 @@ export interface NormalizedFarmContext {
     trend?: string | null;
     unit?: string | null;
     lastUpdated: Date | null;
+  };
+  cropCycles?: Array<{
+    id: string;
+    cropName: string;
+    variety?: string;
+    fieldName: string;
+    currentStage: string;
+    plantingDate: Date;
+    expectedHarvestDate?: Date;
+  }>;
+  agents?: {
+    activeAgentsCount: number;
+    pendingApprovalsCount: number;
+    recentInsights: Array<{
+      agentType: string;
+      observation: string;
+      reasoningSummary: string;
+      status: string;
+    }>;
   };
   meta: {
     generatedAt: string;
@@ -250,6 +272,50 @@ export class CopilotContextService {
       missingFields.push('marketPrice');
     }
 
+    // 7. Fetch Active Crop Cycles
+    let activeCycles: any[] = [];
+    try {
+      const activeCycleDocs = await CropCycle.find({ user: userId, status: 'ACTIVE' }).lean();
+      activeCycles = activeCycleDocs.map((c: any) => ({
+        id: c._id.toString(),
+        cropName: c.cropName,
+        variety: c.variety,
+        fieldName: c.fieldName || 'Main Field',
+        currentStage: c.currentStage,
+        plantingDate: c.plantingDate,
+        expectedHarvestDate: c.expectedHarvestDate
+      }));
+    } catch {
+      // Ignore if fetch fails
+    }
+
+    // 8. Fetch Agents Summary & Recent Insights
+    let agentSummary = {
+      activeAgentsCount: 5,
+      pendingApprovalsCount: 0,
+      recentInsights: [] as any[]
+    };
+    try {
+      const pendingCount = await FarmTask.countDocuments({ user: userId, status: 'WAITING_APPROVAL' });
+      const recentActivities = await AgentActivity.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .lean();
+
+      agentSummary = {
+        activeAgentsCount: 5,
+        pendingApprovalsCount: pendingCount,
+        recentInsights: recentActivities.map((a: any) => ({
+          agentType: a.agentType,
+          observation: a.observation,
+          reasoningSummary: a.reasoningSummary,
+          status: a.status
+        }))
+      };
+    } catch {
+      // Ignore if fetch fails
+    }
+
     // Build final Context JSON
     return {
       user: {
@@ -281,6 +347,8 @@ export class CopilotContextService {
       weather: weatherData,
       disease: diseaseData,
       market: marketData,
+      cropCycles: activeCycles,
+      agents: agentSummary,
       meta: {
         generatedAt: new Date().toISOString(),
         missingFields

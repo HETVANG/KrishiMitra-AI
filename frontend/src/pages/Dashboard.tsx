@@ -18,7 +18,8 @@ import {
   ShieldAlert,
   Activity,
   Brain,
-  Droplets
+  Droplets,
+  Bot
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -36,6 +37,7 @@ export const Dashboard: React.FC = () => {
   const [predictions, setPredictions] = useState<any>(null);
   const [irrigationData, setIrrigationData] = useState<any>(null);
   const [activeCropCycle, setActiveCropCycle] = useState<any>(null);
+  const [agentStatus, setAgentStatus] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
@@ -304,12 +306,24 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchAgentStatus = async () => {
+      try {
+        const res = await api.get('/agents/status');
+        if (res.data && res.data.success) {
+          setAgentStatus(res.data.data);
+        }
+      } catch (err) {
+        console.warn('Error loading agent status for dashboard:', err);
+      }
+    };
+
     fetchDashboardData();
     fetchFinancials();
     if (user) {
       fetchPredictions();
       fetchIrrigation();
       fetchCropCycles();
+      fetchAgentStatus();
     }
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
@@ -890,6 +904,41 @@ export const Dashboard: React.FC = () => {
           </Link>
         </div>
       )}
+
+      {/* Farm Agents Summary Card */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0 font-bold border border-brand-500/30">
+            <Bot size={24} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-500/30 text-brand-300 px-2 py-0.5 rounded-md border border-brand-400/20">
+                Agentic Automation Engine
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                5 Specialized Agents Active
+              </span>
+            </div>
+            <h3 className="font-extrabold text-base text-white mt-0.5">
+              Farm Monitoring &bull; Crop Health &bull; Irrigation &bull; Market &bull; Planning
+            </h3>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {agentStatus?.pendingTasksCount > 0 && (
+            <span className="px-3 py-1 bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-full text-xs font-bold animate-pulse">
+              {agentStatus.pendingTasksCount} Approval{agentStatus.pendingTasksCount > 1 ? 's' : ''} Needed
+            </span>
+          )}
+          <Link
+            to="/agents"
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-sm transition-colors flex items-center gap-1.5"
+          >
+            Open Agent Center <ChevronRight size={14} />
+          </Link>
+        </div>
+      </div>
 
       {/* Active Farm Lifecycle Card */}
       {activeCropCycle && (

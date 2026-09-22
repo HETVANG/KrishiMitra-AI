@@ -2,83 +2,129 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { Disease } from '../models/Disease';
 import { DiseaseHistory } from '../models/DiseaseHistory';
-import { User } from '../models/User';
-import { GeminiService } from '../services/GeminiService';
-
-import { CloudinaryService } from '../services/CloudinaryService';
+import { DiseaseIntelligenceService } from '../services/disease/diseaseIntelligenceService';
 
 export class DiseaseController {
   /**
-   * Diagnoses crop disease from leaf upload using Gemini Vision
+   * Advanced Disease Intelligence analysis (Multimodal image + Farm/Crop context + Env Risk)
    */
-  static async diagnose(req: AuthRequest, res: Response, next: NextFunction) {
+  static async analyze(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       if (!req.file) {
-        return res.status(400).json({ success: false, message: 'Please upload a leaf image file.' });
+        return res.status(400).json({ success: false, message: 'Please upload a clear leaf image file.' });
       }
 
-      const lang = req.query.lang || (req.user && req.user.settings && req.user.settings.language) || 'en';
+      const lang = (req.query.lang as string) || (req.body.language as string) || (req.user?.settings?.language) || 'en';
+      const farmId = req.body.farmId || req.query.farmId || undefined;
+      const crop = req.body.crop || req.query.crop || undefined;
+      const variety = req.body.variety || undefined;
+      const growthStage = req.body.growthStage || undefined;
+      const farmerNotes = req.body.farmerNotes || req.body.notes || undefined;
 
-      // Upload image to Cloudinary
-      let imageUri = '';
-      try {
-        imageUri = await CloudinaryService.uploadImageBuffer(req.file.buffer, req.file.mimetype);
-        console.log('[Disease Controller] Cloudinary upload success:', imageUri);
-      } catch (uploadErr) {
-        console.warn('[Disease Controller] Cloudinary upload failed, proceeding with empty URI:', uploadErr);
-      }
-
-      // Analyze image via Gemini Service
-      const diagnosis = await GeminiService.diagnoseCropDisease(
+      const assessment = await DiseaseIntelligenceService.processLeafScan(
         req.file.buffer,
         req.file.mimetype,
-        lang as string
+        {
+          userId: req.user ? req.user._id.toString() : undefined,
+          farmId,
+          crop,
+          variety,
+          growthStage,
+          farmerNotes,
+          language: lang
+        }
       );
 
-      // Save to database cache history & user scan counts if authenticated
+      // Backwards compatibility format for diagnosis property
+      const diagnosis = {
+        name: assessment.diseaseName,
+        localName: assessment.localName,
+        scientificName: assessment.scientificName,
+        confidenceScore: assessment.confidenceScore,
+        condition: assessment.condition,
+        severity: assessment.severity,
+        symptoms: assessment.symptoms,
+        evidence: assessment.evidence,
+        causes: assessment.possibleCauses,
+        organicTreatment: assessment.organicTreatment,
+        chemicalTreatment: assessment.chemicalTreatment,
+        pesticideDetails: assessment.pesticideDetails,
+        preventiveTips: assessment.preventiveTips
+      };
+
+      // Upsert into Disease collection
       try {
-        if (req.user) {
-          // Increment scan usage count
-          await User.findByIdAndUpdate(req.user._id, { $inc: { scansUsedToday: 1 } });
-          req.user.scansUsedToday = (req.user.scansUsedToday || 0) + 1;
-
-          // Save scan history log to MongoDB
-          await DiseaseHistory.create({
-            user: req.user._id,
-            diseaseName: diagnosis.name,
-            scientificName: diagnosis.scientificName,
-            confidenceScore: diagnosis.confidenceScore,
-            imageUri,
-            symptoms: diagnosis.symptoms,
-            causes: diagnosis.causes,
-            organicTreatment: diagnosis.organicTreatment,
-            chemicalTreatment: diagnosis.chemicalTreatment,
-            preventiveTips: diagnosis.preventiveTips,
-            pesticideDetails: diagnosis.pesticideDetails
-          });
-        }
-
-        // Upsert general disease entry for search list (both guest and user)
         await Disease.findOneAndUpdate(
-          { name: diagnosis.name },
+          { name: assessment.diseaseName },
           {
-            name: diagnosis.name,
-            symptoms: diagnosis.symptoms,
-            causes: diagnosis.causes,
-            chemicalTreatment: diagnosis.chemicalTreatment,
-            organicTreatment: diagnosis.organicTreatment,
-            preventiveTips: diagnosis.preventiveTips
+            name: assessment.diseaseName,
+            symptoms: assessment.symptoms,
+            causes: assessment.possibleCauses,
+            chemicalTreatment: assessment.chemicalTreatment,
+            organicTreatment: assessment.organicTreatment,
+            preventiveTips: assessment.preventiveTips
           },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
       } catch (dbErr) {
-        console.warn(`[Disease Save Cache Warning] Failed: ${dbErr}`);
+        console.warn('[DiseaseController] Cache update warning:', dbErr);
       }
 
       return res.json({
         success: true,
-        diagnosis,
-        imageUri,
+        assessment,
+        diagnosis, // Backwards compatibility
+        imageUri: assessment.imageUri
+      });
+    } catch (error: any) {
+      console.error('[DiseaseController Analyze Error]', error);
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to complete disease analysis.'
+      });
+    }
+  }
+
+  /**
+   * Backwards compatible legacy diagnose endpoint
+   */
+  static async diagnose(req: AuthRequest, res: Response, next: NextFunction) {
+    return DiseaseController.analyze(req, res, next);
+  }
+
+  /**
+   * Fetch disease history logs for authenticated user
+   */
+  static async getHistory(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const { farmId, crop, limit = 20, page = 1 } = req.query;
+      const query: any = { user: req.user._id };
+
+      if (farmId) query.farm = farmId;
+      if (crop) query.crop = new RegExp(crop as string, 'i');
+
+      const skip = (Number(page) - 1) * Number(limit);
+
+      const [history, total] = await Promise.all([
+        DiseaseHistory.find(query)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(Number(limit)),
+        DiseaseHistory.countDocuments(query)
+      ]);
+
+      return res.json({
+        success: true,
+        history,
+        pagination: {
+          total,
+          page: Number(page),
+          pages: Math.ceil(total / Number(limit))
+        }
       });
     } catch (error) {
       next(error);
@@ -86,7 +132,97 @@ export class DiseaseController {
   }
 
   /**
-   * Fetch known disease descriptions lists
+   * Fetch single scan detail by ID
+   */
+  static async getHistoryById(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const scan = await DiseaseHistory.findOne({
+        _id: req.params.id,
+        user: req.user._id
+      });
+
+      if (!scan) {
+        return res.status(404).json({ success: false, message: 'Scan history record not found' });
+      }
+
+      return res.json({
+        success: true,
+        scan
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Schedule or update follow-up date for a scan
+   */
+  static async scheduleFollowUp(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const { days = 5, notes } = req.body;
+      const updated = await DiseaseIntelligenceService.scheduleFollowUp(
+        req.user._id.toString(),
+        req.params.id,
+        Number(days),
+        notes
+      );
+
+      return res.json({
+        success: true,
+        message: `Follow-up scheduled for ${days} days`,
+        scan: updated
+      });
+    } catch (error: any) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+  }
+
+  /**
+   * Fetch active disease concerns for a farm (scans in past 30 days with active issues)
+   */
+  static async getActiveConcerns(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+
+      const farmId = req.params.farmId;
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      const query: any = {
+        user: req.user._id,
+        createdAt: { $gte: thirtyDaysAgo },
+        condition: { $ne: 'HEALTHY' }
+      };
+
+      if (farmId && farmId !== 'all') {
+        query.farm = farmId;
+      }
+
+      const concerns = await DiseaseHistory.find(query)
+        .sort({ createdAt: -1 })
+        .limit(10);
+
+      return res.json({
+        success: true,
+        concerns,
+        hasActiveConcerns: concerns.length > 0
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Fetch list of known diseases
    */
   static async listDiseases(req: AuthRequest, res: Response, next: NextFunction) {
     try {

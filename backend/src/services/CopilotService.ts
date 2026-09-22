@@ -140,7 +140,7 @@ FARM CONTEXT PROVIDED (Verified Data):
 - Primary Crops: ${context.farm.crops.map(c => c.name).join(', ')}
 - Live Weather: ${context.weather.available ? `${context.weather.tempCelsius}°C, ${context.weather.condition}, Humidity: ${context.weather.humidity}%, Rain Prob: ${context.weather.rainProbability}%` : 'Weather Data Unavailable'}
 - Soil Analysis: ${context.soil.available ? `pH: ${context.soil.ph}, N: ${context.soil.nitrogen}, P: ${context.soil.phosphorus}, K: ${context.soil.potassium}` : 'Soil Analysis Not Performed'}
-- Disease History: ${context.disease.available ? `Recent Disease: ${context.disease.latestDiagnosis?.disease} (Confidence: ${context.disease.latestDiagnosis?.confidence})` : 'No Recent Leaf Scans'}
+- Disease History: ${context.disease.available ? `Latest Scan: ${context.disease.latestDiagnosis?.disease} on ${context.disease.latestDiagnosis?.crop} (Condition: ${context.disease.latestDiagnosis?.condition}, Severity: ${context.disease.latestDiagnosis?.severity}, Follow-up Due: ${context.disease.latestDiagnosis?.followUpDate ? new Date(context.disease.latestDiagnosis.followUpDate).toLocaleDateString() : 'None'})` : 'No Recent Leaf Scans'}
 - Market Intelligence: ${context.market.available ? `Commodity: ${context.market.commodity}, Market: ${context.market.marketName}, Avg Price: ₹${context.market.avgPrice}` : 'Market Price Unavailable'}
 
 SAFETY & HONESTY RULES:

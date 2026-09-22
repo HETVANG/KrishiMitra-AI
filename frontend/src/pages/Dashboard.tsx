@@ -237,12 +237,12 @@ export const Dashboard: React.FC = () => {
 
       // 3. Fetch Disease History
       try {
-        const res = await api.get('/diseases/list');
+        const res = await api.get('/diseases/history?limit=3');
         if (res.data && res.data.success) {
           setDiseaseHistory(res.data.history || []);
         }
       } catch (err) {
-        console.warn('Failed to load disease history for alerts:', err);
+        console.warn('Failed to load disease history for dashboard widget:', err);
       }
 
       // 4. Fetch Schemes List
@@ -1064,6 +1064,46 @@ export const Dashboard: React.FC = () => {
             </Link>
           </div>
         )}
+
+        {/* Crop Health & Disease Intelligence Widget Section */}
+        <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-2xl shrink-0">
+              <ScanEye size={24} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Crop Health & Pathology Intelligence</h3>
+                <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
+                  diseaseHistory.length > 0 && diseaseHistory[0].condition !== 'HEALTHY'
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                }`}>
+                  {diseaseHistory.length > 0 ? (diseaseHistory[0].condition ? diseaseHistory[0].condition.replace(/_/g, ' ') : 'ACTIVE SCANS LOGGED') : 'MONITORING READY'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed max-w-3xl">
+                {diseaseHistory.length > 0
+                  ? `Latest scan on ${diseaseHistory[0].crop || 'crop'}: "${diseaseHistory[0].diseaseName}" (${diseaseHistory[0].severity || 'moderate'} severity). Scanned on ${new Date(diseaseHistory[0].createdAt).toLocaleDateString()}.`
+                  : 'No active disease concerns logged. Perform routine leaf scans to monitor crop foliage and detect early pathogen signs.'
+                }
+              </p>
+              {diseaseHistory.length > 0 && diseaseHistory[0].recommendedActions?.[0] && (
+                <div className="text-[10px] text-gray-400 font-semibold pt-1">
+                  Next Step: {diseaseHistory[0].recommendedActions[0].title} — {diseaseHistory[0].recommendedActions[0].details}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Link
+            to="/disease"
+            className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 shrink-0 transition-colors"
+          >
+            <span>Disease Pathology Hub</span>
+            <ChevronRight size={14} />
+          </Link>
+        </div>
 
         {/* Financial Expense Pie Card (5 cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">

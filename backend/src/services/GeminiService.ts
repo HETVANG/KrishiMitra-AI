@@ -437,6 +437,124 @@ export class GeminiService {
   }
 
   /**
+   * Multimodal Leaf Disease Detection with Farm/Crop context & structured disease intelligence schema
+   */
+  static async diagnoseCropDiseaseWithContext(
+    imageBuffer: Buffer,
+    mimeType: string,
+    contextHeader: string = '',
+    language: string = 'en'
+  ): Promise<any> {
+    if (genAI) {
+      try {
+        const model = genAI.getGenerativeModel({ model: geminiModel });
+
+        const prompt = `You are a certified senior plant pathologist and agricultural AI diagnostic engine.
+Analyze the attached plant image along with the following farm context:
+${contextHeader}
+
+Categorize the leaf condition into EXACTLY ONE of these categories:
+- "HEALTHY": No disease or pest damage detected.
+- "POSSIBLE_DISEASE": Symptoms indicative of fungal, bacterial, or viral pathogen infection.
+- "POSSIBLE_PEST_DAMAGE": Chewing, boring, or sucking insect pest damage.
+- "NUTRIENT_RELATED_SYMPTOMS": Chlorosis, necrosis, or deficiency patterns.
+- "ENVIRONMENTAL_STRESS": Heat scorch, drought wilt, or sun scald.
+- "UNCERTAIN": Visual symptoms exist but cannot be pinpointed confidently.
+- "INSUFFICIENT_IMAGE_QUALITY": Image is blurry, too dark, out of focus, or does not clearly show a leaf.
+
+IMPORTANT RULES:
+1. Translate ALL text string values into target language: "${language}" (except scientificName which must stay in Latin).
+2. Do NOT invent pesticide dosages or chemical concentrations.
+3. Return STRICT JSON without markdown code blocks.
+
+JSON Format:
+{
+  "condition": "HEALTHY | POSSIBLE_DISEASE | POSSIBLE_PEST_DAMAGE | NUTRIENT_RELATED_SYMPTOMS | ENVIRONMENTAL_STRESS | UNCERTAIN | INSUFFICIENT_IMAGE_QUALITY",
+  "crop": "Crop Name in ${language}",
+  "name": "Disease/Condition Name in ${language}",
+  "localName": "Local Name in ${language}",
+  "scientificName": "Latin scientific name (or N/A)",
+  "confidence": "low | moderate | high",
+  "confidenceScore": 0.88,
+  "severity": "low | moderate | high | uncertain",
+  "symptoms": ["Observable visual symptom 1 in ${language}", "Symptom 2 in ${language}"],
+  "evidence": [
+    { "label": "Visual Evidence", "value": "Observed symptom pattern" },
+    { "label": "Lesion Type", "value": "Necrotic / Chlorotic / Spots" }
+  ],
+  "causes": ["Possible cause 1 in ${language}", "Possible cause 2 in ${language}"],
+  "organicTreatment": ["Safe organic/cultural practice 1 in ${language}"],
+  "chemicalTreatment": ["Registered active chemical spray 1 in ${language}"],
+  "pesticideDetails": {
+    "localName": "Recommended active ingredient in ${language}",
+    "englishName": "Active chemical ingredient (e.g. Mancozeb / Copper Oxychloride)",
+    "brands": ["Common registered product 1"],
+    "dosage": "Follow package label guidelines",
+    "mixingMethod": "Mix thoroughly in water per product instructions",
+    "precautions": "Wear mask, gloves, and protective gear when spraying",
+    "waitingPeriod": "Observe mandatory pre-harvest waiting interval"
+  },
+  "preventiveTips": ["Preventive tip 1 in ${language}", "Preventive tip 2 in ${language}"],
+  "limitations": "AI image analysis provides diagnostic support. Verify with a certified field specialist before applying major treatments."
+}`;
+
+        const imagePart = {
+          inlineData: {
+            data: imageBuffer.toString('base64'),
+            mimeType
+          }
+        };
+
+        const result = await callGeminiWithRetry(() => model.generateContent([prompt, imagePart]));
+        const responseText = result.response.text().trim();
+        console.log('[Gemini Service Context Diagnose Response]', responseText);
+
+        try {
+          return cleanAndParseJson(responseText);
+        } catch (parseErr) {
+          console.warn('[Gemini Context Parse Warning]', parseErr);
+          return {
+            condition: 'POSSIBLE_DISEASE',
+            crop: 'Crop Leaf',
+            name: 'Observed Symptom',
+            localName: 'Leaf Spot / Symptom',
+            scientificName: 'Pathogen',
+            confidence: 'moderate',
+            confidenceScore: 0.75,
+            severity: 'moderate',
+            symptoms: [responseText],
+            causes: ['Underlying pathogen or environmental stress'],
+            organicTreatment: [],
+            chemicalTreatment: [],
+            preventiveTips: []
+          };
+        }
+      } catch (error) {
+        console.error('[Gemini Context Diagnosis Error]', error);
+        throw error;
+      }
+    }
+
+    const mockData = getLocalizedMockData(language);
+    return {
+      condition: 'POSSIBLE_DISEASE',
+      crop: 'Crop Leaf',
+      name: mockData.disease.name,
+      localName: mockData.disease.localName,
+      scientificName: mockData.disease.scientificName,
+      confidence: 'high',
+      confidenceScore: 0.9,
+      severity: 'moderate',
+      symptoms: mockData.disease.symptoms,
+      causes: mockData.disease.causes,
+      organicTreatment: mockData.disease.organicTreatment,
+      chemicalTreatment: mockData.disease.chemicalTreatment,
+      pesticideDetails: mockData.disease.pesticideDetails,
+      preventiveTips: mockData.disease.preventiveTips
+    };
+  }
+
+  /**
    * Crop Recommendations
    */
   static async recommendCrops(inputs: {

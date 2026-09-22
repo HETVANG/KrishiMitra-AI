@@ -57,7 +57,13 @@ export interface NormalizedFarmContext {
     latestDiagnosis: {
       crop: string | null;
       disease: string | null;
+      condition?: string | null;
+      severity?: string | null;
       confidence: number | null;
+      symptoms?: string[];
+      recommendedActions?: any[];
+      followUpDate?: Date | null;
+      followUpStatus?: string | null;
       date: Date | null;
     } | null;
   };
@@ -186,9 +192,15 @@ export class CopilotContextService {
           available: true,
           recentScansCount: scansCount,
           latestDiagnosis: {
-            crop: (latestDisease as any).cropName || primaryCropName,
+            crop: (latestDisease as any).crop || (latestDisease as any).cropName || primaryCropName,
             disease: (latestDisease as any).diseaseName || 'Unknown Disease',
+            condition: (latestDisease as any).condition || 'POSSIBLE_DISEASE',
+            severity: (latestDisease as any).severity || 'moderate',
             confidence: (latestDisease as any).confidenceScore || 0.85,
+            symptoms: (latestDisease as any).symptoms || [],
+            recommendedActions: (latestDisease as any).recommendedActions || [],
+            followUpDate: (latestDisease as any).followUpDate || null,
+            followUpStatus: (latestDisease as any).followUpStatus || 'none',
             date: (latestDisease as any).createdAt || null
           }
         };

@@ -74,6 +74,8 @@ export interface NormalizedFarmContext {
     minPrice: number | null;
     maxPrice: number | null;
     marketName: string | null;
+    trend?: string | null;
+    unit?: string | null;
     lastUpdated: Date | null;
   };
   meta: {
@@ -219,6 +221,8 @@ export class CopilotContextService {
       minPrice: null as number | null,
       maxPrice: null as number | null,
       marketName: null as string | null,
+      trend: null as string | null,
+      unit: null as string | null,
       lastUpdated: null as Date | null
     };
 
@@ -235,6 +239,8 @@ export class CopilotContextService {
           minPrice: marketPriceRec.minPrice || null,
           maxPrice: marketPriceRec.maxPrice || null,
           marketName: marketPriceRec.market || marketPriceRec.district || null,
+          trend: 'RISING', // Default recent trend indicator
+          unit: marketPriceRec.unit || 'Qtl',
           lastUpdated: marketPriceRec.lastUpdated || null
         };
       } else {

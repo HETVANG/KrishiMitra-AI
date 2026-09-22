@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { MarketPriceController } from '../controllers/MarketPriceController';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate, optionalAuthenticate, authorize } from '../middleware/auth';
 import { validateBody } from '../middleware/validator';
 
 const router = Router();
@@ -13,6 +13,15 @@ router.get('/nearby', MarketPriceController.getNearby);
 router.get('/last-update', MarketPriceController.getLastUpdate);
 router.get('/commodities', MarketPriceController.getCommodities);
 router.get('/sync-stats', MarketPriceController.getSyncStats);
+
+// Step 20 Market Intelligence & Comparison endpoints
+router.get('/intelligence/:commodity?', optionalAuthenticate, MarketPriceController.getIntelligence);
+router.get('/compare', MarketPriceController.compareMarkets);
+
+// Step 20 Watchlist Endpoints
+router.get('/watchlist', authenticate, MarketPriceController.getWatchlist);
+router.post('/watchlist', authenticate, MarketPriceController.addToWatchlist);
+router.delete('/watchlist/:crop', authenticate, MarketPriceController.removeFromWatchlist);
 
 router.post(
   '/sync',
@@ -30,3 +39,4 @@ router.post(
 );
 
 export default router;
+

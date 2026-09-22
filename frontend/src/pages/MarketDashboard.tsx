@@ -1,29 +1,55 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
-import { Search, TrendingUp, TrendingDown, HelpCircle, LineChart, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react';
+import { 
+  Search, 
+  TrendingUp, 
+  TrendingDown, 
+  HelpCircle, 
+  LineChart, 
+  RefreshCw, 
+  ArrowLeft, 
+  ArrowRight,
+  Heart,
+  Activity,
+  Layers,
+  Sparkles,
+  Info,
+  Building2,
+  Check
+} from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 export const MarketDashboard: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user, token } = useAuth();
+
+  // Core Market Intelligence Data
+  const [intelligence, setIntelligence] = useState<any>(null);
   const [prices, setPrices] = useState<any[]>([]);
-  const [trending, setTrending] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<any>(null);
-  const [searchCrop, setSearchCrop] = useState('');
+  const [comparison, setComparison] = useState<any>(null);
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+
+  // Filter States
+  const [searchCrop, setSearchCrop] = useState('Wheat');
   const [searchState, setSearchState] = useState('');
   const [searchDistrict, setSearchDistrict] = useState('');
   const [searchDate, setSearchDate] = useState('');
+  const [periodDays, setPeriodDays] = useState<number>(7);
   const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<any>(null);
+
+  // Status & Loading States
   const [loading, setLoading] = useState(false);
+  const [loadingIntel, setLoadingIntel] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [loadingTrending, setLoadingTrending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [watchlistUpdating, setWatchlistUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [fallbackSource, setFallbackSource] = useState<string | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
 
   const getTranslatedCropName = (englishName: string): string => {
     if (!englishName) return '';
@@ -39,12 +65,10 @@ export const MarketDashboard: React.FC = () => {
         }
       }
     }
-    if (categories.length > 0) {
-      console.warn(`[Crop Translation Warning] Failed to translate crop "${englishName}" (language: ${i18n.language}). No matching commodity found in loaded catalog.`);
-    }
     return englishName;
   };
 
+  // 1. Load Commodity Categories
   useEffect(() => {
     const loadCommodities = async () => {
       try {
@@ -59,14 +83,48 @@ export const MarketDashboard: React.FC = () => {
     void loadCommodities();
   }, []);
 
-  const fetchPrices = async (targetPage = page) => {
+  // 2. Fetch User Watchlist if Authenticated
+  useEffect(() => {
+    if (token) {
+      api.get('/market/watchlist')
+        .then(res => {
+          if (res.data?.success) {
+            setWatchlist(res.data.watchlist || []);
+          }
+        })
+        .catch(err => console.warn('Failed to load watchlist:', err));
+    }
+  }, [token]);
+
+  // 3. Fetch Unified Market Intelligence
+  const fetchMarketIntelligence = async (cropName = searchCrop) => {
+    setLoadingIntel(true);
+    try {
+      const query = new URLSearchParams({
+        state: searchState,
+        district: searchDistrict,
+        lang: i18n.language
+      });
+      const res = await api.get(`/market/intelligence/${encodeURIComponent(cropName)}?${query.toString()}`);
+      if (res.data?.success) {
+        setIntelligence(res.data.intelligence);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch market intelligence:', err);
+    } finally {
+      setLoadingIntel(false);
+    }
+  };
+
+  // 4. Fetch Prices List & Pagination
+  const fetchPrices = async (targetPage = page, cropName = searchCrop) => {
     setLoading(true);
     setError(null);
     try {
       const query = new URLSearchParams({
         page: String(targetPage),
         limit: '8',
-        crop: searchCrop,
+        crop: cropName,
         state: searchState,
         district: searchDistrict,
       });
@@ -75,9 +133,7 @@ export const MarketDashboard: React.FC = () => {
       const res = await api.get(`/market/prices?${query.toString()}`);
       if (res.data?.success) {
         setPrices(res.data.prices || []);
-        setAnalytics(res.data.analytics || null);
         setPagination(res.data.pagination || null);
-        setLastUpdated(res.data.lastUpdated ? new Date(res.data.lastUpdated).toLocaleString('en-IN') : null);
         setFallbackSource(res.data.fallbackSource || 'exact-match');
       } else {
         setError('Unable to load mandi prices right now.');
@@ -90,16 +146,16 @@ export const MarketDashboard: React.FC = () => {
     }
   };
 
-  const fetchHistory = async () => {
+  // 5. Fetch Historical Trend Data
+  const fetchHistory = async (cropName = searchCrop, period = periodDays) => {
     setLoadingHistory(true);
     try {
       const query = new URLSearchParams({
-        crop: searchCrop || 'Potato',
-        state: searchState || 'West Bengal',
-        district: searchDistrict || 'Hooghly',
-        limit: '12',
+        crop: cropName,
+        state: searchState,
+        district: searchDistrict,
+        limit: String(period === 90 ? 90 : period === 30 ? 30 : 12),
       });
-      if (searchDate) query.set('date', searchDate);
       const res = await api.get(`/market/history?${query.toString()}`);
       if (res.data?.success) {
         setHistory(res.data.history || []);
@@ -111,40 +167,47 @@ export const MarketDashboard: React.FC = () => {
     }
   };
 
-  const fetchTrending = async () => {
-    setLoadingTrending(true);
+  // 6. Fetch Nearby Market Comparisons
+  const fetchComparison = async (cropName = searchCrop) => {
     try {
-      const res = await api.get('/market/trending');
+      const query = new URLSearchParams({
+        crop: cropName,
+        state: searchState,
+        district: searchDistrict,
+        limit: '6'
+      });
+      const res = await api.get(`/market/compare?${query.toString()}`);
       if (res.data?.success) {
-        setTrending(res.data.trending || []);
+        setComparison(res.data.comparison);
       }
     } catch (err) {
-      console.error('Failed to load mandi trends:', err);
-    } finally {
-      setLoadingTrending(false);
+      console.warn('Failed to fetch market comparisons:', err);
     }
   };
 
-  useEffect(() => {
-    void fetchPrices(1);
-    void fetchHistory();
-    void fetchTrending();
-  }, []);
+  // Master fetch trigger
+  const runMasterFetch = (cropName = searchCrop, pDays = periodDays, targetPage = 1) => {
+    void fetchMarketIntelligence(cropName);
+    void fetchPrices(targetPage, cropName);
+    void fetchHistory(cropName, pDays);
+    void fetchComparison(cropName);
+  };
 
-  const handleSearch = (e: React.FormEvent) => {
+  useEffect(() => {
+    runMasterFetch(searchCrop, periodDays, 1);
+  }, [searchCrop, periodDays, searchState]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    void fetchPrices(1);
-    void fetchHistory();
+    runMasterFetch(searchCrop, periodDays, 1);
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
       await api.post('/market/sync');
-      await fetchPrices(page);
-      await fetchHistory();
-      await fetchTrending();
+      runMasterFetch(searchCrop, periodDays, page);
     } catch (err) {
       console.error('Failed to refresh mandi prices:', err);
       setError('Refresh failed. The app will continue using the latest cached prices.');
@@ -153,76 +216,127 @@ export const MarketDashboard: React.FC = () => {
     }
   };
 
-  const metrics = useMemo(() => {
-    const items = (prices || []).filter((p) => {
-      const priceVal = Number(p.avgPrice || p.modalPrice || 0);
-      return priceVal > 0 || p.isTrulyZero === true;
-    });
-    const minPrice = items.length > 0 ? Math.min(...items.map((p) => Number(p.minPrice || 0))) : 0;
-    const maxPrice = items.length > 0 ? Math.max(...items.map((p) => Number(p.maxPrice || 0))) : 0;
-    const avgPrice = items.length > 0 ? Math.round(items.reduce((acc, p) => acc + Number(p.avgPrice || p.modalPrice || 0), 0) / items.length) : 0;
-    return { minPrice, maxPrice, avgPrice };
-  }, [prices]);
-
-  const trendCards = useMemo(() => {
-    if (!trending.length) {
-      return [
-        { name: 'Wheat', growth: '+2.1%', trend: 'up', price: '₹2200/Qtl' },
-        { name: 'Mustard', growth: '+1.4%', trend: 'up', price: '₹5500/Qtl' },
-        { name: 'Cotton', growth: '+0.8%', trend: 'up', price: '₹6500/Qtl' },
-      ];
+  const toggleWatchlist = async () => {
+    if (!token) {
+      alert('Please sign in to save commodities to your watchlist.');
+      return;
     }
 
-    return trending.slice(0, 4).map((item) => {
-      const diff = Number(item.maxPrice || 0) - Number(item.minPrice || 0);
-      const pct = Number(item.minPrice || 0) > 0 ? (diff / Number(item.minPrice)) * 100 : 2.5;
-      const priceVal = Number(item.avgPrice || item.modalPrice || 0);
-      return {
-        name: item.crop,
-        growth: `+${pct.toFixed(1)}%`,
-        trend: 'up',
-        price: priceVal === 0 && !item.isTrulyZero ? 'Price Not Available' : `₹${priceVal}/Qtl`
-      };
-    });
-  }, [trending]);
+    setWatchlistUpdating(true);
+    try {
+      if (intelligence?.isWatchlisted) {
+        await api.delete(`/market/watchlist/${encodeURIComponent(searchCrop)}`);
+        setIntelligence((prev: any) => prev ? { ...prev, isWatchlisted: false } : null);
+        setWatchlist((prev) => prev.filter((w) => w.crop.toLowerCase() !== searchCrop.toLowerCase()));
+      } else {
+        await api.post('/market/watchlist', { crop: searchCrop, state: searchState, district: searchDistrict });
+        setIntelligence((prev: any) => prev ? { ...prev, isWatchlisted: true } : null);
+        const updatedList = await api.get('/market/watchlist');
+        if (updatedList.data?.success) {
+          setWatchlist(updatedList.data.watchlist || []);
+        }
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update watchlist.');
+    } finally {
+      setWatchlistUpdating(false);
+    }
+  };
+
+  const getTrendBadgeStyle = (trend?: string) => {
+    switch (trend) {
+      case 'RISING':
+        return 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200';
+      case 'FALLING':
+        return 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 border-red-200';
+      case 'STABLE':
+        return 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200';
+      default:
+        return 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 border-gray-200';
+    }
+  };
+
+  const getVolatilityBadgeStyle = (volatility?: string) => {
+    switch (volatility) {
+      case 'HIGH':
+        return 'bg-red-500 text-white font-bold';
+      case 'MODERATE':
+        return 'bg-amber-500 text-white font-bold';
+      case 'LOW':
+        return 'bg-emerald-500 text-white font-bold';
+      default:
+        return 'bg-gray-500 text-white font-bold';
+    }
+  };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="bg-gradient-to-r from-amber-500 to-amber-700 text-white p-6 rounded-3xl shadow-lg flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div className="space-y-6 pb-12 text-left">
+      {/* Banner */}
+      <div className="bg-gradient-to-r from-amber-600 to-amber-800 text-white p-6 rounded-3xl shadow-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight font-sans">National Agriculture Market (eNAM) Index</h1>
-          <p className="text-amber-50 text-xs md:text-sm mt-1 font-medium">Live mandi wholesale prices, historical trends, and daily analytics from the backend sync pipeline.</p>
+          <div className="flex items-center gap-2">
+            <LineChart size={24} className="text-amber-200" />
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Market Intelligence Engine (eNAM)</h1>
+          </div>
+          <p className="text-amber-100 text-xs md:text-sm mt-1 font-medium max-w-2xl">
+            Live Mandi rates, 7D/30D price trends, regional market comparisons, volatility scores, and watchlist intelligence.
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={handleRefresh}
-          className="btn-primary py-2.5 px-4 flex items-center justify-center gap-2"
-        >
-          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 font-bold rounded-xl text-xs md:text-sm shadow-sm transition-colors flex items-center gap-2 min-h-[44px]"
+          >
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Syncing Mandis...' : 'Refresh Data'}
+          </button>
+        </div>
       </div>
 
+      {/* User Watchlist Bar */}
+      {token && watchlist.length > 0 && (
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-4 border border-gray-100 dark:border-dark-800/30 shadow-sm flex items-center gap-3 overflow-x-auto">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 pl-2">
+            <Heart size={14} className="text-red-500 fill-red-500" /> Watchlist:
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {watchlist.map((w) => (
+              <button
+                key={w.crop}
+                onClick={() => {
+                  setSearchCrop(w.crop);
+                  if (w.state) setSearchState(w.state);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 ${
+                  searchCrop.toLowerCase() === w.crop.toLowerCase()
+                    ? 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
+                    : 'bg-gray-50 dark:bg-dark-850 border-gray-200 dark:border-dark-800 text-gray-700 dark:text-dark-200 hover:border-amber-300'
+                }`}
+              >
+                <span>{getTranslatedCropName(w.crop)}</span>
+                <span className="font-extrabold text-amber-600 dark:text-amber-400">
+                  {w.currentPrice ? `₹${w.currentPrice}` : 'N/A'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Filters Form */}
       <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Target Crop</label>
-            <select
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Target Commodity / Crop</label>
+            <input
+              type="text"
               value={searchCrop}
               onChange={(e) => setSearchCrop(e.target.value)}
+              placeholder="e.g. Wheat, Tomato"
               className="custom-input text-sm"
-            >
-              <option value="">All Crops</option>
-              {categories.map((cat) => (
-                <optgroup key={cat.category} label={cat.category}>
-                  {cat.items.map((crop: any) => (
-                    <option key={crop.id} value={crop.displayName}>
-                      {getTranslatedCropName(crop.displayName)}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            />
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
@@ -233,19 +347,22 @@ export const MarketDashboard: React.FC = () => {
               <option value="Uttar Pradesh">Uttar Pradesh</option>
               <option value="Gujarat">Gujarat</option>
               <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="West Bengal">West Bengal</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Rajasthan">Rajasthan</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">District / Market</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">District / Mandi</label>
             <input type="text" value={searchDistrict} onChange={(e) => setSearchDistrict(e.target.value)} placeholder="e.g. Karnal" className="custom-input text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Date</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Date Filter</label>
             <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} className="custom-input text-sm" />
           </div>
-          <button type="submit" className="btn-primary py-3 flex items-center justify-center gap-1.5">
+          <button type="submit" className="btn-primary py-3 flex items-center justify-center gap-1.5 min-h-[44px]">
             <Search size={16} />
-            <span>Search Mandis</span>
+            <span>Search Mandi Rates</span>
           </button>
         </form>
       </div>
@@ -254,160 +371,307 @@ export const MarketDashboard: React.FC = () => {
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {[
-            { 
-              label: 'Today', 
-              value: analytics.todayPrice === 0 && !analytics.isTrulyZero ? 'Price Not Available' : `₹${analytics.todayPrice}`, 
-              tone: 'text-amber-600' 
-            },
-            { 
-              label: 'Yesterday', 
-              value: analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero ? 'Price Not Available' : `₹${analytics.yesterdayPrice}`, 
-              tone: 'text-gray-700' 
-            },
-            { 
-              label: 'Difference', 
-              value: (analytics.todayPrice === 0 && !analytics.isTrulyZero) || (analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero) ? 'N/A' : `${analytics.difference >= 0 ? '+' : ''}${analytics.difference}`, 
-              tone: analytics.difference >= 0 ? 'text-emerald-600' : 'text-red-500' 
-            },
-            { 
-              label: 'Change %', 
-              value: (analytics.todayPrice === 0 && !analytics.isTrulyZero) || (analytics.yesterdayPrice === 0 && !analytics.yesterdayIsTrulyZero) ? 'N/A' : `${analytics.percentageChange >= 0 ? '+' : ''}${analytics.percentageChange.toFixed(1)}%`, 
-              tone: analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-red-500' 
-            },
-          ].map((card) => (
-            <div key={card.label} className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-5 rounded-3xl shadow-sm text-left">
-              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">{card.label}</p>
-              <p className={`text-xl font-extrabold mt-2 ${card.tone}`}>{card.value}</p>
+      {/* Main Intelligence Overview Card */}
+      {intelligence && (
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-dark-800">
+            <div>
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className={`text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase border ${getTrendBadgeStyle(intelligence.trend7d?.trend)}`}>
+                  7D Trend: {intelligence.trend7d?.trend || 'STABLE'}
+                </span>
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${getVolatilityBadgeStyle(intelligence.trend7d?.volatility)}`}>
+                  {intelligence.trend7d?.volatility || 'LOW'} Volatility
+                </span>
+                <span className="text-[10px] text-gray-400 font-bold bg-gray-50 dark:bg-dark-800 px-2 py-0.5 rounded-full uppercase">
+                  Source: {intelligence.currentPrice?.source || 'agmarknet'}
+                </span>
+              </div>
+
+              <h2 className="font-extrabold text-2xl md:text-3xl text-gray-800 dark:text-dark-100 mt-2">
+                {getTranslatedCropName(intelligence.commodity)}
+              </h2>
+              <p className="text-xs text-gray-400 dark:text-dark-500 font-semibold mt-0.5">
+                Arrival Date: {intelligence.currentPrice?.arrivalDate} | Updated: {new Date(intelligence.currentPrice?.sourceTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
-          ))}
+
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="text-right">
+                <span className="block text-[10px] text-gray-400 font-bold uppercase">Current Modal Rate</span>
+                <span className="block font-extrabold text-2xl md:text-3xl text-amber-600 dark:text-amber-400">
+                  {intelligence.currentPrice?.modalPrice === null ? 'Price Unavailable' : `₹${intelligence.currentPrice.modalPrice}`}
+                </span>
+                {intelligence.currentPrice?.modalPrice !== null && (
+                  <span className="text-[10px] text-gray-400 font-bold">per {intelligence.currentPrice.unit}</span>
+                )}
+              </div>
+
+              {token && (
+                <button
+                  onClick={toggleWatchlist}
+                  disabled={watchlistUpdating}
+                  className={`p-3 rounded-2xl border transition-all ${
+                    intelligence.isWatchlisted
+                      ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-950/30'
+                      : 'bg-gray-50 border-gray-200 text-gray-400 hover:text-red-500 dark:bg-dark-850 dark:border-dark-800'
+                  }`}
+                  title={intelligence.isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                >
+                  <Heart size={20} className={intelligence.isWatchlisted ? 'fill-red-500' : ''} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 7-Day & 30-Day Statistics Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left pt-1">
+            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Price Change</span>
+              <span className={`text-base font-extrabold mt-1 block ${
+                (intelligence.trend7d?.percentageChange || 0) >= 0 ? 'text-emerald-600' : 'text-red-500'
+              }`}>
+                {intelligence.trend7d?.percentageChange !== null
+                  ? `${intelligence.trend7d.percentageChange >= 0 ? '+' : ''}${intelligence.trend7d.percentageChange}% (₹${intelligence.trend7d.absoluteChange})`
+                  : 'N/A'
+                }
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Range (Min - Max)</span>
+              <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
+                {intelligence.trend7d?.lowestPrice ? `₹${intelligence.trend7d.lowestPrice} - ₹${intelligence.trend7d.highestPrice}` : 'N/A'}
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Regional Average</span>
+              <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
+                {intelligence.trend7d?.averagePrice ? `₹${intelligence.trend7d.averagePrice}` : 'N/A'}
+              </span>
+            </div>
+
+            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">30D Price Trend</span>
+              <span className="text-base font-extrabold text-brand-600 dark:text-brand-400 mt-1 block">
+                {intelligence.trend30d?.percentageChange !== null
+                  ? `${intelligence.trend30d.percentageChange >= 0 ? '+' : ''}${intelligence.trend30d.percentageChange}%`
+                  : 'N/A'
+                }
+              </span>
+            </div>
+          </div>
+
+          {/* Agronomic Advisory Summary */}
+          {intelligence.advisory && (
+            <div className="p-4 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-100 dark:border-amber-900/20 rounded-2xl space-y-2">
+              <h4 className="font-bold text-xs md:text-sm text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                <Sparkles size={16} /> Market Intelligence Summary & Advisory
+              </h4>
+              <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed">
+                {intelligence.advisory.summary}
+              </p>
+              <div className="space-y-1 pt-1">
+                {intelligence.advisory.keyInsights?.map((ins: string, idx: number) => (
+                  <div key={idx} className="text-[11px] text-gray-600 dark:text-dark-350 flex items-start gap-1.5">
+                    <span className="text-amber-500 font-bold">•</span>
+                    <span>{ins}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Minimum Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-red-550 block mt-2 text-red-500">
-            {metrics.minPrice === 0 ? 'Price Not Available' : `₹${metrics.minPrice}`}
-            {metrics.minPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
-          </span>
-          <div className="absolute right-6 bottom-6 text-red-100 dark:text-red-950/20"><TrendingDown size={36} /></div>
-        </div>
-        <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Average Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-brand-600 dark:text-brand-450 block mt-2">
-            {metrics.avgPrice === 0 ? 'Price Not Available' : `₹${metrics.avgPrice}`}
-            {metrics.avgPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
-          </span>
-          <div className="absolute right-6 bottom-6 text-brand-100 dark:text-brand-950/20"><TrendingUp size={36} /></div>
-        </div>
-        <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 p-6 rounded-3xl shadow-sm text-left relative overflow-hidden">
-          <span className="text-[10px] text-gray-400 font-bold uppercase block tracking-wider">Maximum Mandi Rate</span>
-          <span className="text-2xl md:text-3xl font-extrabold text-emerald-600 block mt-2">
-            {metrics.maxPrice === 0 ? 'Price Not Available' : `₹${metrics.maxPrice}`}
-            {metrics.maxPrice > 0 && <span className="text-xs font-medium text-gray-400"> / Quintal</span>}
-          </span>
-          <div className="absolute right-6 bottom-6 text-emerald-100 dark:text-emerald-950/20"><TrendingUp size={36} /></div>
-        </div>
-      </div>
-
+      {/* Grid: Historical Chart (7 cols) + Regional Nearby Mandi Comparison (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-50 dark:border-dark-850">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2"><LineChart className="text-brand-650" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} Price History</h3>
-            <span className="text-xs text-gray-400">Last updated: {lastUpdated || 'Not available'}</span>
+        {/* Historical Price Chart */}
+        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-850 pb-3">
+            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
+              <LineChart className="text-amber-600" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} Price History Chart
+            </h3>
+
+            {/* Timeline Period Selector */}
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-850 p-1 rounded-xl">
+              {[7, 30, 90].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => {
+                    setPeriodDays(d);
+                    void fetchHistory(searchCrop, d);
+                  }}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                    periodDays === d ? 'bg-white dark:bg-dark-900 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {d}D
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="h-[260px] w-full">
+
+          <div className="h-[280px] w-full">
             {loadingHistory ? (
-              <div className="flex items-center justify-center h-full text-brand-600"><div className="w-8 h-8 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div></div>
+              <div className="flex items-center justify-center h-full text-amber-600">
+                <div className="w-8 h-8 border-4 border-t-transparent border-amber-500 rounded-full animate-spin"></div>
+              </div>
             ) : history.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={history} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
-                  <defs><linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#F59E0B" stopOpacity={0.2} /><stop offset="95%" stopColor="#F59E0B" stopOpacity={0} /></linearGradient></defs>
+                  <defs>
+                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
-                  <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '12px' }} />
-                  <Area type="monotone" dataKey="avgPrice" name="Average Price" stroke="#F59E0B" fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2.5} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '12px' }} />
+                  <Area type="monotone" dataKey="avgPrice" name="Average Price (₹/Qtl)" stroke="#F59E0B" fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2.5} />
                   <Area type="monotone" dataKey="minPrice" name="Min Price" stroke="#EF4444" fillOpacity={0} strokeWidth={1} strokeDasharray="3 3" />
                   <Area type="monotone" dataKey="maxPrice" name="Max Price" stroke="#10B981" fillOpacity={0} strokeWidth={1} strokeDasharray="3 3" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400"><HelpCircle size={36} className="text-gray-300 mb-1" /><p className="font-bold text-xs">No historical trend data available.</p></div>
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <HelpCircle size={36} className="text-gray-300 mb-1" />
+                <p className="font-bold text-xs">No historical trend data recorded for this period.</p>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
-          <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mb-4 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center gap-2"><TrendingUp className="text-brand-600" size={18} /> Top Mandi Demand Trends</h3>
-          <div className="space-y-3.5 mb-6">
-            {loadingTrending ? (
-              <div className="text-center py-4"><div className="w-5 h-5 border-2 border-t-transparent border-brand-500 rounded-full animate-spin inline-block"></div></div>
-            ) : trendCards.map((c, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-dark-850 border border-gray-150 dark:border-dark-800/50 rounded-2xl">
-                <div>
-                  <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200">{getTranslatedCropName(c.name)}</h4>
-                  <p className="text-[10px] text-gray-400 dark:text-dark-500 mt-0.5">Estimated local Mandi rate: {c.price}</p>
-                </div>
-                <div className="text-right"><span className={`inline-block px-2.5 py-1 text-[10px] font-bold rounded-lg ${c.trend === 'up' ? 'bg-emerald-50 text-emerald-650 dark:bg-emerald-950/20' : 'bg-red-50 text-red-500 dark:bg-red-950/20'}`}>{c.growth}</span></div>
-              </div>
-            ))}
-          </div>
+        {/* Regional Nearby Mandi Comparison (5 cols) */}
+        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
+          <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
+            <span className="flex items-center gap-2"><Building2 className="text-amber-600" size={18} /> Nearby Mandi Comparisons</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase">Regional Mandis</span>
+          </h3>
 
-          <div className="space-y-2 border-t border-gray-50 dark:border-dark-850 pt-4">
-            <h4 className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Today’s Prices</h4>
-            {fallbackSource && fallbackSource !== 'exact-match' && prices.length > 0 && (
-              <div className="mb-2.5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-300 text-[10px] md:text-xs font-semibold flex items-center gap-1.5 animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                <span>
-                  {fallbackSource === 'latest-local' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices for ${searchDistrict || 'local market'}${searchState ? ', ' + searchState : ''}.`}
-                  {fallbackSource === 'latest-state' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices for ${searchState || 'selected state'}.`}
-                  {fallbackSource === 'latest-country' && `Showing latest available ${getTranslatedCropName(searchCrop) || 'crop'} prices across India.`}
-                </span>
+          {comparison && comparison.comparisons?.length > 0 ? (
+            <div className="space-y-3">
+              <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl border border-amber-100/50 dark:border-amber-900/10 text-xs flex justify-between items-center">
+                <span>Regional Average Modal Price:</span>
+                <strong className="font-extrabold text-amber-700 dark:text-amber-400">₹{comparison.regionalAverage}/Qtl</strong>
               </div>
-            )}
-            <div className="max-h-[350px] overflow-y-auto divide-y divide-gray-50 dark:divide-dark-800/40 pr-1">
-              {loading ? (
-                <div className="text-center py-4"><div className="w-5 h-5 border-2 border-t-transparent border-brand-500 rounded-full animate-spin inline-block"></div></div>
-              ) : prices.length > 0 ? (
-                prices.map((p, pIdx) => (
-                  <div key={pIdx} className="py-3 flex flex-col gap-1 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-gray-800 dark:text-dark-200">{p.market || p.mandiName} Mandi</span>
-                      <span className="font-extrabold text-brand-650 dark:text-brand-400">
-                        {(p.modalPrice || p.avgPrice) === 0 && !p.isTrulyZero ? 'Price Not Available' : `₹${p.modalPrice || p.avgPrice}`}
+
+              <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                {comparison.comparisons.map((c: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 flex items-center justify-between text-xs">
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-dark-100">{c.market} Mandi</h4>
+                      <p className="text-[10px] text-gray-400">{c.district}, {c.state}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-extrabold text-gray-800 dark:text-dark-100 block">
+                        {c.modalPrice ? `₹${c.modalPrice}` : 'N/A'}
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[9.5px] text-gray-400">
-                      <span>{p.district}, {p.state}</span>
-                      <span>Variety: <strong className="text-gray-500 dark:text-dark-350">{p.variety || 'FAQ'}</strong> (Grade: <strong className="text-gray-500 dark:text-dark-350">{p.grade || 'Standard'}</strong>)</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[8px] text-gray-400/80 border-t border-gray-50 dark:border-dark-800/30 pt-1 mt-0.5">
-                      <span>Source: {p.source || 'live-api'}</span>
-                      <span>Arrival: {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}</span>
+                      {c.priceDifference !== null && (
+                        <span className={`text-[9px] font-bold ${c.priceDifference >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {c.priceDifference >= 0 ? `+₹${c.priceDifference}` : `-₹${Math.abs(c.priceDifference)}`} vs Avg
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-center py-6 text-[11px] text-gray-400">Search to populate mandi prices listings.</p>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="py-12 text-center text-gray-400 text-xs font-semibold">
+              No nearby regional mandi comparisons available.
+            </div>
+          )}
         </div>
       </div>
 
-      {pagination && (
-        <div className="flex justify-between items-center bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/50 rounded-3xl px-5 py-3 shadow-sm">
-          <p className="text-sm text-gray-500">Page {pagination.page} of {pagination.totalPages}</p>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchPrices(next); }} className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600"><ArrowLeft size={14} /> Prev</button>
-            <button type="button" onClick={() => { const next = Math.min(pagination.totalPages, page + 1); setPage(next); void fetchPrices(next); }} className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600">Next <ArrowRight size={14} /></button>
-          </div>
+      {/* Mandi Listings Table */}
+      <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
+        <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
+          <span>Live Mandi Price Directory</span>
+          {fallbackSource && fallbackSource !== 'exact-match' && (
+            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-md">
+              Showing fallback level: {fallbackSource}
+            </span>
+          )}
+        </h3>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-gray-100 dark:border-dark-800 text-gray-400 uppercase font-bold text-[10px]">
+                <th className="py-3 px-2">Market / Mandi</th>
+                <th className="py-3 px-2">District / State</th>
+                <th className="py-3 px-2">Commodity</th>
+                <th className="py-3 px-2 text-right">Min Rate</th>
+                <th className="py-3 px-2 text-right">Modal Rate</th>
+                <th className="py-3 px-2 text-right">Max Rate</th>
+                <th className="py-3 px-2 text-right">Arrival Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-dark-850">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-amber-600">
+                    <div className="w-6 h-6 border-2 border-t-transparent border-amber-500 rounded-full animate-spin mx-auto"></div>
+                  </td>
+                </tr>
+              ) : prices.length > 0 ? (
+                prices.map((p: any, idx: number) => (
+                  <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-dark-850/50">
+                    <td className="py-3 px-2 font-bold text-gray-800 dark:text-dark-100">{p.market || p.mandiName}</td>
+                    <td className="py-3 px-2 text-gray-500 dark:text-dark-400">{p.district}, {p.state}</td>
+                    <td className="py-3 px-2 font-semibold text-amber-700 dark:text-amber-400">{getTranslatedCropName(p.crop)}</td>
+                    <td className="py-3 px-2 text-right text-gray-600 dark:text-dark-300">
+                      {p.minPrice === 0 && !p.isTrulyZero ? 'N/A' : `₹${p.minPrice}`}
+                    </td>
+                    <td className="py-3 px-2 text-right font-extrabold text-amber-600 dark:text-amber-400">
+                      {(p.modalPrice || p.avgPrice) === 0 && !p.isTrulyZero ? 'Price Not Available' : `₹${p.modalPrice || p.avgPrice}`}
+                    </td>
+                    <td className="py-3 px-2 text-right text-gray-600 dark:text-dark-300">
+                      {p.maxPrice === 0 && !p.isTrulyZero ? 'N/A' : `₹${p.maxPrice}`}
+                    </td>
+                    <td className="py-3 px-2 text-right text-gray-400">
+                      {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
+                    No mandi rates matched your active filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {pagination && (
+          <div className="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-dark-850">
+            <p className="text-xs text-gray-400">Page {pagination.page} of {pagination.totalPages}</p>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchPrices(next); }} 
+                className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
+              >
+                <ArrowLeft size={14} /> Prev
+              </button>
+              <button 
+                type="button" 
+                onClick={() => { const next = Math.min(pagination.totalPages, page + 1); setPage(next); void fetchPrices(next); }} 
+                className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
+              >
+                Next <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

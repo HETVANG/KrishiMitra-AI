@@ -149,4 +149,85 @@ export class MarketPriceController {
       next(error);
     }
   }
+
+  static async getIntelligence(req: any, res: Response, next: NextFunction) {
+    try {
+      const { MarketIntelligenceService } = require('../services/market/marketIntelligenceService');
+      const commodity = req.params.commodity || (req.query.crop as string) || 'Wheat';
+      const intel = await MarketIntelligenceService.getCommodityIntelligence(commodity, {
+        userId: req.user?._id?.toString(),
+        state: req.query.state as string,
+        district: req.query.district as string,
+        market: req.query.market as string,
+        language: (req.query.lang as string) || req.user?.settings?.language || 'en'
+      });
+      return res.json({ success: true, intelligence: intel });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async compareMarkets(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { MarketComparisonService } = require('../services/market/marketComparisonService');
+      const commodity = (req.query.crop as string) || (req.query.commodity as string) || 'Wheat';
+      const result = await MarketComparisonService.compareMarkets(commodity, {
+        state: req.query.state as string,
+        district: req.query.district as string,
+        limit: Number(req.query.limit || 6)
+      });
+      return res.json({ success: true, comparison: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getWatchlist(req: any, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      const { MarketIntelligenceService } = require('../services/market/marketIntelligenceService');
+      const watchlist = await MarketIntelligenceService.getUserWatchlist(req.user._id.toString());
+      return res.json({ success: true, watchlist });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addToWatchlist(req: any, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      const { crop, state, district, market } = req.body;
+      if (!crop) {
+        return res.status(400).json({ success: false, message: 'Crop parameter required' });
+      }
+      const { MarketIntelligenceService } = require('../services/market/marketIntelligenceService');
+      const item = await MarketIntelligenceService.addToWatchlist(req.user._id.toString(), {
+        crop,
+        state,
+        district,
+        market
+      });
+      return res.status(201).json({ success: true, item });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async removeFromWatchlist(req: any, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      const crop = req.params.crop;
+      const { MarketIntelligenceService } = require('../services/market/marketIntelligenceService');
+      await MarketIntelligenceService.removeFromWatchlist(req.user._id.toString(), crop);
+      return res.json({ success: true, message: `Removed ${crop} from watchlist` });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

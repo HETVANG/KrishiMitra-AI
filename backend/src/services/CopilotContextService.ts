@@ -7,6 +7,9 @@ import { CropCycle } from '../models/CropCycle';
 import { AgentActivity } from '../models/AgentActivity';
 import { FarmTask } from '../models/FarmTask';
 import { WeatherService } from './WeatherService';
+import { Notification } from '../models/Notification';
+import { RegionalContextService, NormalizedRegionalContext } from './regionalContextService';
+import { KnowledgeRetrievalService } from './knowledge/knowledgeRetrievalService';
 
 export interface NormalizedFarmContext {
   user: {
@@ -100,6 +103,20 @@ export interface NormalizedFarmContext {
       status: string;
     }>;
   };
+  regionalContext?: NormalizedRegionalContext;
+  verifiedKnowledge?: {
+    crop?: any;
+    disease?: any;
+    soil?: any;
+    sources: any[];
+  };
+  knowledgeGraph?: any;
+  activeNotifications?: Array<{
+    id: string;
+    title: string;
+    priority: string;
+    type: string;
+  }>;
   meta: {
     generatedAt: string;
     missingFields: string[];
@@ -316,43 +333,104 @@ export class CopilotContextService {
       // Ignore if fetch fails
     }
 
-    // Build final Context JSON
-    return {
-      user: {
-        id: user._id.toString(),
-        name: user.name,
-        language: user.settings?.language || 'en',
-        country: (user as any).countryCode || 'IN',
-        currency: (user as any).currency || 'INR'
-      },
-      farm: {
-        id: selectedFarm ? selectedFarm._id.toString() : null,
-        name: selectedFarm?.name || 'My Primary Farm',
-        sizeAcres: selectedFarm?.size || 1,
-        soilType: selectedFarm?.soilType || 'Loam',
-        waterSource: selectedFarm?.waterSource || 'Borewell',
-        location: {
-          address: selectedFarm?.village ? `${selectedFarm.village}, ${district}, ${state}` : user.farmLocation?.address || `${district}, ${state}`,
-          village: selectedFarm?.village || user.farmLocation?.village || '',
-          district: district,
-          state: state,
-          latitude: lat,
-          longitude: lng
+    // 9. Fetch Regional Context
+    let regionalContext: NormalizedRegionalContext | undefined;
+    try {
+      regionalContext = await RegionalContextService.getRegionalContext(userId, targetFarmId);
+    } catch {
+      // Ignore if fetch fails
+    }
+
+    // 10. Fetch Verified Agriculture Knowledge Context
+    let verifiedKnowledge: any = undefined;
+    try {
+      const knownCrop = KnowledgeRetrievalService.getCropKnowledge(primaryCropName);
+      const knownDisease = diseaseData.latestDiagnosis?.disease ? KnowledgeRetrievalService.getDiseaseKnowledge(diseaseData.latestDiagnosis.disease) : null;
+      const knownSoil = selectedFarm?.soilType ? KnowledgeRetrievalService.getSoilKnowledge(selectedFarm.soilType) : null;
+
+      const sourcesList = [
+        ...(knownCrop?.sources || []),
+        ...(knownDisease?.sources || []),
+        ...(knownSoil?.sources || [])
+      ];
+
+      verifiedKnowledge = {
+        crop: knownCrop?.crop || null,
+        disease: knownDisease?.disease || null,
+        soil: knownSoil?.soil || null,
+        sources: Array.from(new Set(sourcesList.map((s: any) => JSON.stringify(s)))).map((s: any) => JSON.parse(s))
+      };
+    } catch {
+      // Ignore if fetch fails
+    }
+
+      // Fetch Active Notifications
+      let activeNotifications: Array<{ id: string; title: string; priority: string; type: string }> = [];
+      try {
+        const notifs = await Notification.find({
+          user: userId,
+          status: { $in: ['UNREAD', 'READ', 'ACKNOWLEDGED'] }
+        })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .lean();
+        activeNotifications = notifs.map(n => ({
+          id: n._id.toString(),
+          title: n.title,
+          priority: n.priority || 'MEDIUM',
+          type: n.eventType || n.type
+        }));
+      } catch {}
+
+      // Build final Context JSON
+      return {
+        user: {
+          id: user._id.toString(),
+          name: user.name,
+          language: user.settings?.language || 'en',
+          country: regionalContext?.countryCode || (user as any).countryCode || 'IN',
+          currency: regionalContext?.currency || (user as any).currency || 'INR'
         },
-        crops: selectedFarm?.currentCrops?.map((c: string) => ({ name: c, growthStage: 'Active' })) || [
-          { name: primaryCropName, growthStage: 'Active' }
-        ]
-      },
-      soil: soilData,
-      weather: weatherData,
-      disease: diseaseData,
-      market: marketData,
-      cropCycles: activeCycles,
-      agents: agentSummary,
-      meta: {
-        generatedAt: new Date().toISOString(),
-        missingFields
-      }
-    };
+        farm: {
+          id: selectedFarm ? selectedFarm._id.toString() : null,
+          name: selectedFarm?.name || 'My Primary Farm',
+          sizeAcres: selectedFarm?.size || 1,
+          soilType: selectedFarm?.soilType || 'Loam',
+          waterSource: selectedFarm?.waterSource || 'Borewell',
+          location: {
+            address: selectedFarm?.village ? `${selectedFarm.village}, ${district}, ${state}` : user.farmLocation?.address || `${district}, ${state}`,
+            village: selectedFarm?.village || user.farmLocation?.village || '',
+            district: district,
+            state: state,
+            latitude: lat,
+            longitude: lng
+          },
+          crops: selectedFarm?.currentCrops?.map((c: string) => ({ name: c, growthStage: 'Active' })) || [
+            { name: primaryCropName, growthStage: 'Active' }
+          ]
+        },
+        soil: soilData,
+        weather: weatherData,
+        disease: diseaseData,
+        market: marketData,
+        cropCycles: activeCycles,
+        agents: agentSummary,
+        regionalContext,
+        verifiedKnowledge,
+        activeNotifications,
+        knowledgeGraph: {
+          fieldsCount: selectedFarm ? 1 : 0,
+          activeCropCyclesCount: activeCycles.length,
+          dataFreshness: {
+            weather: weatherData.available ? 'FRESH' : 'STALE',
+            soil: soilData.available ? 'RECENT' : 'STALE',
+            disease: diseaseData.available ? 'RECENT' : 'STALE'
+          }
+        },
+        meta: {
+          generatedAt: new Date().toISOString(),
+          missingFields
+        }
+      };
   }
 }

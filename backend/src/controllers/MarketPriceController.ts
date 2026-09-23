@@ -1,9 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 import { marketPriceService } from '../services/MarketPriceService';
+import { ProviderResolver } from '../services/providers/providerResolver';
 
 export class MarketPriceController {
   static async searchPrices(req: Request, res: Response, next: NextFunction) {
     try {
+      const countryCode = (req.query.countryCode as string) || 'IN';
+      const marketProvider = ProviderResolver.getMarketProvider(countryCode);
+
+      if (marketProvider.id.startsWith('unsupported_')) {
+        const provRes = await marketProvider.getMarketPrices('');
+        return res.json({
+          success: true,
+          prices: [],
+          analytics: null,
+          pagination: { page: 1, totalPages: 0, totalRecords: 0 },
+          lastUpdated: null,
+          regionSupported: false,
+          providerInfo: {
+            id: marketProvider.id,
+            name: marketProvider.name,
+            reason: provRes.reason
+          }
+        });
+      }
+
       const result = await marketPriceService.getPrices({
         crop: req.query.crop as string | undefined,
         state: req.query.state as string | undefined,
@@ -19,7 +40,8 @@ export class MarketPriceController {
         prices: result.prices,
         analytics: result.analytics,
         pagination: result.pagination,
-        lastUpdated: result.lastUpdated
+        lastUpdated: result.lastUpdated,
+        regionSupported: true
       });
     } catch (error) {
       next(error);

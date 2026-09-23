@@ -73,6 +73,24 @@ export class GrowthStageEngine {
   };
 
   /**
+   * Get Crop Growth Profile definition
+   */
+  static getCropProfile(cropName: string): CropGrowthProfile {
+    const key = cropName.toLowerCase();
+    return this.cropProfiles[key] || {
+      cropName,
+      totalDaysToHarvest: 100,
+      stages: [
+        { stage: 'GERMINATION', label: 'Germination', startDay: 0, endDay: 14 },
+        { stage: 'SEEDLING', label: 'Seedling Stage', startDay: 15, endDay: 30 },
+        { stage: 'VEGETATIVE', label: 'Vegetative Growth', startDay: 31, endDay: 60 },
+        { stage: 'FLOWERING', label: 'Flowering', startDay: 61, endDay: 80 },
+        { stage: 'MATURITY', label: 'Maturity', startDay: 81, endDay: 100 }
+      ]
+    };
+  }
+
+  /**
    * Estimate current growth stage from planting date and crop type
    */
   static estimateGrowthStage(cropName: string, plantingDate: Date): { stage: GrowthStage; label: string; daysSincePlanting: number; progressPct: number } {

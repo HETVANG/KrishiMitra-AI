@@ -13,7 +13,30 @@ const UserSchema = new Schema(
     settings: {
       language: { type: String, enum: ['en', 'hi', 'gu', 'mr', 'pa', 'bn', 'ta', 'te', 'kn', 'ml', 'or', 'as'], default: 'en' },
       theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+      regionalPreferences: {
+        countryCode: { type: String, default: 'IN' },
+        countryName: { type: String, default: 'India' },
+        stateName: { type: String, default: '' },
+        currency: { type: String, default: 'INR' },
+        currencySymbol: { type: String, default: '₹' },
+        temperatureUnit: { type: String, enum: ['C', 'F'], default: 'C' },
+        landAreaUnit: { type: String, enum: ['acre', 'hectare', 'bigha', 'sq_meter'], default: 'acre' },
+        measurementSystem: { type: String, enum: ['metric', 'imperial'], default: 'metric' },
+        timezone: { type: String, default: 'Asia/Kolkata' }
+      }
     },
+
+    // Step 33 Onboarding Tracking
+    onboardingStatus: {
+      type: String,
+      enum: ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'],
+      default: 'NOT_STARTED',
+      index: true
+    },
+    onboardingStep: { type: Number, default: 1 },
+    onboardingVersion: { type: Number, default: 1 },
+    onboardingCompletedAt: { type: Date },
+
     farmLocation: {
       latitude: { type: Number },
       longitude: { type: Number },

@@ -5,8 +5,14 @@ import { AuthRequest } from '../middleware/auth';
 export class PaymentController {
   static async createOrder(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      const userId = req.user?._id?.toString();
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required for payment order creation' });
+        return;
+      }
+
       const result = await PaymentService.createOrder({
-        userId: req.user?._id?.toString() || req.body.userId,
+        userId,
         planName: req.body.planName,
         billingCycle: req.body.billingCycle,
         amount: req.body.amount,
@@ -23,8 +29,14 @@ export class PaymentController {
 
   static async verify(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      const userId = req.user?._id?.toString();
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required for payment verification' });
+        return;
+      }
+
       const result = await PaymentService.verifyPayment({
-        userId: req.user?._id?.toString() || req.body.userId,
+        userId,
         orderId: req.body.orderId,
         paymentId: req.body.paymentId,
         signature: req.body.signature,

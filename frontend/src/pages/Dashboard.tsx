@@ -19,12 +19,16 @@ import {
   Activity,
   Brain,
   Droplets,
-  Bot
+  Bot,
+  Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { getTranslationsForLang } from '../config/alertTranslations';
+import { RegionalSettingsModal } from '../components/RegionalSettingsModal';
+import { OnboardingModal } from '../components/OnboardingModal';
+import { OnboardingChecklist } from '../components/OnboardingChecklist';
 
 export const Dashboard: React.FC = () => {
   console.log('[KrishiMitra Startup Log] Loading Dashboard');
@@ -91,6 +95,27 @@ export const Dashboard: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showRegionalModal, setShowRegionalModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const res = await api.get('/onboarding/status');
+        if (res.data?.success && res.data.status) {
+          if (res.data.status.status === 'NOT_STARTED' || res.data.status.status === 'IN_PROGRESS') {
+            setShowOnboardingModal(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check onboarding status:', err);
+      }
+    };
+    if (user) {
+      checkOnboarding();
+    }
+  }, [user]);
+
   const [showExpiryModal, setShowExpiryModal] = useState(() => {
     if (user?.subscriptionStatus === 'expired') {
       const dismissed = localStorage.getItem('premium-expiry-dismissed');
@@ -851,6 +876,9 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Onboarding Activation Checklist */}
+      <OnboardingChecklist onOpenModal={() => setShowOnboardingModal(true)} />
+
       {/* Welcome Title Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg text-left">
         <div>
@@ -876,7 +904,13 @@ export const Dashboard: React.FC = () => {
             Here is your localized farm dashboard intelligence summaries.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setShowRegionalModal(true)}
+            className="px-3.5 py-2.5 bg-brand-800/60 hover:bg-brand-800 border border-brand-500/40 text-white font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
+          >
+            <Globe size={16} /> Regional Config
+          </button>
           <Link 
             to="/reports" 
             className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
@@ -1526,6 +1560,22 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Regional Intelligence Settings Modal */}
+      <RegionalSettingsModal
+        isOpen={showRegionalModal}
+        onClose={() => setShowRegionalModal(false)}
+      />
+
+      {/* Farmer Fast Start Onboarding Modal */}
+      <OnboardingModal
+        isOpen={showOnboardingModal}
+        onClose={() => setShowOnboardingModal(false)}
+        onCompleted={() => {
+          setShowOnboardingModal(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };

@@ -26,6 +26,21 @@ import predictiveRoutes from './routes/predictiveRoutes';
 import irrigationRoutes from './routes/irrigationRoutes';
 import cropCycleRoutes from './routes/cropCycleRoutes';
 import agentRoutes from './routes/agentRoutes';
+import regionRoutes from './routes/regionRoutes';
+import knowledgeRoutes from './routes/knowledgeRoutes';
+import knowledgeGraphRoutes from './routes/knowledgeGraphRoutes';
+import decisionRoutes from './routes/decisionRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import proactiveRoutes from './routes/proactiveRoutes';
+import multiFarmRoutes from './routes/multiFarmRoutes';
+import organizationRoutes from './routes/organizationRoutes';
+import marketplaceRoutes from './routes/marketplaceRoutes';
+import providerRoutes from './routes/providerRoutes';
+import partnerRoutes from './routes/partnerRoutes';
+import productIntelligenceRoutes from './routes/productIntelligenceRoutes';
+import onboardingRoutes from './routes/onboardingRoutes';
+import { requestIdMiddleware } from './middleware/requestIdMiddleware';
+import { ObservabilityService } from './services/observabilityService';
 import { AgentOrchestrator } from './services/agents/agentOrchestrator';
 import { authenticate } from './middleware/auth';
 import { PaymentController } from './controllers/PaymentController';
@@ -37,6 +52,7 @@ const app = express();
 
 // Security Middlewares
 app.use(helmet());
+app.use(requestIdMiddleware);
 app.use(cors({
   origin: '*', // For development. Change to specific domain in production
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -75,6 +91,19 @@ app.use('/api/predictions', predictiveRoutes);
 app.use('/api/irrigation', irrigationRoutes);
 app.use('/api/crop-cycles', cropCycleRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/regions', regionRoutes);
+app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/knowledge-graph', knowledgeGraphRoutes);
+app.use('/api/decisions', decisionRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/proactive', proactiveRoutes);
+app.use('/api', multiFarmRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/admin/providers', providerRoutes);
+app.use('/api/admin/partners', partnerRoutes);
+app.use('/api/product-intelligence', productIntelligenceRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.post('/api/create-order', authenticate, PaymentController.createOrder);
@@ -82,9 +111,22 @@ app.post('/api/verify-payment', authenticate, PaymentController.verify);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video-consultation', videoConsultationRoutes);
 
-// Health check endpoint
+// Production Health & Observability Endpoints
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date() });
+  const telemetry = ObservabilityService.getTelemetry();
+  res.json({ success: true, telemetry });
+});
+
+app.get('/health/live', (req, res) => {
+  res.status(200).json({ status: 'live', uptime: process.uptime(), timestamp: new Date() });
+});
+
+app.get('/health/ready', (req, res) => {
+  const telemetry = ObservabilityService.getTelemetry();
+  if (telemetry.status === 'UNAVAILABLE') {
+    return res.status(503).json({ status: 'not_ready', telemetry });
+  }
+  res.status(200).json({ status: 'ready', telemetry });
 });
 
 // Centralized error handler

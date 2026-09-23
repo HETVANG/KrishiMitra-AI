@@ -212,17 +212,32 @@ AgentRegistry.registerAgent({
     const commodity = context.market.commodity || 'Wheat';
     const price = context.market.avgPrice;
     const unit = context.market.unit || 'Qtl';
+    const currencySymbol = context.regionalContext?.currencySymbol || '₹';
+    const isSupported = context.regionalContext?.supported ?? true;
 
-    steps.push({
-      toolName: 'createNotification',
-      parameters: {
-        title: `Market Rate Update: ${commodity}`,
-        message: `Current modal price in ${context.market.marketName || 'local market'} is ₹${price}/${unit} (${context.market.trend || 'STABLE'} trend).`,
-        type: 'market'
-      },
-      description: 'Send factual market price notification',
-      requiresApproval: false
-    });
+    if (!isSupported) {
+      steps.push({
+        toolName: 'createNotification',
+        parameters: {
+          title: `Market Intelligence (${context.regionalContext?.countryName || 'Global'})`,
+          message: `Live market provider feeds are currently active for India (Agmarknet). Regional market feeds for ${context.regionalContext?.countryName} are not active yet.`,
+          type: 'market'
+        },
+        description: 'Send regional market provider status notification',
+        requiresApproval: false
+      });
+    } else {
+      steps.push({
+        toolName: 'createNotification',
+        parameters: {
+          title: `Market Rate Update: ${commodity}`,
+          message: `Current modal price in ${context.market.marketName || 'local market'} is ${currencySymbol}${price}/${unit} (${context.market.trend || 'STABLE'} trend).`,
+          type: 'market'
+        },
+        description: 'Send factual market price notification',
+        requiresApproval: false
+      });
+    }
 
     return AgentPlanner.createPlan(
       'market',
@@ -231,8 +246,8 @@ AgentRegistry.registerAgent({
       ['marketPrices', 'historicalTrends'],
       [],
       'Keep farmer informed of factual mandi rates',
-      `Retrieved latest market rate for ${commodity}: ₹${price}/${unit} in ${context.market.marketName}`,
-      { market: context.market }
+      `Retrieved latest market rate for ${commodity}: ${currencySymbol}${price}/${unit} in ${context.market.marketName || 'local market'}`,
+      { market: context.market, regionalContext: context.regionalContext }
     );
   }
 });

@@ -8,6 +8,16 @@ import { FarmTask } from '../../models/FarmTask';
 import { Notification } from '../../models/Notification';
 import { PredictiveController } from '../../controllers/PredictiveController';
 import { IrrigationController } from '../../controllers/IrrigationController';
+import { KnowledgeRetrievalService } from '../knowledge/knowledgeRetrievalService';
+import { FarmKnowledgeGraphService } from '../knowledgeGraph/farmKnowledgeGraphService';
+import { DecisionEngine } from '../decisionEngine/decisionEngine';
+import { ProactiveEngine } from '../proactive/proactiveEngine';
+import { MultiFarmService } from '../multiFarmService';
+import { MarketplaceSearchService } from '../marketplace/marketplaceSearchService';
+import { MarketplaceService } from '../marketplace/marketplaceService';
+import { MarketplaceCategoryService } from '../marketplace/marketplaceCategoryService';
+import { ProviderRegistry } from '../providers/ProviderRegistry';
+import { ProviderHealthService } from '../providers/ProviderHealthService';
 
 export type ToolPermissionLevel = 'READ_ONLY' | 'RECOMMENDATION' | 'REQUIRES_APPROVAL' | 'AUTOMATED_ALLOWED';
 
@@ -217,3 +227,282 @@ ToolRegistry.registerTool({
     }
   }
 });
+
+// Knowledge Retrieval READ_ONLY Tools
+ToolRegistry.registerTool({
+  name: 'getCropKnowledge',
+  description: 'Retrieve verified crop agronomic profile, growth stages, soil, water, and climate requirements.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getCropKnowledge(params?.crop || 'wheat');
+    return { success: res.success, result: res.crop, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getDiseaseKnowledge',
+  description: 'Retrieve verified plant pathology disease details, symptoms, risk conditions, and prevention.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getDiseaseKnowledge(params?.disease || 'yellow_rust');
+    return { success: res.success, result: res.disease, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getPestKnowledge',
+  description: 'Retrieve verified pest information, symptoms, life cycle, and IPM prevention guidance.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getPestKnowledge(params?.pest || 'pink_bollworm');
+    return { success: res.success, result: res.pest, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getSoilKnowledge',
+  description: 'Retrieve soil profile, pH range, NPK characteristics, drainage, and suitable crops.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getSoilKnowledge(params?.soil || 'alluvial');
+    return { success: res.success, result: res.soil, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getNutrientKnowledge',
+  description: 'Retrieve role, deficiency symptoms, excess symptoms, and management for macro/micronutrients.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getNutrientKnowledge(params?.nutrient || 'nitrogen');
+    return { success: res.success, result: res.nutrient, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getAgriculturalPractice',
+  description: 'Retrieve verified agricultural practice guidelines (seed treatment, irrigation, post-harvest).',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.getPracticeKnowledge(params?.category || params?.id || 'seed_treatment');
+    return { success: res.success, result: res.practices, sources: res.sources };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'searchAgricultureKnowledge',
+  description: 'Perform universal search across crops, diseases, pests, soils, nutrients, and practices.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = KnowledgeRetrievalService.searchKnowledge({ search: params?.query || '' });
+    return { success: res.success, result: res.searchResults, sources: res.sources };
+  }
+});
+
+// Step 25 Knowledge Graph READ_ONLY Tools
+ToolRegistry.registerTool({
+  name: 'getFarmGraph',
+  description: 'Retrieve normalized relationship graph for a farm including fields, crops, soil, weather, disease, and agents.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const graph = await FarmKnowledgeGraphService.getFarmGraph(userId, params?.farmId);
+    return { success: true, result: graph };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getCropContext',
+  description: 'Retrieve crop-cycle relationship context linking crop, growth stage, soil, weather, disease, and market.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const context = await FarmKnowledgeGraphService.getCropContext(userId, params?.cropCycleId);
+    return { success: true, result: context };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getFarmRisks',
+  description: 'Retrieve aggregated farm risks from weather, leaf pathology, and stale soil data.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const risks = await FarmKnowledgeGraphService.getFarmRisks(userId, params?.farmId);
+    return { success: true, result: risks };
+  }
+});
+
+// Step 26 Advanced AI Decision Engine Tools
+ToolRegistry.registerTool({
+  name: 'evaluateDecision',
+  description: 'Evaluate evidence, risks, deterministic rules, and policy to produce a structured decision recommendation.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const decision = await DecisionEngine.evaluateDecision(userId, params?.farmId, params?.category);
+    return { success: true, result: decision };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getDecisionHistory',
+  description: 'Retrieve historical decision records and audit logs for a farm.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const history = await DecisionEngine.getDecisionHistory(userId, params?.farmId);
+    return { success: true, result: history };
+  }
+});
+
+// Step 27 Proactive Farm Intelligence Tools
+ToolRegistry.registerTool({
+  name: 'evaluateProactiveEvents',
+  description: 'Run proactive event detection and notification dispatch sweep for a farm.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const res = await ProactiveEngine.evaluateFarmProactiveEvents(userId, params?.farmId);
+    return { success: true, result: res };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getDailyFarmBrief',
+  description: 'Retrieve Daily Farm Intelligence Brief summarizing weather, crops, pathology, irrigation, and tasks.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const brief = await ProactiveEngine.getDailyFarmBrief(userId, params?.farmId);
+    return { success: true, result: brief };
+  }
+});
+
+// Step 28 Multi-Farm & Enterprise Tools
+ToolRegistry.registerTool({
+  name: 'getUserFarms',
+  description: 'Retrieve list of all authorized farms for the authenticated user.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string) => {
+    const farms = await MultiFarmService.getUserFarms(userId);
+    return { success: true, result: farms };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'compareFarms',
+  description: 'Compare two authorized farms side-by-side on area, crops, weather, soil, tasks, and alerts.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const comparison = await MultiFarmService.compareFarms(userId, params?.farmId1, params?.farmId2);
+    return { success: true, result: comparison };
+  }
+});
+
+// Step 29 Agricultural Marketplace & Services Tools
+ToolRegistry.registerTool({
+  name: 'searchMarketplace',
+  description: 'Search agricultural products, equipment rental, soil testing, drone spraying, and farm support services.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = await MarketplaceSearchService.searchListings(params || {});
+    return { success: true, result: res };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getMarketplaceListing',
+  description: 'Retrieve detailed information for a specific agricultural listing or service.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const res = await MarketplaceService.getListingById(params?.listingId);
+    return { success: true, result: res };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getMarketplaceCategories',
+  description: 'Retrieve active agricultural categories (seeds, fertilizers, drone spraying, soil testing, equipment rental).',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const categories = await MarketplaceCategoryService.getCategories(params?.group, params?.countryCode || 'IN');
+    return { success: true, result: categories };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'createMarketplaceInquiry',
+  description: 'Submit an inquiry to an agricultural provider (requires explicit farmer authorization).',
+  permission: 'REQUIRES_APPROVAL',
+  requiresApproval: true,
+  handler: async (userId: string, params: any) => {
+    const inquiry = await MarketplaceService.createInquiry(userId, params?.farmId, params?.listingId, params?.message, params?.subject);
+    return { success: true, result: inquiry };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'saveMarketplaceListing',
+  description: 'Save or toggle a marketplace listing in user favorites.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (userId: string, params: any) => {
+    const fav = await MarketplaceService.toggleFavorite(userId, params?.farmId, params?.listingId);
+    return { success: true, result: fav };
+  }
+});
+
+// Step 30 Global Provider & Partner Ecosystem Tools
+ToolRegistry.registerTool({
+  name: 'getProviderCapabilities',
+  description: 'Retrieve capabilities supported by agricultural data and service providers for a specific country/region.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const providers = await ProviderRegistry.getProviders(params?.type, params?.countryCode || 'IN');
+    const capabilities = providers.map(p => ({
+      providerId: p.id,
+      name: p.name,
+      type: p.providerType,
+      capabilities: p.capabilities,
+      verificationStatus: p.verificationStatus
+    }));
+    return { success: true, result: capabilities };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'getProviderStatus',
+  description: 'Inspect operational status and health metrics of platform data feeds.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const health = ProviderHealthService.getAllHealthRecords();
+    return { success: true, result: health };
+  }
+});
+
+ToolRegistry.registerTool({
+  name: 'searchEcosystemProviders',
+  description: 'Discover active verified agricultural data providers, research institutions, and service networks.',
+  permission: 'READ_ONLY',
+  requiresApproval: false,
+  handler: async (_userId: string, params: any) => {
+    const providers = await ProviderRegistry.getProviders(params?.providerType, params?.countryCode || 'IN');
+    return { success: true, result: providers };
+  }
+});
+

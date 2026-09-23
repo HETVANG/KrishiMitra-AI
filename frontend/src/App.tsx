@@ -10,6 +10,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { VoiceAssistant } from './components/VoiceAssistant';
+import { RegionalSettingsModal } from './components/RegionalSettingsModal';
 
 // Lazy Loaded Pages for performance route splitting
 const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -24,12 +25,16 @@ const SmartIrrigation = React.lazy(() => import('./pages/SmartIrrigation').then(
 const DiseaseDetection = React.lazy(() => import('./pages/DiseaseDetection').then(m => ({ default: m.DiseaseDetection })));
 const SoilAnalysis = React.lazy(() => import('./pages/SoilAnalysis').then(m => ({ default: m.SoilAnalysis })));
 const MarketDashboard = React.lazy(() => import('./pages/MarketDashboard').then(m => ({ default: m.MarketDashboard })));
+const Marketplace = React.lazy(() => import('./pages/Marketplace').then(m => ({ default: m.Marketplace })));
 const GovSchemes = React.lazy(() => import('./pages/GovSchemes').then(m => ({ default: m.GovSchemes })));
 const Forum = React.lazy(() => import('./pages/Forum').then(m => ({ default: m.Forum })));
 const Experts = React.lazy(() => import('./pages/Experts').then(m => ({ default: m.Experts })));
 const Expenses = React.lazy(() => import('./pages/Expenses').then(m => ({ default: m.Expenses })));
 const Reports = React.lazy(() => import('./pages/Reports').then(m => ({ default: m.Reports })));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const AdminProviders = React.lazy(() => import('./pages/AdminProviders').then(m => ({ default: m.AdminProviders })));
+const AdminPartners = React.lazy(() => import('./pages/AdminPartners').then(m => ({ default: m.AdminPartners })));
+const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics').then(m => ({ default: m.AdminAnalytics })));
 const Pricing = React.lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
 const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })));
 const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed').then(m => ({ default: m.PaymentFailed })));
@@ -96,6 +101,7 @@ const AdminRoute = () => {
 // Layout Wrapper
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showRegionalModal, setShowRegionalModal] = useState(false);
   const { user } = useAuth();
 
   React.useEffect(() => {
@@ -137,12 +143,20 @@ const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-950 flex text-left">
       {/* Sidebar navigation */}
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        setIsOpen={setSidebarOpen} 
+        onOpenRegionalSettings={() => setShowRegionalModal(true)} 
+      />
 
       {/* Main viewport */}
       <div className="flex-1 flex flex-col lg:pl-64 min-h-screen">
         {/* Navbar */}
-        <Navbar onMenuToggle={() => setSidebarOpen(prev => !prev)} title={getHeaderTitle()} />
+        <Navbar 
+          onMenuToggle={() => setSidebarOpen(prev => !prev)} 
+          title={getHeaderTitle()} 
+          onOpenRegionalSettings={() => setShowRegionalModal(true)} 
+        />
 
         {/* View content pages */}
         <main className="flex-grow p-4 md:p-6 overflow-y-auto">
@@ -152,6 +166,12 @@ const DashboardLayout = () => {
 
       {/* Voice Assistant Widget floating */}
       {user && <VoiceAssistant />}
+
+      {/* Global Regional Settings Modal */}
+      <RegionalSettingsModal 
+        isOpen={showRegionalModal} 
+        onClose={() => setShowRegionalModal(false)} 
+      />
     </div>
   );
 };
@@ -239,6 +259,7 @@ export const AppContent = () => {
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/agents" element={<FarmAgents />} />
               <Route path="/crop-cycles" element={<FarmLifecycle />} />
               <Route path="/predictive-intelligence" element={<PredictiveIntelligence />} />
@@ -260,6 +281,9 @@ export const AppContent = () => {
               {/* Admin only dashboard portal */}
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/admin/providers" element={<AdminProviders />} />
+                <Route path="/admin/partners" element={<AdminPartners />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
               </Route>
             </Route>
           </Route>

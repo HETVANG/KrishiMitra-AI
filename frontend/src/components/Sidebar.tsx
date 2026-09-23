@@ -18,7 +18,12 @@ import {
   Brain,
   Droplets,
   Activity,
-  Bot
+  Bot,
+  Globe,
+  Store,
+  Server,
+  Building2,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -26,14 +31,16 @@ import { useTranslation } from 'react-i18next';
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  onOpenRegionalSettings?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegionalSettings }) => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
   const links = [
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/marketplace', label: 'Agri Marketplace', icon: Store },
     { to: '/agents', label: 'Farm Agents', icon: Bot },
     { to: '/crop-cycles', label: 'Farm Lifecycle', icon: Activity },
     { to: '/copilot', label: 'AI Farm Copilot', icon: Brain },
@@ -125,33 +132,90 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             );
           })}
 
-          {/* Admin link conditional */}
+          {/* Admin links conditional */}
           {user?.role === 'admin' && (
-            <NavLink
-              to="/admin"
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) => 
-                `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-red-600 text-white shadow-md' 
-                    : 'text-red-650 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20'
-                }`
-              }
-            >
-              <ShieldAlert size={18} />
-              <span>{t('nav.admin')}</span>
-            </NavLink>
+            <>
+              <NavLink
+                to="/admin"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-red-600 text-white shadow-md' 
+                      : 'text-red-650 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20'
+                  }`
+                }
+              >
+                <ShieldAlert size={18} />
+                <span>{t('nav.admin')}</span>
+              </NavLink>
+              <NavLink
+                to="/admin/providers"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-brand-600 text-white shadow-md' 
+                      : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800/40'
+                  }`
+                }
+              >
+                <Server size={16} />
+                <span>Provider Feeds</span>
+              </NavLink>
+              <NavLink
+                to="/admin/partners"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-brand-600 text-white shadow-md' 
+                      : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800/40'
+                  }`
+                }
+              >
+                <Building2 size={16} />
+                <span>Partner Ecosystem</span>
+              </NavLink>
+              <NavLink
+                to="/admin/analytics"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-brand-600 text-white shadow-md' 
+                      : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800/40'
+                  }`
+                }
+              >
+                <BarChart3 size={16} />
+                <span>Product Analytics</span>
+              </NavLink>
+            </>
           )}
         </nav>
 
         {/* Footer actions */}
-        <div className="p-3 border-t border-gray-100 dark:border-dark-800/50">
+        <div className="p-3 space-y-1 border-t border-gray-100 dark:border-dark-800/50">
+          {onOpenRegionalSettings && (
+            <button
+              onClick={() => {
+                onOpenRegionalSettings();
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950/20 dark:text-dark-300 rounded-xl transition-all duration-200"
+            >
+              <Globe size={18} />
+              <span>Regional Settings</span>
+            </button>
+          )}
+
           <button
             onClick={() => {
               logout();
               setIsOpen(false);
             }}
-            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/10 dark:text-dark-400 rounded-xl transition-all duration-200"
+            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/10 dark:text-dark-400 rounded-xl transition-all duration-200"
           >
             <LogOut size={18} />
             <span>{t('nav.logout')}</span>

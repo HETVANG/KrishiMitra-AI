@@ -7,9 +7,10 @@ import { useTranslation } from 'react-i18next';
 interface NavbarProps {
   onMenuToggle: () => void;
   title: string;
+  onOpenRegionalSettings?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegionalSettings }) => {
   const { user, updateSettings } = useAuth();
   const { theme, toggleTheme, setLanguage } = useTheme();
   const { i18n } = useTranslation();
@@ -97,6 +98,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title }) => {
             ))}
           </select>
         </div>
+
+        {/* Regional Settings Trigger */}
+        {onOpenRegionalSettings && (
+          <button
+            onClick={onOpenRegionalSettings}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200/50 dark:border-brand-800/40 rounded-lg hover:bg-brand-100 transition-colors"
+            title="Configure regional settings"
+          >
+            <Globe size={14} />
+            <span className="hidden sm:inline">Region</span>
+          </button>
+        )}
 
         {/* Theme Toggle */}
         <button

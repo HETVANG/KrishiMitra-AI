@@ -153,11 +153,26 @@ export const AdminPartners: React.FC = () => {
                   <Globe className="w-3.5 h-3.5 text-gray-400" />
                   <span>Coverage: <strong className="text-gray-800 dark:text-dark-100">{p.countries?.join(', ') || 'IN'}</strong></span>
                 </div>
-                {p.contactInformation?.contactPerson && (
-                  <div className="flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{p.contactInformation.contactPerson}</span>
-                  </div>
+                
+                {p.verificationStatus !== 'VERIFIED' && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token');
+                        await fetch(`/api/partners/${p._id}/verify`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({ decision: 'VERIFIED', notes: 'Verified by system admin' })
+                        });
+                        fetchPartners();
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }}
+                    className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-lg transition-colors"
+                  >
+                    Verify Partner
+                  </button>
                 )}
               </div>
             </div>

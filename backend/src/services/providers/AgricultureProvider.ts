@@ -3,6 +3,7 @@ import { RegionRegistry } from '../../config/regions/regionRegistry';
 
 export interface AgricultureProviderResult {
   available: boolean;
+  code?: string;
   reason?: string;
   providerName?: string;
   data?: any;
@@ -48,8 +49,10 @@ export class UnsupportedAgricultureProvider implements AgricultureProvider {
   async getAgriculturalCalendar(): Promise<AgricultureProviderResult> {
     return {
       available: false,
+      code: 'FEATURE_NOT_SUPPORTED_IN_REGION',
       reason: 'Regional calendar data unavailable',
       providerName: this.name
     };
   }
 }
+

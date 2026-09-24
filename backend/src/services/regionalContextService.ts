@@ -1,12 +1,14 @@
 import { User } from '../models/User';
 import { Farm } from '../models/Farm';
 import { RegionRegistry } from '../config/regions/regionRegistry';
-import { TemperatureUnit, LandAreaUnit, MeasurementSystem } from '../config/regions/regionTypes';
+import { TemperatureUnit, LandAreaUnit, MeasurementSystem, CountryStatus, RegionalFeatureAvailability } from '../config/regions/regionTypes';
 import { ProviderResolver } from './providers/providerResolver';
 
 export interface NormalizedRegionalContext {
   countryCode: string;
   countryName: string;
+  status: CountryStatus;
+  readinessScore: number;
   state: string;
   district: string;
   city: string;
@@ -21,10 +23,13 @@ export interface NormalizedRegionalContext {
   measurementSystem: MeasurementSystem;
   timezone: string;
   supported: boolean;
+  features: RegionalFeatureAvailability;
   providers: {
     market: string;
     weather: string;
     agriculture: string;
+    payment: string;
+    soil: string;
   };
 }
 
@@ -46,10 +51,11 @@ export class RegionalContextService {
       selectedFarm = await Farm.findOne({ user: userId }).sort({ createdAt: -1 }).lean();
     }
 
-    // Determine country code and config
+    // Determine country code and config - Farm context is authoritative for agricultural operations
     const userRegPref = (user as any).settings?.regionalPreferences || {};
     const countryCode = selectedFarm?.countryCode || userRegPref.countryCode || (user as any).countryCode || 'IN';
     const regionConfig = RegionRegistry.getRegionConfig(countryCode);
+    const readiness = RegionRegistry.evaluateCountryReadiness(countryCode);
 
     const state = selectedFarm?.state || user.farmLocation?.state || userRegPref.stateName || 'Gujarat';
     const district = selectedFarm?.district || user.farmLocation?.district || 'Ahmedabad';
@@ -69,10 +75,14 @@ export class RegionalContextService {
     const marketProv = ProviderResolver.getMarketProvider(countryCode);
     const weatherProv = ProviderResolver.getWeatherProvider(countryCode);
     const agriProv = ProviderResolver.getAgricultureProvider(countryCode);
+    const paymentProv = ProviderResolver.getPaymentProvider(countryCode);
+    const soilProv = ProviderResolver.getSoilProvider(countryCode);
 
     return {
       countryCode: regionConfig.countryCode,
       countryName: regionConfig.countryName,
+      status: regionConfig.status || 'PLANNED',
+      readinessScore: readiness.readinessScore,
       state,
       district,
       city,
@@ -87,11 +97,15 @@ export class RegionalContextService {
       measurementSystem,
       timezone,
       supported: regionConfig.supported,
+      features: regionConfig.supportedFeatures,
       providers: {
         market: marketProv.name,
         weather: weatherProv.name,
-        agriculture: agriProv.name
+        agriculture: agriProv.name,
+        payment: paymentProv.name,
+        soil: soilProv.name
       }
     };
   }
 }
+

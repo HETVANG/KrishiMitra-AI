@@ -40,6 +40,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
 
   const links = [
     { to: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { to: '/organizations', label: 'Organizations & FPO', icon: Building2 },
+    { to: '/partners/discover', label: 'Partner Network', icon: Globe },
     { to: '/marketplace', label: 'Agri Marketplace', icon: Store },
     { to: '/agents', label: 'Farm Agents', icon: Bot },
     { to: '/crop-cycles', label: 'Farm Lifecycle', icon: Activity },
@@ -190,6 +192,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
               >
                 <BarChart3 size={16} />
                 <span>Product Analytics</span>
+              </NavLink>
+              <NavLink
+                to="/admin/growth"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-brand-600 text-white shadow-md' 
+                      : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800/40'
+                  }`
+                }
+              >
+                <BarChart3 size={16} />
+                <span>Growth & Acquisition</span>
+              </NavLink>
+              <NavLink
+                to="/admin/success"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => 
+                  `flex items-center gap-3 px-4 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-brand-600 text-white shadow-md' 
+                      : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50 dark:hover:bg-dark-800/40'
+                  }`
+                }
+              >
+                <Activity size={16} />
+                <span>Farmer Success Engine</span>
               </NavLink>
             </>
           )}

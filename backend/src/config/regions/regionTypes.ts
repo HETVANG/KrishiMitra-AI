@@ -4,6 +4,8 @@ export type WeightUnit = 'kg' | 'quintal' | 'ton' | 'lb';
 export type VolumeUnit = 'liter' | 'gallon';
 export type MeasurementSystem = 'metric' | 'imperial';
 
+export type CountryStatus = 'PLANNED' | 'COMING_SOON' | 'LIMITED' | 'BETA' | 'SUPPORTED' | 'PAUSED';
+
 export interface MarketProviderInfo {
   id: string;
   name: string;
@@ -31,11 +33,32 @@ export interface RegionalFeatureAvailability {
   predictiveIntelligence: boolean;
   cropLifecycle: boolean;
   farmAgents: boolean;
+  marketplace?: boolean;
+  payments?: boolean;
+  expertNetwork?: boolean;
+  advisory?: boolean;
+  diseaseDetection?: boolean;
+  yieldPrediction?: boolean;
+}
+
+export interface CountryReadiness {
+  countryCode: string;
+  countryName: string;
+  status: CountryStatus;
+  readinessScore: number; // 0 to 100
+  dataSourcesReady: boolean;
+  languageReady: boolean;
+  regulatoryReady: boolean;
+  paymentsReady: boolean;
+  agronomicCalendarReady: boolean;
+  missingRequirements: string[];
+  recommendation: string;
 }
 
 export interface RegionalConfig {
   countryCode: string; // ISO 3166-1 alpha-2 e.g. "IN"
   countryName: string;
+  status: CountryStatus;
   supported: boolean;
   defaultLanguage: string;
   supportedLanguages: string[];
@@ -58,3 +81,4 @@ export interface RegionalConfig {
   supportedCrops: string[];
   supportedFeatures: RegionalFeatureAvailability;
 }
+

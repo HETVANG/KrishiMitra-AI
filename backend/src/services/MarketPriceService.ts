@@ -288,6 +288,7 @@ class MarketPriceService {
   private buildAnalytics(prices: any[], latestHistory?: any) {
     if (!prices.length) {
       return {
+        priceStatus: 'PRICE_UNAVAILABLE',
         todayPrice: 0,
         yesterdayPrice: 0,
         difference: 0,
@@ -314,12 +315,13 @@ class MarketPriceService {
     const arrivalQuantity = prices.reduce((acc, item) => acc + (item.arrivalQuantity || 0), 0);
 
     return {
+      priceStatus: 'AVAILABLE',
       todayPrice,
       yesterdayPrice,
       difference,
       percentageChange,
       highestPrice,
-      lowestPrice,
+      lowestPrice: lowestPrice === Number.POSITIVE_INFINITY ? 0 : lowestPrice,
       averagePrice,
       arrivalQuantity,
       isTrulyZero,

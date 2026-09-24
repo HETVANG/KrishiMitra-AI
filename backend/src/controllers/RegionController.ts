@@ -21,6 +21,39 @@ export class RegionController {
   }
 
   /**
+   * GET /api/regions/readiness
+   */
+  static async getReadiness(_req: Request, res: Response): Promise<void> {
+    try {
+      const countries = RegionRegistry.getAllCountries();
+      const evaluations = countries.map(c => RegionRegistry.evaluateCountryReadiness(c.countryCode));
+      res.json({
+        success: true,
+        count: evaluations.length,
+        data: evaluations
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  /**
+   * GET /api/regions/readiness/:countryCode
+   */
+  static async getReadinessByCountry(req: Request, res: Response): Promise<void> {
+    try {
+      const code = req.params.countryCode;
+      const readiness = RegionRegistry.evaluateCountryReadiness(code);
+      res.json({
+        success: true,
+        data: readiness
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  /**
    * GET /api/regions/:countryCode
    */
   static async getCountryByCode(req: Request, res: Response): Promise<void> {
@@ -126,3 +159,4 @@ export class RegionController {
     }
   }
 }
+

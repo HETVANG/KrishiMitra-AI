@@ -3,6 +3,7 @@ import { RegionalConfig } from './regionTypes';
 export const INDIA_REGIONAL_CONFIG: RegionalConfig = {
   countryCode: 'IN',
   countryName: 'India',
+  status: 'SUPPORTED',
   supported: true,
   defaultLanguage: 'en',
   supportedLanguages: ['en', 'hi', 'gu', 'mr', 'pa', 'bn', 'ta', 'te', 'kn', 'ml', 'or', 'as'],
@@ -49,6 +50,13 @@ export const INDIA_REGIONAL_CONFIG: RegionalConfig = {
     irrigationIntelligence: true,
     predictiveIntelligence: true,
     cropLifecycle: true,
-    farmAgents: true
+    farmAgents: true,
+    marketplace: true,
+    payments: true,
+    expertNetwork: true,
+    advisory: true,
+    diseaseDetection: true,
+    yieldPrediction: true
   }
 };
+

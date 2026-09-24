@@ -31,10 +31,20 @@ const Forum = React.lazy(() => import('./pages/Forum').then(m => ({ default: m.F
 const Experts = React.lazy(() => import('./pages/Experts').then(m => ({ default: m.Experts })));
 const Expenses = React.lazy(() => import('./pages/Expenses').then(m => ({ default: m.Expenses })));
 const Reports = React.lazy(() => import('./pages/Reports').then(m => ({ default: m.Reports })));
+const OrganizationList = React.lazy(() => import('./pages/OrganizationList').then(m => ({ default: m.OrganizationList })));
+const OrganizationOnboarding = React.lazy(() => import('./pages/OrganizationOnboarding').then(m => ({ default: m.OrganizationOnboarding })));
+const OrganizationWorkspace = React.lazy(() => import('./pages/OrganizationWorkspace').then(m => ({ default: m.OrganizationWorkspace })));
+const PartnerDiscovery = React.lazy(() => import('./pages/PartnerDiscovery').then(m => ({ default: m.PartnerDiscovery })));
+const PartnerApplication = React.lazy(() => import('./pages/PartnerApplication').then(m => ({ default: m.PartnerApplication })));
+const PartnerPortal = React.lazy(() => import('./pages/PartnerPortal').then(m => ({ default: m.PartnerPortal })));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const AdminProviders = React.lazy(() => import('./pages/AdminProviders').then(m => ({ default: m.AdminProviders })));
 const AdminPartners = React.lazy(() => import('./pages/AdminPartners').then(m => ({ default: m.AdminPartners })));
 const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics').then(m => ({ default: m.AdminAnalytics })));
+const AdminGrowth = React.lazy(() => import('./pages/AdminGrowth').then(m => ({ default: m.AdminGrowth })));
+const AdminSuccess = React.lazy(() => import('./pages/AdminSuccess').then(m => ({ default: m.AdminSuccess })));
+const AdminAIGovernance = React.lazy(() => import('./pages/AdminAIGovernance').then(m => ({ default: m.AdminAIGovernance })));
+const PublicShare = React.lazy(() => import('./pages/PublicShare').then(m => ({ default: m.PublicShare })));
 const Pricing = React.lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
 const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })));
 const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed').then(m => ({ default: m.PaymentFailed })));
@@ -252,6 +262,10 @@ export const AppContent = () => {
             <Route path="/schemes" element={<GovSchemes />} />
           </Route>
 
+          {/* Public Share Landing Routes */}
+          <Route path="/share/:type/:shareId" element={<PublicShare />} />
+          <Route path="/share/:shareId" element={<PublicShare />} />
+
           {/* Dynamic selector for root path */}
           <Route path="/" element={<HomeRoute />} />
 
@@ -259,6 +273,12 @@ export const AppContent = () => {
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/organizations" element={<OrganizationList />} />
+              <Route path="/organizations/new" element={<OrganizationOnboarding />} />
+              <Route path="/organizations/:id" element={<OrganizationWorkspace />} />
+              <Route path="/partners/discover" element={<PartnerDiscovery />} />
+              <Route path="/partners/apply" element={<PartnerApplication />} />
+              <Route path="/partners/portal" element={<PartnerPortal />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/agents" element={<FarmAgents />} />
               <Route path="/crop-cycles" element={<FarmLifecycle />} />
@@ -284,6 +304,9 @@ export const AppContent = () => {
                 <Route path="/admin/providers" element={<AdminProviders />} />
                 <Route path="/admin/partners" element={<AdminPartners />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/growth" element={<AdminGrowth />} />
+                <Route path="/admin/success" element={<AdminSuccess />} />
+                <Route path="/admin/ai-governance" element={<AdminAIGovernance />} />
               </Route>
             </Route>
           </Route>

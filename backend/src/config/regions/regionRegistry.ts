@@ -1,5 +1,5 @@
-import { RegionalConfig } from './regionTypes';
-import { COUNTRY_CONFIG_MAP } from './countryConfig';
+import { RegionalConfig, CountryReadiness, CountryStatus, RegionalFeatureAvailability } from './regionTypes';
+import { COUNTRY_CONFIG_MAP, evaluateCountryReadiness } from './countryConfig';
 import { INDIA_REGIONAL_CONFIG } from './indiaConfig';
 
 export class RegionRegistry {
@@ -26,7 +26,22 @@ export class RegionRegistry {
   static isSupportedCountry(countryCode?: string): boolean {
     if (!countryCode) return true;
     const config = this.getRegionConfig(countryCode);
-    return config.supported === true;
+    return config.supported === true || config.status === 'SUPPORTED' || config.status === 'BETA';
+  }
+
+  /**
+   * Check whether a specific agricultural platform feature is supported in a given country
+   */
+  static isFeatureAvailable(countryCode: string | undefined, featureKey: keyof RegionalFeatureAvailability): boolean {
+    const config = this.getRegionConfig(countryCode);
+    return config.supportedFeatures ? !!config.supportedFeatures[featureKey] : false;
+  }
+
+  /**
+   * Evaluate regional production readiness for a target country
+   */
+  static evaluateCountryReadiness(countryCode?: string): CountryReadiness {
+    return evaluateCountryReadiness(countryCode || 'IN');
   }
 
   /**
@@ -34,7 +49,7 @@ export class RegionRegistry {
    */
   static getSeasonForDate(date: Date, countryCode?: string): { seasonName: string; available: boolean } {
     const config = this.getRegionConfig(countryCode);
-    if (!config.supported || !config.agriculturalCalendar?.seasons) {
+    if (!config.supported || !config.agriculturalCalendar?.seasons || config.agriculturalCalendar.seasons.length === 0) {
       return { seasonName: 'Regional calendar data unavailable', available: false };
     }
 
@@ -66,6 +81,14 @@ export class RegionRegistry {
    * Get list of active supported countries
    */
   static getSupportedCountries(): RegionalConfig[] {
-    return Object.values(COUNTRY_CONFIG_MAP).filter(c => c.supported);
+    return Object.values(COUNTRY_CONFIG_MAP).filter(c => c.supported || c.status === 'SUPPORTED' || c.status === 'BETA');
+  }
+
+  /**
+   * Filter registered countries by activation status
+   */
+  static getCountriesByStatus(status: CountryStatus): RegionalConfig[] {
+    return Object.values(COUNTRY_CONFIG_MAP).filter(c => c.status === status);
   }
 }
+

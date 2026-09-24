@@ -3,6 +3,7 @@ import { Menu, Sun, Moon, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -19,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
     { code: 'en', label: 'English' },
     { code: 'hi', label: 'हिन्दी' },
     { code: 'gu', label: 'ગુજરાતી' },
-    { code: 'mr', label: 'मराठी' },
+    { code: 'mr', label: 'मરાઠી' },
     { code: 'pa', label: 'ਪੰਜਾਬੀ' },
     { code: 'bn', label: 'বাংলা' },
     { code: 'ta', label: 'தமிழ்' },
@@ -83,6 +84,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
+        {/* Workspace Switcher */}
+        {user && <WorkspaceSwitcher />}
+
         {/* Language Picker */}
         <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-dark-800/50 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-gray-200/50 dark:border-dark-700/30">
           <Globe size={14} className="text-gray-500 dark:text-dark-400" />

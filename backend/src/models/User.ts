@@ -37,6 +37,11 @@ const UserSchema = new Schema(
     onboardingVersion: { type: Number, default: 1 },
     onboardingCompletedAt: { type: Date },
 
+    // Step 36 Customer Acquisition & Referral fields
+    referralCode: { type: String, uppercase: true, trim: true, sparse: true, index: true },
+    referredBy: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    referralCount: { type: Number, default: 0 },
+
     farmLocation: {
       latitude: { type: Number },
       longitude: { type: Number },

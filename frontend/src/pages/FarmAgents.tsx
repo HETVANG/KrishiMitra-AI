@@ -88,14 +88,19 @@ export const FarmAgents: React.FC = () => {
   const [runningAgent, setRunningAgent] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  const [automationStatus, setAutomationStatus] = useState<any>(null);
+  const [weeklySummary, setWeeklySummary] = useState<any>(null);
+
   const fetchAgentData = async () => {
     try {
       setLoading(true);
-      const [statusRes, actRes, tasksRes, policyRes] = await Promise.all([
+      const [statusRes, actRes, tasksRes, policyRes, autoStatusRes, weeklyRes] = await Promise.all([
         api.get('/agents/status'),
         api.get('/agents/activity?limit=15'),
         api.get('/agents/tasks'),
-        api.get('/agents/policies')
+        api.get('/agents/policies'),
+        api.get('/automation/status').catch(() => null),
+        api.get('/automation/weekly-summary').catch(() => null)
       ]);
 
       if (statusRes.data?.success) {
@@ -110,6 +115,12 @@ export const FarmAgents: React.FC = () => {
       }
       if (policyRes.data?.success) {
         setPolicy(policyRes.data.data || policy);
+      }
+      if (autoStatusRes?.data?.success) {
+        setAutomationStatus(autoStatusRes.data.data);
+      }
+      if (weeklyRes?.data?.success) {
+        setWeeklySummary(weeklyRes.data.data);
       }
     } catch (err) {
       console.error('[FarmAgents] Error fetching agent data:', err);

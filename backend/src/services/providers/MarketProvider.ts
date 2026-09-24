@@ -3,6 +3,7 @@ import { RegionRegistry } from '../../config/regions/regionRegistry';
 
 export interface MarketProviderResult {
   available: boolean;
+  code?: string;
   reason?: string;
   providerName?: string;
   prices?: any[];
@@ -29,6 +30,7 @@ export class IndiaMarketProvider implements MarketProvider {
       if (!prices || prices.length === 0) {
         return {
           available: false,
+          code: 'INSUFFICIENT_DATA',
           reason: `No live mandi prices found for ${commodity} in the selected area.`,
           providerName: this.name
         };
@@ -42,6 +44,7 @@ export class IndiaMarketProvider implements MarketProvider {
     } catch (err: any) {
       return {
         available: false,
+        code: 'DATA_PROVIDER_UNAVAILABLE',
         reason: err.message || 'Market provider connection error',
         providerName: this.name
       };
@@ -62,8 +65,10 @@ export class UnsupportedMarketProvider implements MarketProvider {
   async getMarketPrices(): Promise<MarketProviderResult> {
     return {
       available: false,
+      code: 'FEATURE_NOT_SUPPORTED_IN_REGION',
       reason: 'Market data is not currently available for this region.',
       providerName: this.name
     };
   }
 }
+

@@ -29,6 +29,9 @@ import { getTranslationsForLang } from '../config/alertTranslations';
 import { RegionalSettingsModal } from '../components/RegionalSettingsModal';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
+import { ReferralWidget } from '../components/ReferralWidget';
+import { DailyBriefWidget } from '../components/DailyBriefWidget';
+import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 
 export const Dashboard: React.FC = () => {
   console.log('[KrishiMitra Startup Log] Loading Dashboard');
@@ -97,6 +100,7 @@ export const Dashboard: React.FC = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRegionalModal, setShowRegionalModal] = useState(false);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -879,6 +883,12 @@ export const Dashboard: React.FC = () => {
       {/* Onboarding Activation Checklist */}
       <OnboardingChecklist onOpenModal={() => setShowOnboardingModal(true)} />
 
+      {/* Personalized Daily Farm Brief */}
+      <DailyBriefWidget onOpenTimeline={() => setShowTimelineModal(true)} />
+
+      {/* Farmer Referral & Growth Widget */}
+      <ReferralWidget />
+
       {/* Welcome Title Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg text-left">
         <div>
@@ -1575,6 +1585,12 @@ export const Dashboard: React.FC = () => {
           setShowOnboardingModal(false);
           window.location.reload();
         }}
+      />
+
+      {/* Chronological Farm Activity Timeline Modal */}
+      <FarmerTimelineModal
+        isOpen={showTimelineModal}
+        onClose={() => setShowTimelineModal(false)}
       />
     </div>
   );

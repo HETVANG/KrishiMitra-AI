@@ -6,6 +6,10 @@ import { FeatureUsageService } from '../services/productIntelligence/featureUsag
 import { ProductInsightService } from '../services/productIntelligence/productInsightService';
 import { IssueReport } from '../models/IssueReport';
 import { FeatureRequest } from '../models/FeatureRequest';
+import { SupportTicketService } from '../services/feedback/supportTicketService';
+import { SafetyReportService } from '../services/feedback/safetyReportService';
+import { FeatureRequestService } from '../services/feedback/featureRequestService';
+import { ProductFeedbackService } from '../services/feedback/productFeedbackService';
 
 export class ProductIntelligenceController {
   /**
@@ -47,7 +51,7 @@ export class ProductIntelligenceController {
         return;
       }
 
-      const { farmId, feature, type, rating, message, category } = req.body;
+      const { farmId, feature, type, rating, message, category, referenceId } = req.body;
 
       if (!feature || !type || !message) {
         res.status(400).json({ success: false, message: 'feature, type, and message are required' });
@@ -71,6 +75,98 @@ export class ProductIntelligenceController {
       });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message || 'Failed to submit feedback' });
+    }
+  }
+
+  /**
+   * Create support ticket
+   */
+  static async createSupportTicket(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?._id?.toString();
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const { category, priority, subject, description, farmId, organizationId, language } = req.body;
+      if (!category || !subject || !description) {
+        res.status(400).json({ success: false, message: 'category, subject, and description are required' });
+        return;
+      }
+
+      const ticket = await SupportTicketService.createTicket({
+        userId,
+        farmId,
+        organizationId,
+        category,
+        priority,
+        subject,
+        description,
+        language
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Support ticket created successfully. Our team will review your request.',
+        ticket
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Failed to create support ticket' });
+    }
+  }
+
+  /**
+   * Get user's own support tickets
+   */
+  static async getUserSupportTickets(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?._id?.toString();
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const tickets = await SupportTicketService.getUserTickets(userId);
+      res.status(200).json({ success: true, tickets });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Failed to fetch support tickets' });
+    }
+  }
+
+  /**
+   * Submit agricultural AI safety hazard report
+   */
+  static async submitSafetyReport(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?._id?.toString();
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'Authentication required' });
+        return;
+      }
+
+      const { category, feature, description, referenceId, farmId } = req.body;
+      if (!category || !feature || !description) {
+        res.status(400).json({ success: false, message: 'category, feature, and description are required' });
+        return;
+      }
+
+      const report = await SafetyReportService.submitReport({
+        userId,
+        farmId,
+        category,
+        feature,
+        referenceId,
+        description
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Safety hazard report received and routed to product safety review team.',
+        report
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, message: err.message || 'Failed to submit safety report' });
     }
   }
 
@@ -140,24 +236,23 @@ export class ProductIntelligenceController {
         return;
       }
 
-      const featureReq = await FeatureRequest.create({
+      const result = await FeatureRequestService.createRequest({
         userId,
         title,
         description,
-        category: category || 'GENERAL',
-        region: region || 'IN',
-        language: language || 'en',
-        status: 'SUBMITTED'
+        category,
+        region,
+        language
       });
 
-      res.status(201).json({ success: true, message: 'Feature request submitted', featureRequest: featureReq });
+      res.status(201).json({ success: true, message: 'Feature request submitted', ...result });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message || 'Failed to submit feature request' });
     }
   }
 
   /**
-   * Get Admin product intelligence analytics (Admin only)
+   * Get Admin product intelligence analytics & feedback queues (Admin only)
    */
   static async getAdminAnalytics(req: Request, res: Response): Promise<void> {
     try {
@@ -165,16 +260,23 @@ export class ProductIntelligenceController {
       const usageMetrics = await FeatureUsageService.getFeatureUsageMetrics(days);
       const insights = await ProductInsightService.generateInsights();
       const feedbackQueue = await FeedbackService.getAllFeedback();
+      const openSafetyReports = await SafetyReportService.getOpenReports();
+      const knowledgeGaps = await ProductFeedbackService.getKnowledgeGaps();
+      const regionalGaps = await ProductFeedbackService.getRegionalGaps();
 
       res.status(200).json({
         success: true,
         periodDays: days,
         usageMetrics,
         insights,
-        feedbackQueue
+        feedbackQueue,
+        openSafetyReports,
+        knowledgeGaps,
+        regionalGaps
       });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message || 'Failed to fetch product analytics' });
     }
   }
 }
+

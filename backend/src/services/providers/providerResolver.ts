@@ -7,6 +7,22 @@ import { ProviderCapabilityService } from './ProviderCapabilityService';
 import { WeatherProviderAdapter, MarketProviderAdapter, AgricultureKnowledgeAdapter, StandardProviderResponse } from './ProviderAdapter';
 import { ProviderType } from '../../models/Provider';
 
+export interface PaymentProviderResult {
+  id: string;
+  name: string;
+  available: boolean;
+  code?: string;
+  reason?: string;
+}
+
+export interface SoilProviderResult {
+  id: string;
+  name: string;
+  available: boolean;
+  code?: string;
+  reason?: string;
+}
+
 export class ProviderResolver {
   /**
    * Get MarketProvider for a country code
@@ -35,6 +51,57 @@ export class ProviderResolver {
       return new IndiaAgricultureProvider();
     }
     return new UnsupportedAgricultureProvider(countryCode);
+  }
+
+  /**
+   * Get PaymentProvider for a country code
+   */
+  static getPaymentProvider(countryCode: string = 'IN'): PaymentProviderResult {
+    const code = countryCode.trim().toUpperCase();
+    if (code === 'IN') {
+      return {
+        id: 'razorpay_india',
+        name: 'Razorpay Payment Gateway (India)',
+        available: true
+      };
+    }
+    const config = RegionRegistry.getRegionConfig(code);
+    return {
+      id: `unsupported_payment_${code.toLowerCase()}`,
+      name: `Payment Gateway (${config.countryName})`,
+      available: false,
+      code: 'FEATURE_NOT_SUPPORTED_IN_REGION',
+      reason: `Razorpay billing is currently optimized for India (IN). Payment gateway for ${config.countryName} is under integration.`
+    };
+  }
+
+  /**
+   * Get SoilProvider for a country code
+   */
+  static getSoilProvider(countryCode: string = 'IN'): SoilProviderResult {
+    const code = countryCode.trim().toUpperCase();
+    if (code === 'IN') {
+      return {
+        id: 'national_soil_survey_in',
+        name: 'National Soil Survey & SoilGrids Data Feed',
+        available: true
+      };
+    }
+    const config = RegionRegistry.getRegionConfig(code);
+    if (config.supportedFeatures?.predictiveIntelligence) {
+      return {
+        id: `soilgrids_global_${code.toLowerCase()}`,
+        name: `ISRIC SoilGrids Global Telemetry (${config.countryName})`,
+        available: true
+      };
+    }
+    return {
+      id: `unsupported_soil_${code.toLowerCase()}`,
+      name: `Soil Telemetry (${config.countryName})`,
+      available: false,
+      code: 'FEATURE_NOT_SUPPORTED_IN_REGION',
+      reason: `Soil telemetry data is not currently available for ${config.countryName}.`
+    };
   }
 
   /**
@@ -74,3 +141,4 @@ export class ProviderResolver {
     return await marketAdapter.getMarketPrices(commodity, state, district);
   }
 }
+

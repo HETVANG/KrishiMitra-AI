@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { DashboardAICoreWidget, TaskCompletionAnimation } from '../animations';
 import { 
   Bot, 
   Send, 
@@ -349,7 +350,15 @@ export const FarmCopilot: React.FC = () => {
         </div>
       ) : null}
 
+      {/* 3D AI Core & Farmer Interaction Visualization */}
+      <DashboardAICoreWidget
+        loading={loading}
+        contextLoading={contextLoading}
+        lastMessage={messages[messages.length - 1]}
+      />
+
       {/* Tabs Navigation */}
+
       <div className="flex border-b border-gray-200 dark:border-dark-800 overflow-x-auto gap-2">
         <button
           onClick={() => setActiveTab('chat')}
@@ -599,35 +608,14 @@ export const FarmCopilot: React.FC = () => {
 
           <div className="space-y-3">
             {dailyTasks.map((task, idx) => (
-              <div 
-                key={idx}
-                onClick={() => toggleTaskCompletion(task._id, idx)}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 ${
-                  task.completed 
-                    ? 'bg-gray-50 dark:bg-dark-950/40 border-gray-200 dark:border-dark-800/40 opacity-70' 
-                    : 'bg-white dark:bg-dark-900 border-gray-100 dark:border-dark-800 shadow-sm hover:border-brand-300'
-                }`}
-              >
-                <div className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 ${
-                  task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-dark-700'
-                }`}>
-                  {task.completed && <Check size={14} />}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className={`text-sm font-extrabold ${task.completed ? 'line-through text-gray-400' : 'text-gray-800 dark:text-dark-100'}`}>
-                      {task.title}
-                    </h4>
-                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
-                      task.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-brand-100 text-brand-700'
-                    }`}>
-                      {task.priority} Priority
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-dark-400 mt-1">{task.reason}</p>
-                </div>
-              </div>
+              <TaskCompletionAnimation
+                key={task._id || `task-${idx}`}
+                completed={task.completed}
+                label={task.title}
+                reason={task.reason}
+                priority={task.priority}
+                onToggle={() => toggleTaskCompletion(task._id, idx)}
+              />
             ))}
           </div>
         </div>

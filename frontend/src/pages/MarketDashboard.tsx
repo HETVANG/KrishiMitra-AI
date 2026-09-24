@@ -20,6 +20,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { MarketPriceChangeIndicator, MarketRefreshAnimation } from '../animations';
 
 export const MarketDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();

@@ -32,6 +32,7 @@ import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { ReferralWidget } from '../components/ReferralWidget';
 import { DailyBriefWidget } from '../components/DailyBriefWidget';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
+import { DashboardLivingFarmWidget, DashboardWeatherVisualWidget } from '../animations';
 
 export const Dashboard: React.FC = () => {
   console.log('[KrishiMitra Startup Log] Loading Dashboard');
@@ -929,6 +930,12 @@ export const Dashboard: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* 3D Living Farm Visual Environment */}
+      <DashboardLivingFarmWidget farmerCrop={activeCropCycle?.cropName || user?.settings?.crop} />
+
+      {/* Real-time 3D Weather Telemetry Visualizer */}
+      <DashboardWeatherVisualWidget weatherData={weather} farmerCrop={activeCropCycle?.cropName || user?.settings?.crop} />
 
       {/* Trial Reminders & Alerts */}
       {shouldShowExpiringAlert && (

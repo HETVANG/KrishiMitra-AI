@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { DashboardSoilIrrigationWidget } from '../animations';
 import { 
   Droplets, 
   CloudSun, 
@@ -290,7 +291,15 @@ export const SmartIrrigation: React.FC = () => {
         </div>
       </div>
 
+      {/* 3D Soil Cross-Section & Irrigation Visualizer */}
+      <DashboardSoilIrrigationWidget
+        recommendation={recommendation}
+        recentEvents={recentEvents}
+        contextSummary={contextSummary}
+      />
+
       {/* Reasoning & Recommended Actions Grid */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Evidence & Reasoning Card */}
         <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/40 rounded-3xl p-6 space-y-4 shadow-sm">

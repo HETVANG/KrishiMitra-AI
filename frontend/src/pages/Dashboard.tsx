@@ -20,7 +20,8 @@ import {
   Brain,
   Droplets,
   Bot,
-  Globe
+  Globe,
+  ScanEye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';

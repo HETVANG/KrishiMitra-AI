@@ -1,4 +1,4 @@
-import { AnimationEventType, AnimationEventPayload } from '../types/animationTypes';
+import type { AnimationEventType, AnimationEventPayload } from '../types/animationTypes';
 
 type EventCallback<T = any> = (payload: AnimationEventPayload<T>) => void;
 

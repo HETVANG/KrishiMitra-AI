@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { AnimationState } from '../types/animationTypes';
+import type { AnimationState } from '../types/animationTypes';
 
 export interface AnimationControllerOptions {
   autoPlay?: boolean;

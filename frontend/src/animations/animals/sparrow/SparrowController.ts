@@ -1,5 +1,5 @@
 import type { SparrowFlightState } from '../../types/animationTypes';
-import { SparrowState } from './SparrowState';
+import type { SparrowState } from './SparrowState';
 import { damp, organicSway } from '../../utils/naturalMovement';
 
 export interface FlightWaypoint {

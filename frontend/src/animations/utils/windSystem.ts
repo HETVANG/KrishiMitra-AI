@@ -1,4 +1,4 @@
-import { WindVector } from '../types/animationTypes';
+import type { WindVector } from '../types/animationTypes';
 import { organicSway } from './naturalMovement';
 
 export class WindController {

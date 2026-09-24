@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFrame } from '@react-three/fiber';
 import { globalWind } from '../utils/windSystem';
-import { WindVector } from '../types/animationTypes';
+import type { WindVector } from '../types/animationTypes';
 
 interface WindSystemComponentProps {
   wind?: Partial<WindVector>;

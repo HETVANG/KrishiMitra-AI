@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { QualityLevel, QualitySettings } from '../types/animationTypes';
+import type { QualityLevel, QualitySettings } from '../types/animationTypes';
 import { detectDeviceQuality, getQualitySettings } from '../utils/devicePerformance';
 
 export function useDevicePerformance(): {

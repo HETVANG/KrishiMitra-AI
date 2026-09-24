@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { DashboardAICoreWidget, TaskCompletionAnimation } from '../animations';
 import { 
   Bot, 
   Send, 
@@ -349,13 +348,6 @@ export const FarmCopilot: React.FC = () => {
           </div>
         </div>
       ) : null}
-
-      {/* 3D AI Core & Farmer Interaction Visualization */}
-      <DashboardAICoreWidget
-        loading={loading}
-        contextLoading={contextLoading}
-        lastMessage={messages[messages.length - 1]}
-      />
 
       {/* Tabs Navigation */}
 

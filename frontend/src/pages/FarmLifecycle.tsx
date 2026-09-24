@@ -26,7 +26,6 @@ import {
   X,
   Sparkles
 } from 'lucide-react';
-import { FarmLifecycleGrowthWidget } from '../animations';
 
 interface CropCycle {
   _id: string;
@@ -326,9 +325,6 @@ export const FarmLifecycle: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* 3D Biological Crop Growth & Underground Potato Visualization */}
-      <FarmLifecycleGrowthWidget farmerCrop={currentSelectedCycle?.cropName} verifiedStage={currentSelectedCycle?.currentStage} />
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">

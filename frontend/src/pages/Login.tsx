@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout, Mail, Lock, AlertCircle } from 'lucide-react';
-import { LoginAnimationLayer } from '../animations';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
@@ -32,7 +31,6 @@ export const Login: React.FC = () => {
       {/* Visual Banner on Left */}
       <div className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1470')` }}>
         <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px]" />
-        <LoginAnimationLayer />
         <div className="absolute bottom-16 left-16 right-16 z-20 text-white">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 shadow-lg">

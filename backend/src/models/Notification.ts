@@ -71,4 +71,7 @@ NotificationSchema.pre('save', function (next) {
   next();
 });
 
+NotificationSchema.index({ user: 1, isRead: 1, createdAt: -1 });
+NotificationSchema.index({ user: 1, farm: 1, status: 1 });
+
 export const Notification = model('Notification', NotificationSchema);

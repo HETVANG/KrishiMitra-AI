@@ -32,15 +32,17 @@ export const errorHandler = (
   const userMessage = err.userMessage || (statusCode >= 500 ? 'An unexpected error occurred on the server. Please try again later.' : message);
   const requestId = (req as any).id || (req.headers['x-request-id'] as string) || 'unknown';
 
+  const isProd = process.env.NODE_ENV === 'production';
+
   console.error(`[Error Handler] [${req.method}] ${req.url} - Status ${statusCode} [${code}] - ReqID: ${requestId} - Message: ${message}`);
-  if (err.stack && process.env.NODE_ENV !== 'production') {
+  if (err.stack && !isProd) {
     console.error(err.stack);
   }
 
   res.status(statusCode).json({
     success: false,
     code,
-    message,
+    message: isProd && statusCode >= 500 ? 'An unexpected error occurred. Please contact support.' : message,
     userMessage,
     requestId,
     timestamp: new Date().toISOString()

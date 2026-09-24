@@ -3,15 +3,14 @@ import { resolveApiNameToCommodity } from '../config/commodities';
 
 const normalizeText = (value?: string): string => (typeof value === 'string' ? value.trim() : '');
 
-const toNumber = (value: unknown): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
+const toNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
     const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
+    return Number.isFinite(parsed) ? parsed : null;
   }
-  return 0;
+  return null;
 };
 
 const escapeRegex = (str: string): string => {
@@ -37,23 +36,24 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
   const rawModal = record.modalPrice !== undefined ? record.modalPrice : (record.modal_price !== undefined ? record.modal_price : record.Modal_Price);
   const rawArrival = record.arrivalQuantity !== undefined ? record.arrivalQuantity : (record.arrival_quantity !== undefined ? record.arrival_quantity : (record.arrivals !== undefined ? record.arrivals : record.Arrivals));
 
-  const minPrice = Math.max(toNumber(rawMin), 0);
-  const maxPrice = Math.max(toNumber(rawMax), minPrice);
-  const modalPrice = Math.max(toNumber(rawModal), toNumber(rawAvg), Math.round((minPrice + maxPrice) / 2));
-  const avgPrice = Math.max(toNumber(rawAvg), modalPrice, Math.round((minPrice + maxPrice) / 2));
-  const arrivalQuantity = Math.max(toNumber(rawArrival), 0);
-  const unit = normalizeText(record.unit || record.Unit) || 'Qtl';
+  const parsedMin = toNumberOrNull(rawMin);
+  const parsedMax = toNumberOrNull(rawMax);
+  const parsedModal = toNumberOrNull(rawModal);
+  const parsedAvg = toNumberOrNull(rawAvg);
+  const parsedArrival = toNumberOrNull(rawArrival);
+
   const isTrulyZero = record.isTrulyZero === true || record.isTrulyZero === 'true';
+  const hasValidNumericPrice = parsedMin !== null || parsedMax !== null || parsedModal !== null || parsedAvg !== null || isTrulyZero;
+
+  const minPrice = parsedMin !== null ? Math.max(parsedMin, 0) : 0;
+  const maxPrice = parsedMax !== null ? Math.max(parsedMax, minPrice) : minPrice;
+  const modalPrice = parsedModal !== null ? parsedModal : (parsedAvg !== null ? parsedAvg : Math.round((minPrice + maxPrice) / 2));
+  const avgPrice = parsedAvg !== null ? parsedAvg : modalPrice;
+  const arrivalQuantity = parsedArrival !== null ? Math.max(parsedArrival, 0) : 0;
+  const unit = normalizeText(record.unit || record.Unit) || 'Qtl';
   
   const rawDate = record.date || record.arrival_date || record.date_arrival || record.Arrival_Date;
   const parsedDate = rawDate ? new Date(rawDate) : fallbackDate;
-
-  console.info(`[Mandi Price Logger]
-  - Requested API Commodity Name: "${rawCrop}"
-  - Final Mapped Commodity: "${crop}"
-  - Market Returned: "${market}, ${state}"
-  - Raw API Prices: Min=${rawMin}, Max=${rawMax}, Modal=${rawModal}, Avg=${rawAvg}
-  - Final Mapped Prices: Min=${minPrice}, Max=${maxPrice}, Modal=${modalPrice}, Avg=${avgPrice}`);
 
   return {
     crop,
@@ -63,6 +63,8 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
     district,
     market,
     mandiName: market,
+    priceAvailable: hasValidNumericPrice,
+    priceDisplay: hasValidNumericPrice ? `₹${modalPrice}/${unit}` : 'Price Not Available',
     minPrice,
     maxPrice,
     avgPrice,
@@ -71,7 +73,8 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
     unit,
     isTrulyZero,
     date: Number.isNaN(parsedDate.getTime()) ? fallbackDate : parsedDate,
-    source: normalizeText(record.source) || 'live-api',
+    source: normalizeText(record.source) || 'Agmarknet APMC Mandi Feed',
+    fetchedAt: fallbackDate,
     lastUpdated: fallbackDate
   };
 };

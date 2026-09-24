@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Farm } from '../models/Farm';
 import { FarmMembership } from '../models/FarmMembership';
 
@@ -21,6 +22,9 @@ export class FarmAuthorizationService {
    * Determine exact user role in a farm
    */
   static async getUserRoleInFarm(userId: string, farmId: string): Promise<FarmRole | null> {
+    if (mongoose.connection.readyState !== 1) {
+      return null;
+    }
     const farm = await Farm.findById(farmId).lean();
     if (!farm || farm.status === 'ARCHIVED') return null;
 

@@ -16,7 +16,9 @@ export class AISafetyValidator {
     }
 
     const injectionPatterns = [
-      /ignore previous instructions/i,
+      /ignore.*instructions/i,
+      /ignore previous/i,
+      /disregard.*system/i,
       /disregard system prompt/i,
       /you are now an unfiltered/i,
       /override safety/i,

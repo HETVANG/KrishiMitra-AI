@@ -59,9 +59,17 @@ const app = express();
 app.use(helmet());
 app.use(requestIdMiddleware);
 app.use(cors({
-  origin: '*', // For development. Change to specific domain in production
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: (origin, callback) => {
+    const allowed = process.env.CLIENT_URL || 'http://localhost:5173';
+    if (!origin || process.env.NODE_ENV !== 'production' || origin === allowed || allowed === '*') {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy rejection: Origin not permitted'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Rate Limiter to guard against DOS

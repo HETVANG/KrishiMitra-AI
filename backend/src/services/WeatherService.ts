@@ -1,7 +1,8 @@
 import axios from 'axios';
+import mongoose from 'mongoose';
 import { Weather } from '../models/Weather';
 
-const apiKey = process.env.OPENWEATHER_API_KEY;
+const openWeatherApiKey = process.env.OPENWEATHER_API_KEY;
 
 export interface WeatherData {
   current: {
@@ -26,9 +27,12 @@ export interface WeatherData {
     message: string;
   }>;
   aiAdvice: string;
+  source: string;
+  observedAt: string;
+  fetchedAt: string;
+  freshness: 'LIVE' | 'CACHED' | 'FALLBACK' | 'UNAVAILABLE';
 }
 
-// Localized weather warning alerts and advisories
 const weatherAdvisories: Record<string, {
   criticalHeat: string;
   criticalFrost: string;
@@ -49,7 +53,7 @@ const weatherAdvisories: Record<string, {
     adviceRain: 'Rainfall is expected. Postpone irrigation activities to save water. Hold off on pesticide sprays as rain will wash it away.',
     adviceHeat: 'Temperatures are high today. Schedule irrigation early in the morning. Inspect crops for moisture stress signs.',
     adviceOptimal: 'Weather conditions are stable and favorable. Ideal time for applying nitrogen fertilizer, sowing seeds, or manual weeding.',
-    weatherReport: 'weather conditions clear'
+    weatherReport: 'Weather conditions clear'
   },
   hi: {
     criticalHeat: 'गंभीर लू की चेतावनी! सिंचाई की दर उच्च रखें, जहां संभव हो छायादार जाली का उपयोग करके फसलों की रक्षा करें।',
@@ -81,58 +85,71 @@ export class WeatherService {
     return weatherAdvisories[code] || weatherAdvisories.en;
   }
 
-  static async getWeatherData(lat: number, lon: number, language: string = 'en'): Promise<WeatherData> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    
-    try {
-      const cached = await Weather.findOne({
-        latitude: lat,
-        longitude: lon,
-        updatedAt: { $gte: oneHourAgo }
-      });
+  private static validateNumeric(value: any, min: number, max: number, fallback: number): number {
+    if (typeof value === 'number' && !Number.isNaN(value) && value >= min && value <= max) {
+      return value;
+    }
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed) && parsed >= min && parsed <= max) {
+      return parsed;
+    }
+    return fallback;
+  }
 
-      if (cached) {
-        console.log(`[Weather Service] Cache Hit for coordinates (${lat}, ${lon})`);
-        const weatherData = cached.forecastData as WeatherData;
-        
-        // Translate Cached Advice dynamically to target language
-        const tokens = this.getAdvisoryToken(language);
-        const temp = weatherData.current.temp;
-        const condition = weatherData.current.condition;
-        
-        // Recompute alerts and advice in target language
-        weatherData.alerts = this.computeAlerts(temp, weatherData.current.windSpeed, weatherData.current.humidity, weatherData.current.rainProb, language);
-        weatherData.aiAdvice = this.generateAiWeatherAdvice(temp, condition, weatherData.alerts, language);
-        return weatherData;
+  static async getWeatherData(lat: number, lon: number, language: string = 'en'): Promise<WeatherData> {
+    // Validate lat/lon
+    const validLat = this.validateNumeric(lat, -90, 90, 20.5937);
+    const validLon = this.validateNumeric(lon, -180, 180, 78.9629);
+
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const nowIso = new Date().toISOString();
+    
+    // 1. Query Cache if DB online
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const cached = await Weather.findOne({
+          latitude: validLat,
+          longitude: validLon,
+          updatedAt: { $gte: oneHourAgo }
+        });
+
+        if (cached && cached.forecastData) {
+          console.log(`[Weather Service] Cache Hit for coordinates (${validLat}, ${validLon})`);
+          const weatherData = cached.forecastData as WeatherData;
+          weatherData.freshness = 'CACHED';
+          weatherData.fetchedAt = nowIso;
+          return weatherData;
+        }
+      } catch (dbError) {
+        console.warn(`[Weather Cache Warning] Cache query notice: ${dbError}`);
       }
-    } catch (dbError) {
-      console.warn(`[Weather Cache Warning] Failed to query cache database: ${dbError}`);
     }
 
-    let weatherResult: WeatherData;
+    let weatherResult: WeatherData | null = null;
 
-    if (apiKey) {
+    // 2. OpenWeather API (If API key exists)
+    if (openWeatherApiKey) {
       try {
-        console.log(`[Weather Service] Live OpenWeather request for (${lat}, ${lon})`);
-        const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
-        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+        console.log(`[Weather Service] Live OpenWeather request for (${validLat}, ${validLon})`);
+        const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${validLat}&lon=${validLon}&units=metric&appid=${openWeatherApiKey}`;
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${validLat}&lon=${validLon}&units=metric&appid=${openWeatherApiKey}`;
 
         const [currRes, foreRes] = await Promise.all([
-          axios.get(currentUrl),
-          axios.get(forecastUrl)
+          axios.get(currentUrl, { timeout: 8000 }),
+          axios.get(forecastUrl, { timeout: 8000 })
         ]);
 
         const currData = currRes.data;
         const foreList = foreRes.data.list;
 
-        const temp = currData.main.temp;
-        const humidity = currData.main.humidity;
-        const windSpeed = currData.wind.speed;
+        const temp = this.validateNumeric(currData.main?.temp, -50, 60, 25);
+        const humidity = this.validateNumeric(currData.main?.humidity, 0, 100, 50);
+        const windSpeed = this.validateNumeric(currData.wind?.speed, 0, 150, 5);
         const rainProb = currData.rain ? 80 : 10;
-        const condition = currData.weather[0].main;
-        const description = currData.weather[0].description;
+        const condition = currData.weather?.[0]?.main || 'Clear';
+        const description = currData.weather?.[0]?.description || 'Clear sky';
 
-        const dailyForecast: any[] = [];
+        const dailyForecast: WeatherData['forecast'] = [];
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
         for (let i = 0; i < foreList.length; i += 8) {
@@ -140,9 +157,9 @@ export class WeatherService {
           const date = new Date(item.dt * 1000);
           dailyForecast.push({
             day: daysOfWeek[date.getDay()],
-            tempMin: Math.round(item.main.temp_min),
-            tempMax: Math.round(item.main.temp_max),
-            condition: item.weather[0].main,
+            tempMin: Math.round(this.validateNumeric(item.main?.temp_min, -50, 60, temp - 3)),
+            tempMax: Math.round(this.validateNumeric(item.main?.temp_max, -50, 60, temp + 3)),
+            condition: item.weather?.[0]?.main || 'Clear',
             rainProb: item.pop ? Math.round(item.pop * 100) : 15
           });
         }
@@ -153,7 +170,7 @@ export class WeatherService {
         weatherResult = {
           current: {
             temp: Math.round(temp),
-            humidity,
+            humidity: Math.round(humidity),
             windSpeed: Number(windSpeed.toFixed(1)),
             rainProb,
             aqi: 45,
@@ -162,26 +179,115 @@ export class WeatherService {
           },
           forecast: dailyForecast.slice(0, 7),
           alerts,
-          aiAdvice
+          aiAdvice,
+          source: 'OpenWeather Official Live API',
+          observedAt: nowIso,
+          fetchedAt: nowIso,
+          freshness: 'LIVE'
         };
-
-      } catch (error) {
-        console.error('[Weather Service Live Error] Falling back to Mock weather engines:', error);
-        weatherResult = this.generateMockWeatherData(lat, lon, language);
+      } catch (error: any) {
+        console.warn('[Weather Service] OpenWeather API call failed. Attempting Open-Meteo free telemetry fallback...', error.message);
       }
-    } else {
-      weatherResult = this.generateMockWeatherData(lat, lon, language);
     }
 
-    // Cache the result in MongoDB
-    try {
-      await Weather.findOneAndUpdate(
-        { latitude: lat, longitude: lon },
-        { latitude: lat, longitude: lon, forecastData: weatherResult },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-    } catch (saveError) {
-      console.error('[Weather Cache Error] Failed to write weather cache:', saveError);
+    // 3. Open-Meteo Free Public API (Requires Zero API Key - Live Telemetry)
+    if (!weatherResult) {
+      try {
+        console.log(`[Weather Service] Open-Meteo live request for (${validLat}, ${validLon})`);
+        const openMeteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${validLat}&longitude=${validLon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto`;
+        
+        const response = await axios.get(openMeteoUrl, { timeout: 8000 });
+        const current = response.data?.current || {};
+        const daily = response.data?.daily || {};
+
+        const temp = this.validateNumeric(current.temperature_2m, -50, 60, 25);
+        const humidity = this.validateNumeric(current.relative_humidity_2m, 0, 100, 50);
+        const windSpeed = this.validateNumeric(current.wind_speed_10m, 0, 150, 5);
+        const code = current.weather_code || 0;
+        const condition = code >= 80 ? 'Rain' : code >= 50 ? 'Rain' : code >= 1 ? 'Clouds' : 'Clear';
+        const rainProb = daily.precipitation_probability_max?.[0] || (condition === 'Rain' ? 80 : 15);
+
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const forecast: WeatherData['forecast'] = [];
+        const times = daily.time || [];
+
+        for (let i = 0; i < Math.min(times.length, 7); i++) {
+          const dDate = new Date(times[i]);
+          const codeDay = daily.weather_code?.[i] || 0;
+          const condDay = codeDay >= 80 ? 'Rain' : codeDay >= 50 ? 'Rain' : codeDay >= 1 ? 'Clouds' : 'Clear';
+          forecast.push({
+            day: daysOfWeek[dDate.getDay()],
+            tempMin: Math.round(this.validateNumeric(daily.temperature_2m_min?.[i], -50, 60, temp - 4)),
+            tempMax: Math.round(this.validateNumeric(daily.temperature_2m_max?.[i], -50, 60, temp + 4)),
+            condition: condDay,
+            rainProb: daily.precipitation_probability_max?.[i] || 15
+          });
+        }
+
+        const alerts = this.computeAlerts(temp, windSpeed, humidity, rainProb, language);
+        const aiAdvice = this.generateAiWeatherAdvice(temp, condition, alerts, language);
+
+        weatherResult = {
+          current: {
+            temp: Math.round(temp),
+            humidity: Math.round(humidity),
+            windSpeed: Number(windSpeed.toFixed(1)),
+            rainProb,
+            aqi: 40,
+            condition,
+            description: `Live Open-Meteo ${condition} feed`
+          },
+          forecast,
+          alerts,
+          aiAdvice,
+          source: 'Open-Meteo Live Telemetry (Zero-Key Provider)',
+          observedAt: nowIso,
+          fetchedAt: nowIso,
+          freshness: 'LIVE'
+        };
+      } catch (openMeteoError: any) {
+        console.warn('[Weather Service] Open-Meteo request failed:', openMeteoError.message);
+      }
+    }
+
+    // 4. Fallback / Offline engine if remote APIs fail
+    if (!weatherResult) {
+      if (process.env.NODE_ENV === 'production') {
+        // Strict production requirement: distinguish unavailable state
+        weatherResult = {
+          current: {
+            temp: 0,
+            humidity: 0,
+            windSpeed: 0,
+            rainProb: 0,
+            aqi: 0,
+            condition: 'Unavailable',
+            description: 'Weather data unavailable'
+          },
+          forecast: [],
+          alerts: [{ type: 'none', severity: 'info', message: 'Weather telemetry currently unavailable.' }],
+          aiAdvice: 'Weather data is temporarily unavailable from remote meteorological feeds.',
+          source: 'System Offline Status',
+          observedAt: nowIso,
+          fetchedAt: nowIso,
+          freshness: 'UNAVAILABLE'
+        };
+      } else {
+        weatherResult = this.generateMockWeatherData(validLat, validLon, language);
+      }
+    }
+
+    // Cache the result in MongoDB if DB is online
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Weather.findOneAndUpdate(
+          { latitude: validLat, longitude: validLon },
+          { latitude: validLat, longitude: validLon, forecastData: weatherResult },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      } catch (saveError) {
+        console.warn('[Weather Cache Error] Failed to write weather cache:', saveError);
+      }
     }
 
     return weatherResult;
@@ -192,41 +298,21 @@ export class WeatherService {
     const tokens = this.getAdvisoryToken(language);
 
     if (temp > 40) {
-      alerts.push({
-        type: 'heatwave',
-        severity: 'critical',
-        message: tokens.criticalHeat
-      });
+      alerts.push({ type: 'heatwave', severity: 'critical', message: tokens.criticalHeat });
     } else if (temp < 5) {
-      alerts.push({
-        type: 'frost',
-        severity: 'critical',
-        message: tokens.criticalFrost
-      });
+      alerts.push({ type: 'frost', severity: 'critical', message: tokens.criticalFrost });
     }
 
     if (windSpeed > 12) {
-      alerts.push({
-        type: 'storm',
-        severity: 'warning',
-        message: tokens.warningStorm
-      });
+      alerts.push({ type: 'storm', severity: 'warning', message: tokens.warningStorm });
     }
 
     if (rainProb > 75) {
-      alerts.push({
-        type: 'rain',
-        severity: 'warning',
-        message: tokens.warningRain
-      });
+      alerts.push({ type: 'rain', severity: 'warning', message: tokens.warningRain });
     }
 
     if (alerts.length === 0) {
-      alerts.push({
-        type: 'none',
-        severity: 'info',
-        message: tokens.infoNone
-      });
+      alerts.push({ type: 'none', severity: 'info', message: tokens.infoNone });
     }
 
     return alerts;
@@ -262,6 +348,7 @@ export class WeatherService {
 
     const alerts = this.computeAlerts(baseTemp, windSpeed, humidity, rainProb, language);
     const aiAdvice = this.generateAiWeatherAdvice(baseTemp, condition, alerts, language);
+    const nowIso = new Date().toISOString();
 
     return {
       current: {
@@ -275,7 +362,11 @@ export class WeatherService {
       },
       forecast,
       alerts,
-      aiAdvice
+      aiAdvice,
+      source: 'KrishiMitra Fallback Weather Engine',
+      observedAt: nowIso,
+      fetchedAt: nowIso,
+      freshness: 'FALLBACK'
     };
   }
 

@@ -56,7 +56,8 @@ const mapUserPayload = (user: any) => {
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, password, phone, role, settings, farmLocation } = req.body;
+      const { name, email, password, phone, settings, farmLocation } = req.body;
+      const safeRole = (req.body.role === 'farmer') ? 'farmer' : 'user';
 
       // Live MongoDB Mode
       const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -69,7 +70,7 @@ export class AuthController {
         email: email.toLowerCase(),
         password,
         phone,
-        role: role || 'user',
+        role: safeRole,
         settings: settings || { language: 'en', theme: 'light' },
         farmLocation,
         plan: 'free',

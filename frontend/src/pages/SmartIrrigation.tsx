@@ -290,12 +290,7 @@ export const SmartIrrigation: React.FC = () => {
         </div>
       </div>
 
-      {/* 3D Soil Cross-Section & Irrigation Visualizer */}
-      <DashboardSoilIrrigationWidget
-        recommendation={recommendation}
-        recentEvents={recentEvents}
-        contextSummary={contextSummary}
-      />
+
 
       {/* Reasoning & Recommended Actions Grid */}
 

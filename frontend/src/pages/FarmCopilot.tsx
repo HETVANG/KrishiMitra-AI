@@ -364,12 +364,7 @@ export const FarmCopilot: React.FC = () => {
         </div>
       ) : null}
 
-      {/* 3D AI Core & Farmer Interaction Visualization */}
-      <DashboardAICoreWidget
-        loading={loading}
-        contextLoading={contextLoading}
-        lastMessage={messages[messages.length - 1]}
-      />
+
 
       {/* Tabs Navigation */}
 
@@ -663,14 +658,42 @@ export const FarmCopilot: React.FC = () => {
 
           <div className="space-y-3">
             {dailyTasks.map((task, idx) => (
-              <TaskCompletionAnimation
+              <div 
                 key={task._id || `task-${idx}`}
-                completed={task.completed}
-                label={task.title}
-                reason={task.reason}
-                priority={task.priority}
-                onToggle={() => toggleTaskCompletion(task._id, idx)}
-              />
+                onClick={() => toggleTaskCompletion(task._id, idx)}
+                className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-start justify-between gap-3 ${
+                  task.completed 
+                    ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/50 opacity-80' 
+                    : 'bg-white dark:bg-dark-900 border-gray-100 dark:border-dark-800 hover:border-gray-200 dark:hover:border-dark-700 shadow-sm'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
+                    task.completed 
+                      ? 'bg-emerald-500 border-emerald-500 text-white' 
+                      : 'border-gray-300 dark:border-dark-600 bg-gray-50 dark:bg-dark-800'
+                  }`}>
+                    {task.completed && <Check size={14} className="stroke-[3]" />}
+                  </div>
+                  <div>
+                    <h4 className={`text-xs md:text-sm font-bold ${task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-dark-100'}`}>
+                      {task.title}
+                    </h4>
+                    {task.reason && (
+                      <p className="text-xs text-gray-500 dark:text-dark-400 mt-0.5">{task.reason}</p>
+                    )}
+                  </div>
+                </div>
+                {task.priority && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wider ${
+                    task.priority === 'high' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' :
+                    task.priority === 'medium' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' :
+                    'bg-gray-100 text-gray-700 dark:bg-dark-800 dark:text-gray-300'
+                  }`}>
+                    {task.priority}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </div>

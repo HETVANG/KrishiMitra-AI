@@ -488,8 +488,7 @@ export const DiseaseDetection: React.FC = () => {
               </div>
             )}
 
-            {/* Interactive 3D Leaf Scanner & Symptom Visualizer */}
-            <Disease3DScannerWidget assessment={assessment} isScanning={loading} className="mt-4" />
+
           </div>
 
           {/* Assessment Results Display (7 cols) */}

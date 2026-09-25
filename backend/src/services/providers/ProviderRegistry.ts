@@ -154,11 +154,14 @@ export class ProviderRegistry {
   /**
    * List all providers filtered by type and country
    */
-  static async getProviders(type?: ProviderType, countryCode: string = 'IN'): Promise<ProviderDefinition[]> {
+  static async getProviders(type?: ProviderType, countryCode: string = 'IN', includeInactive: boolean = false): Promise<ProviderDefinition[]> {
     if (mongoose.connection.readyState === 1) {
       try {
         await this.ensureDefaultProviders();
-        const query: any = { status: 'ACTIVE' };
+        const query: any = {};
+        if (!includeInactive) {
+          query.status = 'ACTIVE';
+        }
         if (type) query.providerType = type;
         query.$or = [{ country: countryCode.toUpperCase() }, { supportedCountries: countryCode.toUpperCase() }];
 
@@ -186,7 +189,7 @@ export class ProviderRegistry {
     }
 
     // Static fallback if DB is offline or empty
-    let list = DEFAULT_PLATFORM_PROVIDERS.filter(p => p.status === 'ACTIVE');
+    let list = includeInactive ? DEFAULT_PLATFORM_PROVIDERS : DEFAULT_PLATFORM_PROVIDERS.filter(p => p.status === 'ACTIVE');
     if (type) list = list.filter(p => p.providerType === type);
     list = list.filter(p => p.country === countryCode.toUpperCase() || p.supportedCountries.includes(countryCode.toUpperCase()));
     return list;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ProviderRegistry } from '../services/providers/ProviderRegistry';
+import { ProviderRegistry, DEFAULT_PLATFORM_PROVIDERS } from '../services/providers/ProviderRegistry';
 import { ProviderHealthService } from '../services/providers/ProviderHealthService';
 import { ProviderConfigService } from '../services/providers/ProviderConfigService';
 import { Provider } from '../models/Provider';
@@ -14,7 +14,7 @@ export class ProviderController {
       const countryCode = (req.query.countryCode as string) || 'IN';
       const type = req.query.type as any;
 
-      const providers = await ProviderRegistry.getProviders(type, countryCode);
+      const providers = await ProviderRegistry.getProviders(type, countryCode, true);
       const healthRecords = ProviderHealthService.getAllHealthRecords();
       const healthMap = new Map(healthRecords.map(h => [h.providerId, h]));
 
@@ -37,12 +37,14 @@ export class ProviderController {
           lastSuccessfulRequest: new Date()
         };
         const config = ProviderConfigService.getProviderConfig(p.id);
-        const dbDoc = dbMap.get(p.id) || slugMap.get(p.slug);
+        const dbDoc = dbMap.get(p.id) || slugMap.get(p.slug) || dbDocs.find(d => d.slug === p.slug || d.slug === p.id || d.name === p.name);
+        const isEnabled = dbDoc ? (dbDoc.enabled !== false && dbDoc.status !== 'INACTIVE') : true;
 
         return {
           ...p,
           id: dbDoc ? dbDoc._id.toString() : p.id,
-          enabled: dbDoc ? (dbDoc.enabled !== false) : true,
+          enabled: isEnabled,
+          status: isEnabled ? (dbDoc?.status || p.status || 'ACTIVE') : 'INACTIVE',
           priority: dbDoc?.priority || 1,
           timeoutMs: dbDoc?.timeoutMs || 5000,
           cacheTTL: dbDoc?.cacheTTL || 3600,
@@ -152,20 +154,51 @@ export class ProviderController {
   }
 
   /**
+   * Helper to find a provider document by ID, slug, or name, seeding if missing
+   */
+  private static async findProviderDoc(id: string) {
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      const p = await Provider.findById(id);
+      if (p) return p;
+    }
+    const slugNormalized = id.replace(/_/g, '-');
+    let p = await Provider.findOne({
+      $or: [{ slug: id }, { slug: slugNormalized }, { name: id }]
+    });
+    if (p) return p;
+
+    const defaultDef = DEFAULT_PLATFORM_PROVIDERS.find(def => def.id === id || def.slug === id || def.slug === slugNormalized);
+    if (defaultDef) {
+      p = await Provider.create({
+        name: defaultDef.name,
+        slug: defaultDef.slug,
+        providerType: defaultDef.providerType,
+        description: defaultDef.description,
+        organizationType: defaultDef.organizationType,
+        country: defaultDef.country,
+        supportedCountries: defaultDef.supportedCountries,
+        capabilities: defaultDef.capabilities,
+        status: defaultDef.status || 'ACTIVE',
+        verificationStatus: defaultDef.verificationStatus,
+        documentationUrl: defaultDef.documentationUrl,
+        dataFreshness: defaultDef.dataFreshness,
+        enabled: true
+      });
+      return p;
+    }
+    return null;
+  }
+
+  /**
    * Update provider configuration (Admin only)
    */
   static async updateProvider(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const { name, description, region, capabilities, priority, timeoutMs, cacheTTL, baseUrl } = req.body;
+      const { name, description, region, capabilities, priority, timeoutMs, cacheTTL, baseUrl, enabled } = req.body;
       const adminName = (req as any).user?.name || (req as any).user?.email || 'Admin';
 
-      let provider = null;
-      if (id.match(/^[0-9a-fA-F]{24}$/)) {
-        provider = await Provider.findById(id);
-      } else {
-        provider = await Provider.findOne({ slug: id });
-      }
+      const provider = await ProviderController.findProviderDoc(id);
 
       if (!provider) {
         res.status(404).json({ success: false, message: 'Provider not found' });
@@ -180,6 +213,10 @@ export class ProviderController {
       if (timeoutMs !== undefined) provider.timeoutMs = timeoutMs;
       if (cacheTTL !== undefined) provider.cacheTTL = cacheTTL;
       if (baseUrl !== undefined) provider.baseUrl = baseUrl;
+      if (enabled !== undefined) {
+        provider.enabled = Boolean(enabled);
+        provider.status = provider.enabled ? 'ACTIVE' : 'INACTIVE';
+      }
 
       await provider.save();
 
@@ -213,12 +250,7 @@ export class ProviderController {
       const { enabled } = req.body;
       const adminName = (req as any).user?.name || (req as any).user?.email || 'Admin';
 
-      let provider = null;
-      if (id.match(/^[0-9a-fA-F]{24}$/)) {
-        provider = await Provider.findById(id);
-      } else {
-        provider = await Provider.findOne({ slug: id });
-      }
+      const provider = await ProviderController.findProviderDoc(id);
 
       if (!provider) {
         res.status(404).json({ success: false, message: 'Provider not found' });
@@ -243,7 +275,13 @@ export class ProviderController {
       res.status(200).json({
         success: true,
         message: `Provider ${provider.name} is now ${provider.enabled ? 'ENABLED' : 'DISABLED'}`,
-        enabled: provider.enabled
+        enabled: provider.enabled,
+        provider: {
+          id: provider._id.toString(),
+          name: provider.name,
+          enabled: provider.enabled,
+          status: provider.status
+        }
       });
     } catch (err: any) {
       res.status(500).json({ success: false, message: err.message || 'Failed to toggle status' });

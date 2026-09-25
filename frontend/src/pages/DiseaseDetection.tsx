@@ -52,6 +52,7 @@ export const DiseaseDetection: React.FC = () => {
   const [assessment, setAssessment] = useState<any>(null);
   const [error, setError] = useState<string>('');
   const [validationMessage, setValidationMessage] = useState<string>('');
+  const [generatingPdf, setGeneratingPdf] = useState<boolean>(false);
   
   // Audio & Utilities
   const [speaking, setSpeaking] = useState<boolean>(false);
@@ -262,16 +263,48 @@ export const DiseaseDetection: React.FC = () => {
     }
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!assessment) return;
     if (!token) {
-      alert('Please create a free account to download PDF reports.');
+      alert('Please create a free account to view PDF reports.');
       navigate('/register');
       return;
     }
-    const baseUrl = getApiBaseUrl();
-    const url = `${baseUrl}/reports/download?type=disease&diseaseName=${encodeURIComponent(assessment.diseaseName)}&lang=${i18n.language}&Authorization=Bearer ${token}`;
-    window.open(url, '_blank');
+
+    if (generatingPdf) return;
+
+    setGeneratingPdf(true);
+
+    try {
+      const response = await api.get('/reports/download', {
+        params: {
+          type: 'disease',
+          diseaseName: assessment.diseaseName,
+          lang: i18n.language,
+          disposition: 'inline'
+        },
+        responseType: 'blob'
+      });
+
+      if (response.data) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+
+        // Revoke object URL after 60 seconds to avoid memory leak
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 60000);
+      } else {
+        throw new Error('PDF payload empty');
+      }
+    } catch (err: any) {
+      console.error('PDF Preview generation error:', err);
+      const errMsg = t('disease.pdf_error', 'Unable to generate the report. Please try again.');
+      alert(errMsg);
+    } finally {
+      setGeneratingPdf(false);
+    }
   };
 
   const handleReset = () => {
@@ -734,9 +767,20 @@ export const DiseaseDetection: React.FC = () => {
 
                   <button
                     onClick={handleDownloadPdf}
-                    className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm min-h-[40px] transition-colors"
+                    disabled={generatingPdf}
+                    className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm min-h-[40px] transition-colors"
                   >
-                    <Download size={14} /> {t('disease.actions.download_pdf')}
+                    {generatingPdf ? (
+                      <>
+                        <RefreshCw size={14} className="animate-spin" />
+                        <span>{t('disease.generating_pdf', 'Generating report...')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={14} />
+                        <span>{t('disease.actions.download_pdf')}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

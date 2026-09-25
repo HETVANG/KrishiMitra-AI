@@ -112,8 +112,10 @@
       "ask_expert": "Ask an Expert Specialist",
       "schedule_recheck": "Schedule Re-check",
       "recheck_scheduled": "Follow-up Scheduled",
-      "download_pdf": "Download Report PDF"
+      "download_pdf": "View PDF Report"
     },
+    "generating_pdf": "Generating report...",
+    "pdf_error": "Unable to generate the report. Please try again.",
     "empty": {
       "title": "No active disease scan loaded",
       "desc": "Upload a leaf photo on the left panel to execute an advanced pathology diagnosis."

@@ -162,10 +162,28 @@ export const SoilAnalysis: React.FC = () => {
     }
   };
 
-  const handleDownloadPdf = () => {
-    const token = localStorage.getItem('token');
-    const url = `${getApiBaseUrl()}/reports/download?type=crop&lang=${i18n.language}&Authorization=Bearer ${token}`;
-    window.open(url, '_blank');
+  const [generatingPdf, setGeneratingPdf] = useState<boolean>(false);
+
+  const handleDownloadPdf = async () => {
+    if (generatingPdf) return;
+    setGeneratingPdf(true);
+    try {
+      const response = await api.get('/reports/download', {
+        params: { type: 'crop', lang: i18n.language, disposition: 'inline' },
+        responseType: 'blob'
+      });
+      if (response.data) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      }
+    } catch (err: any) {
+      console.error('Soil report PDF generation error:', err);
+      alert('Unable to generate the soil report PDF. Please try again.');
+    } finally {
+      setGeneratingPdf(false);
+    }
   };
 
   return (

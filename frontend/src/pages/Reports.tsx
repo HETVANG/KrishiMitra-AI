@@ -8,7 +8,9 @@ export const Reports: React.FC = () => {
 
   const [error, setError] = React.useState('');
 
-  const handleDownload = (reportType: 'crop' | 'weather' | 'expense' | 'disease') => {
+  const [loadingReport, setLoadingReport] = React.useState<string | null>(null);
+
+  const handleDownload = async (reportType: 'crop' | 'weather' | 'expense' | 'disease') => {
     setError('');
     const hasPremium = user?.plan === 'premium' || (user?.subscriptionStatus === 'trialing' && new Date(user.trialEndDate || 0) > new Date());
 
@@ -17,10 +19,24 @@ export const Reports: React.FC = () => {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    const baseUrl = getApiBaseUrl();
-    const url = `${baseUrl}/reports/download?type=${reportType}&Authorization=Bearer ${token}`;
-    window.open(url, '_blank');
+    setLoadingReport(reportType);
+    try {
+      const response = await api.get('/reports/download', {
+        params: { type: reportType, disposition: 'inline' },
+        responseType: 'blob'
+      });
+      if (response.data) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      }
+    } catch (err: any) {
+      console.error('Report PDF generation error:', err);
+      setError('Unable to generate the report. Please try again.');
+    } finally {
+      setLoadingReport(null);
+    }
   };
 
   const reportsList = [

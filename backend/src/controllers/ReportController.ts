@@ -182,9 +182,10 @@ export class ReportController {
         fileName = `KrishiMitra_Disease_Report_${cleanName || 'Diagnosis'}.pdf`;
       }
 
-      // Set headers for PDF streaming
+      // Set headers for PDF streaming (defaults to inline for browser preview)
+      const disposition = (req.query.disposition as string) === 'attachment' ? 'attachment' : 'inline';
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
 
       // Log download into the Reports collection in MongoDB
       try {

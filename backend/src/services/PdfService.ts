@@ -434,28 +434,32 @@ export class PdfService {
       const leftMargin = 40;
       const contentWidth = 515.28;
 
-      // Header Banner (Height: 85)
-      doc.rect(0, 0, pageWidth, 85).fill(primary);
+      // Header Banner (Height: 75)
+      doc.rect(0, 0, pageWidth, 75).fill(primary);
 
-      // Header Text
-      doc.font(boldFont).fillColor('#FFFFFF').fontSize(22).text('KrishiMitra AI', leftMargin, 20);
-      doc.font(font).fontSize(12).text(this.t('pathologyTitle', lang), leftMargin, 48);
+      // Title at Top Left (y: 14)
+      doc.font(boldFont).fillColor('#FFFFFF').fontSize(20).text('KrishiMitra AI', leftMargin, 14);
 
-      // Date on Top Right
+      // Date at Top Right (y: 18)
       const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
         year: 'numeric'
       });
-      doc.font(font).fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 48, {
+      doc.font(font).fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 18, {
         align: 'right',
         width: 180
       });
 
-      let currentY = 100;
+      // Subtitle below Title across full width (y: 44)
+      doc.font(font).fontSize(11).text(this.t('pathologyTitle', lang), leftMargin, 44, {
+        width: contentWidth
+      });
 
-      // SUMMARY OVERVIEW BOX (Height: ~105)
-      doc.rect(leftMargin, currentY, contentWidth, 105).fillAndStroke('#F3F4F6', '#E5E7EB');
+      let currentY = 88;
+
+      // SUMMARY OVERVIEW BOX (Height: 90)
+      doc.rect(leftMargin, currentY, contentWidth, 90).fillAndStroke('#F3F4F6', '#E5E7EB');
       
       const cropName = data.crop || 'Crop Leaf';
       const diseaseName = data.diseaseName || data.name || 'Observed Pathology Symptom';
@@ -466,22 +470,22 @@ export class PdfService {
       const confPercent = rawConf > 1 ? `${rawConf.toFixed(0)}%` : `${(rawConf * 100).toFixed(0)}%`;
       const severityStr = (data.severity || 'Moderate').toUpperCase();
 
-      const textColWidth = data.imageBuffer ? 360 : contentWidth - 30;
+      const textColWidth = data.imageBuffer ? 340 : contentWidth - 30;
 
       doc.font(boldFont).fillColor(text).fontSize(10);
-      doc.text(`${this.t('cropLabel', lang)}: `, leftMargin + 15, currentY + 12, { continued: true });
+      doc.text(`${this.t('cropLabel', lang)}: `, leftMargin + 12, currentY + 10, { continued: true });
       doc.font(font).fontSize(10).text(cropName);
 
-      doc.font(boldFont).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 15, currentY + 30, { continued: true });
+      doc.font(boldFont).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 12, currentY + 28, { continued: true });
       doc.font(font).fontSize(10).text(fullDiseaseStr, { width: textColWidth });
 
-      doc.font(font).fontSize(10).text(`${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`, leftMargin + 15, currentY + 70);
+      doc.font(font).fontSize(9.5).text(`${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`, leftMargin + 12, currentY + 62);
 
       // Optional Image on Right Side of Box
       if (data.imageBuffer && Buffer.isBuffer(data.imageBuffer)) {
         try {
-          doc.image(data.imageBuffer, leftMargin + contentWidth - 95, currentY + 10, {
-            fit: [85, 85],
+          doc.image(data.imageBuffer, leftMargin + contentWidth - 82, currentY + 8, {
+            fit: [74, 74],
             align: 'center',
             valign: 'center'
           });
@@ -490,55 +494,67 @@ export class PdfService {
         }
       }
 
-      currentY += 120;
+      currentY += 100;
 
-      // Section Helper
+      // Section Helpers
+      const checkPageBreak = (neededHeight: number) => {
+        if (currentY + neededHeight > 740) {
+          doc.addPage();
+          currentY = 40;
+        }
+      };
+
       const renderSectionDivider = (yPos: number) => {
         doc.moveTo(leftMargin, yPos).lineTo(leftMargin + contentWidth, yPos).strokeColor('#E5E7EB').lineWidth(1).stroke();
       };
 
       // 1. SYMPTOMS SECTION
+      checkPageBreak(65);
       renderSectionDivider(currentY);
-      currentY += 8;
+      currentY += 6;
 
-      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
-      currentY += 16;
-      doc.font(font).fontSize(9.5).fillColor(text);
+      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
+      currentY += 14;
+      doc.font(font).fontSize(9).fillColor(text);
 
       const symptomsList: string[] = Array.isArray(data.symptoms) && data.symptoms.length > 0
         ? data.symptoms
         : [data.symptoms || 'Visible leaf lesions, discoloration, or spot patterns observed on foliage.'];
 
       symptomsList.slice(0, 3).forEach((sym: string) => {
+        const textH = doc.heightOfString(`• ${sym}`, { width: contentWidth - 15 });
         doc.text(`• ${sym}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-        currentY += 14;
+        currentY += Math.max(textH, 12) + 2;
       });
 
-      currentY += 6;
+      currentY += 4;
 
       // 2. POSSIBLE CAUSE SECTION
+      checkPageBreak(50);
       renderSectionDivider(currentY);
-      currentY += 8;
+      currentY += 6;
 
-      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
-      currentY += 16;
-      doc.font(font).fontSize(9.5).fillColor(text);
+      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
+      currentY += 14;
+      doc.font(font).fontSize(9).fillColor(text);
 
       const causesList: string[] = Array.isArray(data.possibleCauses) && data.possibleCauses.length > 0
         ? data.possibleCauses
         : (data.causes ? (Array.isArray(data.causes) ? data.causes : [data.causes]) : ['Fungal or bacterial pathogen proliferation encouraged by warm, humid foliage microclimate.']);
 
       const causeText = causesList.slice(0, 2).join('; ');
+      const causeH = doc.heightOfString(causeText, { width: contentWidth - 15 });
       doc.text(causeText, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 22;
+      currentY += Math.max(causeH, 12) + 6;
 
       // 3. WHAT TO DO NOW SECTION
+      checkPageBreak(80);
       renderSectionDivider(currentY);
-      currentY += 8;
+      currentY += 6;
 
-      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
-      currentY += 16;
-      doc.font(font).fontSize(9.5).fillColor(text);
+      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
+      currentY += 14;
+      doc.font(font).fontSize(9).fillColor(text);
 
       let immediateAction = 'Inspect infected leaves immediately and isolate severely affected plants.';
       let monitoringAction = 'Monitor neighboring field rows daily for spreading leaf spots.';
@@ -550,57 +566,74 @@ export class PdfService {
         if (data.recommendedActions[2]) preventionAction = data.recommendedActions[2].details || data.recommendedActions[2].title || preventionAction;
       }
 
-      doc.text(`1. Immediate: ${immediateAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 16;
-      doc.text(`2. Monitor: ${monitoringAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 16;
-      doc.text(`3. Prevent: ${preventionAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 22;
+      const actions = [
+        `1. Immediate: ${immediateAction}`,
+        `2. Monitor: ${monitoringAction}`,
+        `3. Prevent: ${preventionAction}`
+      ];
+
+      actions.forEach((act: string) => {
+        const actH = doc.heightOfString(act, { width: contentWidth - 15 });
+        doc.text(act, leftMargin + 10, currentY, { width: contentWidth - 15 });
+        currentY += Math.max(actH, 12) + 2;
+      });
+
+      currentY += 4;
 
       // 4. BIOLOGICAL / ORGANIC OPTIONS
+      checkPageBreak(55);
       renderSectionDivider(currentY);
-      currentY += 8;
+      currentY += 6;
 
-      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
-      currentY += 16;
-      doc.font(font).fontSize(9.5).fillColor(text);
+      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
+      currentY += 14;
+      doc.font(font).fontSize(9).fillColor(text);
 
       const organicList: string[] = Array.isArray(data.organicTreatment) && data.organicTreatment.length > 0
         ? data.organicTreatment
         : ['Spray Neem oil formulation (5ml/L water) or Trichoderma viride bio-fungicide.'];
 
       organicList.slice(0, 2).forEach((org: string) => {
+        const orgH = doc.heightOfString(`• ${org}`, { width: contentWidth - 15 });
         doc.text(`• ${org}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-        currentY += 14;
+        currentY += Math.max(orgH, 12) + 2;
       });
 
-      currentY += 6;
+      currentY += 4;
 
       // 5. CHEMICAL CONTROL
+      checkPageBreak(65);
       renderSectionDivider(currentY);
-      currentY += 8;
+      currentY += 6;
 
-      doc.font(boldFont).fontSize(11).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
-      currentY += 16;
-      doc.font(font).fontSize(9.5).fillColor(text);
+      doc.font(boldFont).fontSize(10.5).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
+      currentY += 14;
+      doc.font(font).fontSize(9).fillColor(text);
 
       const chemicalList: string[] = Array.isArray(data.chemicalTreatment) && data.chemicalTreatment.length > 0
         ? data.chemicalTreatment
         : (data.pesticideDetails ? [`${data.pesticideDetails.englishName || data.pesticideDetails.localName || 'Fungicide spray'} (${data.pesticideDetails.dosage || '2g/L'})`] : ['Copper Oxychloride or Mancozeb spray if infection exceeds 15% threshold.']);
 
+      const chemH = doc.heightOfString(`• ${chemicalList[0]}`, { width: contentWidth - 15 });
       doc.text(`• ${chemicalList[0]}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 16;
+      currentY += Math.max(chemH, 12) + 4;
 
-      doc.font(font).fontSize(8.5).fillColor('#DC2626').text(this.t('safetyWarning', lang), leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += 24;
+      doc.font(font).fontSize(8).fillColor('#DC2626');
+      const warnH = doc.heightOfString(this.t('safetyWarning', lang), { width: contentWidth - 15 });
+      doc.text(this.t('safetyWarning', lang), leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += Math.max(warnH, 10) + 6;
 
       // 6. IMPORTANT ADVISORY DISCLAIMER
+      checkPageBreak(35);
       renderSectionDivider(currentY);
-      currentY += 8;
-      doc.font(font).fontSize(8.5).fillColor(secondary).text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
+      currentY += 6;
+      doc.font(font).fontSize(8).fillColor(secondary);
+      const discH = doc.heightOfString(this.t('importantDisclaimer', lang), { width: contentWidth });
+      doc.text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
+      currentY += Math.max(discH, 10) + 6;
 
       // FOOTER AT BOTTOM OF PAGE 1
-      doc.font(boldFont).fontSize(9).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 790, {
+      doc.font(boldFont).fontSize(8.5).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 765, {
         align: 'center',
         width: contentWidth
       });

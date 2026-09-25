@@ -434,33 +434,35 @@ export class PdfService {
       const leftMargin = 40;
       const contentWidth = 515.28;
 
-      // Header Banner (Height: 75)
-      doc.rect(0, 0, pageWidth, 75).fill(primary);
+      // 1. TOP HEADER BANNER (Height: 65)
+      doc.rect(0, 0, pageWidth, 65).fill(primary);
 
-      // Title at Top Left (y: 14)
-      doc.font(boldFont).fillColor('#FFFFFF').fontSize(20).text('KrishiMitra AI', leftMargin, 14);
+      // Title at Top Left
+      doc.font(boldFont).fillColor('#FFFFFF').fontSize(18).text('KrishiMitra AI', leftMargin, 12);
 
-      // Date at Top Right (y: 18)
+      // Date at Top Right
       const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
         year: 'numeric'
       });
-      doc.font(font).fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 18, {
+      doc.font(font).fontSize(8.5).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 200, 14, {
         align: 'right',
-        width: 180
+        width: 200
       });
 
-      // Subtitle below Title across full width (y: 44)
-      doc.font(font).fontSize(11).text(this.t('pathologyTitle', lang), leftMargin, 44, {
+      // Subtitle below Title
+      doc.font(font).fontSize(10).text(this.t('pathologyTitle', lang), leftMargin, 38, {
         width: contentWidth
       });
 
-      let currentY = 88;
+      let currentY = 75;
 
-      // SUMMARY OVERVIEW BOX (Height: 90)
-      doc.rect(leftMargin, currentY, contentWidth, 90).fillAndStroke('#F3F4F6', '#E5E7EB');
-      
+      // 2. ISOLATED SUMMARY OVERVIEW BOX (Text Column vs Image Column)
+      const hasImage = data.imageBuffer && Buffer.isBuffer(data.imageBuffer);
+      const imageWidth = hasImage ? 80 : 0;
+      const textColWidth = hasImage ? (contentWidth - imageWidth - 20) : (contentWidth - 20);
+
       const cropName = data.crop || 'Crop Leaf';
       const diseaseName = data.diseaseName || data.name || 'Observed Pathology Symptom';
       const localNameStr = data.localName ? ` (${data.localName})` : '';
@@ -470,35 +472,56 @@ export class PdfService {
       const confPercent = rawConf > 1 ? `${rawConf.toFixed(0)}%` : `${(rawConf * 100).toFixed(0)}%`;
       const severityStr = (data.severity || 'Moderate').toUpperCase();
 
-      const textColWidth = data.imageBuffer ? 340 : contentWidth - 30;
+      // Calculate dynamic text height inside box
+      doc.font(boldFont).fontSize(9.5);
+      const diseaseLabelW = doc.widthOfString(`${this.t('diseaseLabel', lang)}: `);
+      
+      doc.font(font).fontSize(9.5);
+      const diseaseValHeight = doc.heightOfString(fullDiseaseStr, { width: textColWidth - diseaseLabelW });
 
-      doc.font(boldFont).fillColor(text).fontSize(10);
-      doc.text(`${this.t('cropLabel', lang)}: `, leftMargin + 12, currentY + 10, { continued: true });
-      doc.font(font).fontSize(10).text(cropName);
+      const metricsStr = `${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`;
+      const metricsHeight = doc.heightOfString(metricsStr, { width: textColWidth });
 
-      doc.font(boldFont).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 12, currentY + 28, { continued: true });
-      doc.font(font).fontSize(10).text(fullDiseaseStr, { width: textColWidth });
+      const summaryContentHeight = 10 + 14 + diseaseValHeight + 6 + metricsHeight + 10;
+      const boxHeight = Math.max(summaryContentHeight, hasImage ? 85 : 65);
 
-      doc.font(font).fontSize(9.5).text(`${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`, leftMargin + 12, currentY + 62);
+      // Render summary card background
+      doc.rect(leftMargin, currentY, contentWidth, boxHeight).fillAndStroke('#F9FAFB', '#E5E7EB');
 
-      // Optional Image on Right Side of Box
-      if (data.imageBuffer && Buffer.isBuffer(data.imageBuffer)) {
+      // Render Text Column (Strictly bounded within leftMargin + 10, width textColWidth)
+      let innerY = currentY + 10;
+
+      // Row 1: Crop
+      doc.font(boldFont).fillColor(text).fontSize(9.5).text(`${this.t('cropLabel', lang)}: `, leftMargin + 10, innerY, { continued: true });
+      doc.font(font).fontSize(9.5).text(cropName);
+      innerY += 15;
+
+      // Row 2: Disease Name (bounded horizontally to prevent image overlap)
+      doc.font(boldFont).fillColor(text).fontSize(9.5).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 10, innerY, { continued: true });
+      doc.font(font).fontSize(9.5).text(fullDiseaseStr, { width: textColWidth });
+      innerY += Math.max(diseaseValHeight, 14) + 6;
+
+      // Row 3: Confidence / Severity / Date Metrics
+      doc.font(font).fillColor(secondary).fontSize(8.5).text(metricsStr, leftMargin + 10, innerY, { width: textColWidth });
+
+      // Optional Leaf Image on RIGHT Column (Strictly at x = leftMargin + contentWidth - imageWidth - 5)
+      if (hasImage) {
         try {
-          doc.image(data.imageBuffer, leftMargin + contentWidth - 82, currentY + 8, {
-            fit: [74, 74],
+          doc.image(data.imageBuffer, leftMargin + contentWidth - imageWidth - 5, currentY + 5, {
+            fit: [imageWidth, boxHeight - 10],
             align: 'center',
             valign: 'center'
           });
         } catch (imgErr) {
-          console.warn('[PdfService Image Warning] Could not render image buffer:', imgErr);
+          console.warn('[PdfService Image Warning] Could not render leaf image:', imgErr);
         }
       }
 
-      currentY += 100;
+      currentY += boxHeight + 10;
 
       // Section Helpers
       const checkPageBreak = (neededHeight: number) => {
-        if (currentY + neededHeight > 740) {
+        if (currentY + neededHeight > 770) {
           doc.addPage();
           currentY = 40;
         }
@@ -509,13 +532,13 @@ export class PdfService {
       };
 
       // 1. SYMPTOMS SECTION
-      checkPageBreak(65);
+      checkPageBreak(50);
       renderSectionDivider(currentY);
-      currentY += 6;
+      currentY += 5;
 
-      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
-      currentY += 14;
-      doc.font(font).fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
+      currentY += 13;
+      doc.font(font).fontSize(8.5).fillColor(text);
 
       const symptomsList: string[] = Array.isArray(data.symptoms) && data.symptoms.length > 0
         ? data.symptoms
@@ -524,19 +547,19 @@ export class PdfService {
       symptomsList.slice(0, 3).forEach((sym: string) => {
         const textH = doc.heightOfString(`• ${sym}`, { width: contentWidth - 15 });
         doc.text(`• ${sym}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-        currentY += Math.max(textH, 12) + 2;
+        currentY += Math.max(textH, 11) + 2;
       });
 
-      currentY += 4;
+      currentY += 3;
 
       // 2. POSSIBLE CAUSE SECTION
-      checkPageBreak(50);
+      checkPageBreak(40);
       renderSectionDivider(currentY);
-      currentY += 6;
+      currentY += 5;
 
-      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
-      currentY += 14;
-      doc.font(font).fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
+      currentY += 13;
+      doc.font(font).fontSize(8.5).fillColor(text);
 
       const causesList: string[] = Array.isArray(data.possibleCauses) && data.possibleCauses.length > 0
         ? data.possibleCauses
@@ -545,16 +568,16 @@ export class PdfService {
       const causeText = causesList.slice(0, 2).join('; ');
       const causeH = doc.heightOfString(causeText, { width: contentWidth - 15 });
       doc.text(causeText, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += Math.max(causeH, 12) + 6;
+      currentY += Math.max(causeH, 11) + 5;
 
       // 3. WHAT TO DO NOW SECTION
-      checkPageBreak(80);
+      checkPageBreak(60);
       renderSectionDivider(currentY);
-      currentY += 6;
+      currentY += 5;
 
-      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
-      currentY += 14;
-      doc.font(font).fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
+      currentY += 13;
+      doc.font(font).fontSize(8.5).fillColor(text);
 
       let immediateAction = 'Inspect infected leaves immediately and isolate severely affected plants.';
       let monitoringAction = 'Monitor neighboring field rows daily for spreading leaf spots.';
@@ -575,19 +598,19 @@ export class PdfService {
       actions.forEach((act: string) => {
         const actH = doc.heightOfString(act, { width: contentWidth - 15 });
         doc.text(act, leftMargin + 10, currentY, { width: contentWidth - 15 });
-        currentY += Math.max(actH, 12) + 2;
+        currentY += Math.max(actH, 11) + 2;
       });
 
-      currentY += 4;
+      currentY += 3;
 
       // 4. BIOLOGICAL / ORGANIC OPTIONS
-      checkPageBreak(55);
+      checkPageBreak(40);
       renderSectionDivider(currentY);
-      currentY += 6;
+      currentY += 5;
 
-      doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
-      currentY += 14;
-      doc.font(font).fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
+      currentY += 13;
+      doc.font(font).fontSize(8.5).fillColor(text);
 
       const organicList: string[] = Array.isArray(data.organicTreatment) && data.organicTreatment.length > 0
         ? data.organicTreatment
@@ -596,19 +619,19 @@ export class PdfService {
       organicList.slice(0, 2).forEach((org: string) => {
         const orgH = doc.heightOfString(`• ${org}`, { width: contentWidth - 15 });
         doc.text(`• ${org}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-        currentY += Math.max(orgH, 12) + 2;
+        currentY += Math.max(orgH, 11) + 2;
       });
 
-      currentY += 4;
+      currentY += 3;
 
       // 5. CHEMICAL CONTROL
-      checkPageBreak(65);
+      checkPageBreak(50);
       renderSectionDivider(currentY);
-      currentY += 6;
+      currentY += 5;
 
-      doc.font(boldFont).fontSize(10.5).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
-      currentY += 14;
-      doc.font(font).fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(10).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
+      currentY += 13;
+      doc.font(font).fontSize(8.5).fillColor(text);
 
       const chemicalList: string[] = Array.isArray(data.chemicalTreatment) && data.chemicalTreatment.length > 0
         ? data.chemicalTreatment
@@ -616,24 +639,23 @@ export class PdfService {
 
       const chemH = doc.heightOfString(`• ${chemicalList[0]}`, { width: contentWidth - 15 });
       doc.text(`• ${chemicalList[0]}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += Math.max(chemH, 12) + 4;
+      currentY += Math.max(chemH, 11) + 3;
 
-      doc.font(font).fontSize(8).fillColor('#DC2626');
+      doc.font(font).fontSize(7.5).fillColor('#DC2626');
       const warnH = doc.heightOfString(this.t('safetyWarning', lang), { width: contentWidth - 15 });
       doc.text(this.t('safetyWarning', lang), leftMargin + 10, currentY, { width: contentWidth - 15 });
-      currentY += Math.max(warnH, 10) + 6;
+      currentY += Math.max(warnH, 9) + 4;
 
       // 6. IMPORTANT ADVISORY DISCLAIMER
-      checkPageBreak(35);
+      checkPageBreak(25);
       renderSectionDivider(currentY);
-      currentY += 6;
-      doc.font(font).fontSize(8).fillColor(secondary);
+      currentY += 5;
+      doc.font(font).fontSize(7.5).fillColor(secondary);
       const discH = doc.heightOfString(this.t('importantDisclaimer', lang), { width: contentWidth });
       doc.text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
-      currentY += Math.max(discH, 10) + 6;
 
-      // FOOTER AT BOTTOM OF PAGE 1
-      doc.font(boldFont).fontSize(8.5).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 765, {
+      // 7. FOOTER AT BOTTOM OF PAGE 1 (Fixed at y = 780)
+      doc.font(boldFont).fontSize(8).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 780, {
         align: 'center',
         width: contentWidth
       });

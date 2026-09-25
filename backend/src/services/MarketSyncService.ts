@@ -20,7 +20,15 @@ class MarketSyncService {
     return this.cache.records;
   }
 
+  private scheduled = false;
+
   public async scheduleDailySync() {
+    if (this.scheduled) {
+      console.info('[Market Sync] Scheduler already active.');
+      return;
+    }
+    this.scheduled = true;
+
     cron.schedule('0 */6 * * *', async () => {
       await this.syncLatestPrices();
     }, {

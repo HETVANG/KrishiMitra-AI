@@ -55,20 +55,56 @@ AgentOrchestrator.init();
 
 const app = express();
 
+// Trust single proxy hop for Render reverse proxy setup (must be set before express-rate-limit)
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet());
 app.use(requestIdMiddleware);
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = process.env.CLIENT_URL || 'http://localhost:5173';
-    if (!origin || process.env.NODE_ENV !== 'production' || origin === allowed || allowed === '*') {
+    const envOrigins = [
+      process.env.CLIENT_URL,
+      process.env.FRONTEND_URL,
+      process.env.APP_URL,
+      process.env.ALLOWED_ORIGINS
+    ]
+      .filter(Boolean)
+      .flatMap(val => (val as string).split(','))
+      .map(s => s.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+
+    const defaultOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:3000',
+      'https://krishimitra-ai.vercel.app',
+      'https://krishimitra.vercel.app'
+    ];
+
+    const allowedOrigins = Array.from(new Set([...envOrigins, ...defaultOrigins]));
+
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const isAllowed =
+      allowedOrigins.includes(normalizedOrigin) ||
+      (process.env.NODE_ENV !== 'production') ||
+      allowedOrigins.includes('*') ||
+      (normalizedOrigin.endsWith('.vercel.app') && envOrigins.some(a => a.includes('vercel.app')));
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error('CORS policy rejection: Origin not permitted'));
+      console.warn(`[CORS Warning] Rejected unauthorized origin: ${origin}`);
+      callback(null, false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Request-Id'],
   credentials: true
 }));
 
@@ -130,7 +166,20 @@ app.post('/api/verify-payment', authenticate, PaymentController.verify);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video-consultation', videoConsultationRoutes);
 
-// Production Health & Observability Endpoints
+// Production Root & Health Endpoints
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    service: 'KrishiMitra AI API Server',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.head('/', (req, res) => {
+  res.status(200).end();
+});
+
 app.get('/health', (req, res) => {
   const telemetry = ObservabilityService.getTelemetry();
   res.json({ success: true, telemetry });

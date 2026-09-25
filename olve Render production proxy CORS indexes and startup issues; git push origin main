@@ -1,0 +1,8 @@
+warning: in the working copy of 'backend/src/app.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/Partner.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/src/models/PartnerReferral.ts', LF will be replaced by CRLF the next time Git touches it
+ backend/src/app.ts                        | 59 [32m++++++++++++++++++++++++++++[m[31m---[m
+ backend/src/models/Partner.ts             |  2 [32m+[m[31m-[m
+ backend/src/models/PartnerReferral.ts     |  1 [31m-[m
+ backend/src/services/MarketSyncService.ts |  8 [32m+++++[m
+ 4 files changed, 63 insertions(+), 7 deletions(-)

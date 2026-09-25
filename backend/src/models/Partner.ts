@@ -117,7 +117,7 @@ const PartnerSchema: Schema = new Schema(
       contactPerson: { type: String }
     },
     ownerUserId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
-    referralCode: { type: String, required: true, unique: true, index: true },
+    referralCode: { type: String, required: true, unique: true },
     referralLink: { type: String, default: '' },
     verificationDetails: {
       verifiedAt: { type: Date },

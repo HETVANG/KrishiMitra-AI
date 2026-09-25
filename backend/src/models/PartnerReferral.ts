@@ -21,6 +21,5 @@ const PartnerReferralSchema = new Schema(
 );
 
 PartnerReferralSchema.index({ partner: 1, status: 1 });
-PartnerReferralSchema.index({ referralCode: 1 });
 
 export const PartnerReferral = model('PartnerReferral', PartnerReferralSchema);

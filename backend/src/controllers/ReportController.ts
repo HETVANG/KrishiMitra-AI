@@ -8,6 +8,10 @@ import { WeatherService } from '../services/WeatherService';
 import { GeminiService } from '../services/GeminiService';
 import { hasPremiumAccess } from '../middleware/subscription';
 
+import axios from 'axios';
+import { DiseaseHistory } from '../models/DiseaseHistory';
+import { getLocalizedMockData } from '../services/GeminiService';
+
 export class ReportController {
   /**
    * Generates and downloads PDF reports based on query selection in the active language
@@ -15,26 +19,13 @@ export class ReportController {
   static async downloadReport(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: 'Unauthenticated' });
-      const { type, lang } = req.query;
+      const { type, lang, scanId, diseaseName } = req.query;
 
       if (!type || !['crop', 'weather', 'disease', 'expense'].includes(type as string)) {
         return res.status(400).json({ success: false, message: 'Invalid or missing report type parameter.' });
       }
 
       const reportType = type as 'crop' | 'weather' | 'disease' | 'expense';
-
-      // Protect Premium PDF Reports (Crop & Disease scans)
-      if (reportType === 'crop' || reportType === 'disease') {
-        if (!hasPremiumAccess(req.user)) {
-          res.setHeader('Content-Type', 'application/json');
-          return res.status(403).json({
-            success: false,
-            code: 'PREMIUM_UPGRADE_REQUIRED',
-            message: 'Premium feature – Coming Soon'
-          });
-        }
-      }
-
       const activeLang = (lang || req.user?.settings?.language || 'en') as string;
       let reportData: any = {};
 
@@ -47,10 +38,6 @@ export class ReportController {
         res.setHeader('Content-Type', 'application/json');
         return res.status(400).json({ success: false, message: 'Crop reports require a configured farm location. Please set your location on the dashboard first.' });
       }
-
-      // Set headers for PDF streaming
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=KrishiMitra_${reportType}_Report.pdf`);
 
       if (reportType === 'crop') {
         const farm = await Farm.findOne({ user: req.user._id });
@@ -113,13 +100,91 @@ export class ReportController {
       } 
       
       else if (reportType === 'disease') {
-        const diagnosis = await GeminiService.diagnoseCropDisease(
-          Buffer.alloc(0),
-          'image/jpeg',
-          activeLang
-        );
-        reportData = diagnosis;
+        let scanRecord = null;
+        if (scanId) {
+          scanRecord = await DiseaseHistory.findOne({ _id: scanId, user: req.user._id });
+        } else if (diseaseName) {
+          scanRecord = await DiseaseHistory.findOne({
+            user: req.user._id,
+            diseaseName: new RegExp(diseaseName as string, 'i')
+          }).sort({ createdAt: -1 });
+        }
+
+        if (!scanRecord) {
+          scanRecord = await DiseaseHistory.findOne({ user: req.user._id }).sort({ createdAt: -1 });
+        }
+
+        if (scanRecord) {
+          reportData = {
+            name: scanRecord.diseaseName,
+            diseaseName: scanRecord.diseaseName,
+            localName: scanRecord.localName || scanRecord.diseaseName,
+            scientificName: scanRecord.scientificName || 'N/A',
+            condition: scanRecord.condition || 'POSSIBLE_DISEASE',
+            confidence: scanRecord.confidence || 'moderate',
+            confidenceScore: scanRecord.confidenceScore || 0.8,
+            severity: scanRecord.severity || 'moderate',
+            crop: scanRecord.crop || 'Crop Leaf',
+            symptoms: scanRecord.symptoms || [],
+            possibleCauses: scanRecord.possibleCauses || scanRecord.causes || [],
+            organicTreatment: scanRecord.organicTreatment || [],
+            chemicalTreatment: scanRecord.chemicalTreatment || [],
+            preventiveTips: scanRecord.preventiveTips || [],
+            recommendedActions: scanRecord.recommendedActions || [],
+            pesticideDetails: scanRecord.pesticideDetails,
+            environmentalContext: scanRecord.environmentalContext,
+            limitations: scanRecord.limitations,
+            chemicalSafetyNotice: scanRecord.chemicalSafetyNotice,
+            imageUri: scanRecord.imageUri,
+            scanDate: scanRecord.createdAt
+          };
+        } else {
+          // Fallback mock pathology structure for user
+          const mockData = getLocalizedMockData(activeLang);
+          const d = mockData.disease || {};
+          reportData = {
+            name: d.name || 'Tomato Early Blight',
+            diseaseName: d.name || 'Tomato Early Blight',
+            localName: d.localName || 'Early Blight',
+            scientificName: d.scientificName || 'Alternaria solani',
+            condition: 'POSSIBLE_DISEASE',
+            confidence: 'high',
+            confidenceScore: d.confidenceScore || 0.9,
+            severity: 'moderate',
+            crop: 'Tomato',
+            symptoms: d.symptoms || ['Spots on leaves'],
+            possibleCauses: d.causes || ['High humidity'],
+            organicTreatment: d.organicTreatment || ['Neem oil spray'],
+            chemicalTreatment: d.chemicalTreatment || ['Mancozeb spray'],
+            preventiveTips: d.preventiveTips || ['Crop rotation'],
+            pesticideDetails: d.pesticideDetails,
+            imageUri: ''
+          };
+        }
+
+        // Try downloading leaf scan image buffer safely if remote URL is present
+        if (reportData.imageUri && reportData.imageUri.startsWith('http')) {
+          try {
+            const imgRes = await axios.get(reportData.imageUri, { responseType: 'arraybuffer', timeout: 3500 });
+            reportData.imageBuffer = Buffer.from(imgRes.data);
+          } catch (imgErr: any) {
+            console.warn('[PDF Image Fetch Notice] Leaf image skipped:', imgErr?.message || imgErr);
+            reportData.imageBuffer = null;
+          }
+        }
       }
+
+      // Configure filename
+      let fileName = `KrishiMitra_${reportType}_Report.pdf`;
+      if (reportType === 'disease') {
+        const rawName = reportData.diseaseName || 'Disease';
+        const cleanName = rawName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        fileName = `KrishiMitra_Disease_Report_${cleanName || 'Diagnosis'}.pdf`;
+      }
+
+      // Set headers for PDF streaming
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
 
       // Log download into the Reports collection in MongoDB
       try {

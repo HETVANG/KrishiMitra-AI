@@ -9,8 +9,22 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     generated: "Generated",
     cropReport: "CROP STATEMENT REPORT",
     weatherReport: "WEATHER STATEMENT REPORT",
-    diseaseReport: "DISEASE STATEMENT REPORT",
+    diseaseReport: "DISEASE DIAGNOSIS REPORT",
     expenseReport: "EXPENSE STATEMENT REPORT",
+    pathologyTitle: "AI Leaf Pathology Diagnosis",
+    cropLabel: "Crop",
+    diseaseLabel: "Disease Detected",
+    confLabel: "Confidence",
+    severityLabel: "Severity",
+    scanDateLabel: "Date",
+    symptomsTitle: "SYMPTOMS",
+    causesTitle: "POSSIBLE CAUSE",
+    whatToDoTitle: "WHAT TO DO NOW",
+    organicTitle: "BIOLOGICAL / ORGANIC OPTIONS",
+    chemicalTitle: "CHEMICAL CONTROL",
+    safetyWarning: "Safety Warning: Use protective gear while spraying chemicals. Consult local agricultural extension officer.",
+    importantDisclaimer: "IMPORTANT: This report is an AI-generated advisory. Verify symptoms in the field before applying chemical treatment.",
+    farmerCompanion: "KrishiMitra AI - Farmer Companion",
     farmDetails: "Farm Details",
     recCrops: "Recommended Crops",
     yield: "Expected Yield",
@@ -51,6 +65,20 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     weatherReport: "मौसम विवरण रिपोर्ट",
     diseaseReport: "पत्ती रोग निदान रिपोर्ट",
     expenseReport: "वित्तीय बहीखाता रिपोर्ट",
+    pathologyTitle: "एआई पत्ती रोग निदान",
+    cropLabel: "फसल",
+    diseaseLabel: "पहचाना गया रोग",
+    confLabel: "विश्वास दर",
+    severityLabel: "गंभीरता",
+    scanDateLabel: "तारीख",
+    symptomsTitle: "लक्षण",
+    causesTitle: "संभावित कारण",
+    whatToDoTitle: "अब क्या करें",
+    organicTitle: "जैविक / ऑर्गेनिक विकल्प",
+    chemicalTitle: "रासायनिक नियंत्रण",
+    safetyWarning: "सुरक्षा चेतावनी: रसायनों का छिड़काव करते समय सुरक्षात्मक गियर का उपयोग करें। स्थानीय कृषि विस्तार अधिकारी से परामर्श लें।",
+    importantDisclaimer: "महत्वपूर्ण: यह रिपोर्ट एक एआई-जनरेटेड सलाह है। कृपया रासायनिक उपचार से पहले खेत में लक्षणों की पुष्टि करें।",
+    farmerCompanion: "कृषिमित्र एआई - किसान साथी",
     farmDetails: "खेत का विवरण",
     recCrops: "अनुशंसित फसलें",
     yield: "अपेक्षित उपज",
@@ -91,6 +119,20 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     weatherReport: "હવામાન પત્રક અહેવાલ",
     diseaseReport: "રોગ નિદાન પત્રક અહેવાલ",
     expenseReport: "નાણાકીય ખર્ચ પત્રક અહેવાલ",
+    pathologyTitle: "એઆઈ પાંદડાં રોગ નિદાન",
+    cropLabel: "પાક",
+    diseaseLabel: "નિદાન કરેલ રોગ",
+    confLabel: "વિશ્વાસ સ્તર",
+    severityLabel: "ગંભીરતા",
+    scanDateLabel: "તારીખ",
+    symptomsTitle: "લક્ષણો",
+    causesTitle: "શક્ય કારણો",
+    whatToDoTitle: "હવે શું કરવું",
+    organicTitle: "જૈવિક / ઓર્ગેનિક વિકલ્પો",
+    chemicalTitle: "રાસાયણિક નિયંત્રણ",
+    safetyWarning: "સુરક્ષા ચેતવણી: રસાયણોનો છંટકાવ કરતી વખતે રક્ષણાત્મક સાધનોનો ઉપયોગ કરો. સ્થાનિક કૃષિ અધિકારીની સલાહ લો.",
+    importantDisclaimer: "મહત્વપૂર્ણ: આ રિપોર્ટ એઆઈ દ્વારા જનરેટ કરેલ માર્ગદર્શિકા છે. રાસાયણિક સારવાર કરતા પહેલા ખેતરમાં તપાસ કરો.",
+    farmerCompanion: "કૃષિમિત્ર એઆઈ - ખેડૂત સાથી",
     farmDetails: "ખેતરની વિગતો",
     recCrops: "ભલામણ કરેલ પાકો",
     yield: "અપેક્ષિત ઉત્પાદન",
@@ -122,7 +164,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     category: "શ્રેણી",
     amount: "રકમ (રૂ)",
     description: "વર્ણન",
-    footer: "© ૨૦૨૬ કૃષિમિત્ર એઆઈ. આ কમ્પ્યુટર દ્વારા બનાવેલ રિપોર્ટ છે."
+    footer: "© ૨૦૨૬ કૃષિમિત્ર એઆઈ. આ કમ્પ્યુટર દ્વારા બનાવેલ રિપોર્ટ છે."
   },
   mr: {
     subtitle: "स्मार्ट कृषी मंच - डिजिटल माती आणि पीक अहवाल",
@@ -131,6 +173,20 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     weatherReport: "हवामान अहवाल पत्रक",
     diseaseReport: "पान रोग निदान अहवाल",
     expenseReport: "खर्च आणि आर्थिक अहवाल",
+    pathologyTitle: "एआय पान रोग निदान",
+    cropLabel: "पीक",
+    diseaseLabel: "निदान झालेला रोग",
+    confLabel: "विश्वास पातळी",
+    severityLabel: "तीव्रता",
+    scanDateLabel: "दिनांक",
+    symptomsTitle: "लक्षणे",
+    causesTitle: "संभाव्य कारणे",
+    whatToDoTitle: "आता काय करावे",
+    organicTitle: "जैविक / सेंद्रिय पर्याय",
+    chemicalTitle: "रासायनिक नियंत्रण",
+    safetyWarning: "सुरक्षा इशारा: रसायनांची फवारणी करताना संरक्षक साधने वापरा. स्थानिक कृषी अधिकाऱ्याचा सल्ला घ्या.",
+    importantDisclaimer: "महत्त्वाचे: हा अहवाल एक एआय-जनरेट केलेला सल्ला आहे. कृपया रासायनिक उपचारापूर्वी शेतात लक्षणे तपासा.",
+    farmerCompanion: "कृषिमित्र एआय - शेतकरी मित्र",
     farmDetails: "शेताचा तपशील",
     recCrops: "शिफारस केलेली पिके",
     yield: "अपेक्षित उत्पन्न",
@@ -184,7 +240,7 @@ export class PdfService {
   ): void {
     const doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      margins: { top: 40, bottom: 40, left: 40, right: 40 },
     });
 
     doc.pipe(res);
@@ -194,19 +250,28 @@ export class PdfService {
     const textColor = '#1F2937';
     const secondaryColor = '#4B5563';
 
-    // Register Unicode Font on Windows (Arial supports Indian glyph characters)
+    // Register Unicode Font for Indian scripts (Nirmala UI on Windows)
     let fontName = 'Helvetica';
-    const winFontPath = 'C:\\Windows\\Fonts\\arial.ttf';
-    if (fs.existsSync(winFontPath)) {
+    const nirmalaPath = 'C:\\Windows\\Fonts\\nirmala.ttf';
+    const arialPath = 'C:\\Windows\\Fonts\\arial.ttf';
+    const selectedFont = fs.existsSync(nirmalaPath) ? nirmalaPath : fs.existsSync(arialPath) ? arialPath : null;
+
+    if (selectedFont) {
       try {
-        doc.registerFont('ArialUnicode', winFontPath);
-        fontName = 'ArialUnicode';
+        doc.registerFont('IndianFont', selectedFont);
+        fontName = 'IndianFont';
       } catch (e) {
-        console.warn('[PDF Font Warning] Failed to register Arial Unicode font:', e);
+        console.warn('[PDF Font Warning] Failed to register font:', e);
       }
     }
 
     doc.font(fontName);
+
+    if (reportType === 'disease') {
+      this.renderDiseaseSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
+      doc.end();
+      return;
+    }
 
     // Header Banner background
     doc.rect(0, 0, 595.28, 120).fill(primaryColor);
@@ -231,7 +296,6 @@ export class PdfService {
     
     let reportTitleKey = 'cropReport';
     if (reportType === 'weather') reportTitleKey = 'weatherReport';
-    else if (reportType === 'disease') reportTitleKey = 'diseaseReport';
     else if (reportType === 'expense') reportTitleKey = 'expenseReport';
 
     doc.fontSize(14).text(this.t(reportTitleKey, language), 50, 140);
@@ -249,9 +313,6 @@ export class PdfService {
         break;
       case 'weather':
         this.renderWeatherSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
-        break;
-      case 'disease':
-        this.renderDiseaseSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
         break;
       case 'expense':
         this.renderExpenseSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
@@ -332,44 +393,189 @@ export class PdfService {
   }
 
   private static renderDiseaseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
-    doc.font(font).fontSize(12).fillColor(primary).text(this.t('diagSummary', lang), 50, doc.y);
-    doc.y += 10;
-    doc.fontSize(10).fillColor(text);
+    try {
+      // 1-PAGE FARMER-FRIENDLY DISEASE REPORT LAYOUT
+      const pageWidth = 595.28;
+      const leftMargin = 40;
+      const contentWidth = 515.28;
 
-    doc.text(`${this.t('diagDisease', lang)}: ${data.name || 'N/A'} (${data.scientificName || 'N/A'})`, 60, doc.y);
-    doc.y += 15;
-    doc.text(`${this.t('conf', lang)}: ${(data.confidenceScore * 100 || 0).toFixed(0)}%`, 60, doc.y);
-    doc.y += 20;
+      // Header Banner (Height: 85)
+      doc.rect(0, 0, pageWidth, 85).fill(primary);
 
-    // Symptoms
-    doc.fontSize(11).fillColor(primary).text(this.t('symptoms', lang), 50, doc.y);
-    doc.y += 8;
-    doc.fontSize(9).fillColor(text);
-    (data.symptoms || []).forEach((sym: string) => {
-      doc.text(`• ${sym}`, 60, doc.y);
-      doc.y += 14;
-    });
+      // Header Text
+      doc.font(font).fillColor('#FFFFFF').fontSize(22).text('KrishiMitra AI', leftMargin, 20);
+      doc.fontSize(12).text(this.t('pathologyTitle', lang), leftMargin, 48);
 
-    // Organic
-    doc.y += 10;
-    doc.fontSize(11).fillColor(primary).text(this.t('organic', lang), 50, doc.y);
-    doc.y += 8;
-    doc.fontSize(9).fillColor(text);
-    (data.organicTreatment || []).forEach((org: string) => {
-      doc.text(`• ${org}`, 60, doc.y);
-      doc.y += 14;
-    });
+      // Date on Top Right
+      const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+      doc.fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 48, {
+        align: 'right',
+        width: 180
+      });
 
-    // Chemical
-    doc.y += 10;
-    doc.fontSize(11).fillColor('#DC2626').text(this.t('chemical', lang), 50, doc.y);
-    doc.y += 8;
-    doc.fontSize(9).fillColor(text);
-    (data.chemicalTreatment || []).forEach((chem: string) => {
-      doc.text(`• ${chem}`, 60, doc.y);
-      doc.y += 14;
-    });
+      let currentY = 100;
+
+      // SUMMARY OVERVIEW BOX (Height: ~105)
+      doc.rect(leftMargin, currentY, contentWidth, 105).fillAndStroke('#F3F4F6', '#E5E7EB');
+      
+      const cropName = data.crop || 'Crop Leaf';
+      const diseaseName = data.diseaseName || data.name || 'Observed Pathology Symptom';
+      const localNameStr = data.localName ? ` (${data.localName})` : '';
+      const fullDiseaseStr = `${diseaseName}${localNameStr}`;
+      
+      const rawConf = typeof data.confidenceScore === 'number' ? data.confidenceScore : 0.85;
+      const confPercent = rawConf > 1 ? `${rawConf.toFixed(0)}%` : `${(rawConf * 100).toFixed(0)}%`;
+      const severityStr = (data.severity || 'Moderate').toUpperCase();
+
+      const textColWidth = data.imageBuffer ? 360 : contentWidth - 30;
+
+      doc.font(font).fillColor(text).fontSize(10);
+      doc.text(`${this.t('cropLabel', lang)}: `, leftMargin + 15, currentY + 12, { continued: true });
+      doc.font(font).fontSize(10).text(cropName);
+
+      doc.font(font).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 15, currentY + 30, { continued: true });
+      doc.font(font).fontSize(10).text(fullDiseaseStr, { width: textColWidth });
+
+      doc.font(font).fontSize(10).text(`${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`, leftMargin + 15, currentY + 70);
+
+      // Optional Image on Right Side of Box
+      if (data.imageBuffer && Buffer.isBuffer(data.imageBuffer)) {
+        try {
+          doc.image(data.imageBuffer, leftMargin + contentWidth - 95, currentY + 10, {
+            fit: [85, 85],
+            align: 'center',
+            valign: 'center'
+          });
+        } catch (imgErr) {
+          console.warn('[PdfService Image Warning] Could not render image buffer:', imgErr);
+        }
+      }
+
+      currentY += 120;
+
+      // Section Helper
+      const renderSectionDivider = (yPos: number) => {
+        doc.moveTo(leftMargin, yPos).lineTo(leftMargin + contentWidth, yPos).strokeColor('#E5E7EB').lineWidth(1).stroke();
+      };
+
+      // 1. SYMPTOMS SECTION
+      renderSectionDivider(currentY);
+      currentY += 8;
+
+      doc.font(font).fontSize(11).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
+      currentY += 16;
+      doc.font(font).fontSize(9.5).fillColor(text);
+
+      const symptomsList: string[] = Array.isArray(data.symptoms) && data.symptoms.length > 0
+        ? data.symptoms
+        : [data.symptoms || 'Visible leaf lesions, discoloration, or spot patterns observed on foliage.'];
+
+      symptomsList.slice(0, 3).forEach((sym: string) => {
+        doc.text(`• ${sym}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+        currentY += 14;
+      });
+
+      currentY += 6;
+
+      // 2. POSSIBLE CAUSE SECTION
+      renderSectionDivider(currentY);
+      currentY += 8;
+
+      doc.font(font).fontSize(11).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
+      currentY += 16;
+      doc.font(font).fontSize(9.5).fillColor(text);
+
+      const causesList: string[] = Array.isArray(data.possibleCauses) && data.possibleCauses.length > 0
+        ? data.possibleCauses
+        : (data.causes ? (Array.isArray(data.causes) ? data.causes : [data.causes]) : ['Fungal or bacterial pathogen proliferation encouraged by warm, humid foliage microclimate.']);
+
+      const causeText = causesList.slice(0, 2).join('; ');
+      doc.text(causeText, leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 22;
+
+      // 3. WHAT TO DO NOW SECTION
+      renderSectionDivider(currentY);
+      currentY += 8;
+
+      doc.font(font).fontSize(11).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
+      currentY += 16;
+      doc.font(font).fontSize(9.5).fillColor(text);
+
+      let immediateAction = 'Inspect infected leaves immediately and isolate severely affected plants.';
+      let monitoringAction = 'Monitor neighboring field rows daily for spreading leaf spots.';
+      let preventionAction = 'Ensure proper row spacing, drainage, and clear plant debris after harvest.';
+
+      if (Array.isArray(data.recommendedActions) && data.recommendedActions.length > 0) {
+        if (data.recommendedActions[0]) immediateAction = data.recommendedActions[0].details || data.recommendedActions[0].title || immediateAction;
+        if (data.recommendedActions[1]) monitoringAction = data.recommendedActions[1].details || data.recommendedActions[1].title || monitoringAction;
+        if (data.recommendedActions[2]) preventionAction = data.recommendedActions[2].details || data.recommendedActions[2].title || preventionAction;
+      }
+
+      doc.text(`1. Immediate: ${immediateAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 16;
+      doc.text(`2. Monitor: ${monitoringAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 16;
+      doc.text(`3. Prevent: ${preventionAction}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 22;
+
+      // 4. BIOLOGICAL / ORGANIC OPTIONS
+      renderSectionDivider(currentY);
+      currentY += 8;
+
+      doc.font(font).fontSize(11).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
+      currentY += 16;
+      doc.font(font).fontSize(9.5).fillColor(text);
+
+      const organicList: string[] = Array.isArray(data.organicTreatment) && data.organicTreatment.length > 0
+        ? data.organicTreatment
+        : ['Spray Neem oil formulation (5ml/L water) or Trichoderma viride bio-fungicide.'];
+
+      organicList.slice(0, 2).forEach((org: string) => {
+        doc.text(`• ${org}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+        currentY += 14;
+      });
+
+      currentY += 6;
+
+      // 5. CHEMICAL CONTROL
+      renderSectionDivider(currentY);
+      currentY += 8;
+
+      doc.font(font).fontSize(11).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
+      currentY += 16;
+      doc.font(font).fontSize(9.5).fillColor(text);
+
+      const chemicalList: string[] = Array.isArray(data.chemicalTreatment) && data.chemicalTreatment.length > 0
+        ? data.chemicalTreatment
+        : (data.pesticideDetails ? [`${data.pesticideDetails.englishName || data.pesticideDetails.localName || 'Fungicide spray'} (${data.pesticideDetails.dosage || '2g/L'})`] : ['Copper Oxychloride or Mancozeb spray if infection exceeds 15% threshold.']);
+
+      doc.text(`• ${chemicalList[0]}`, leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 16;
+
+      doc.font(font).fontSize(8.5).fillColor('#DC2626').text(this.t('safetyWarning', lang), leftMargin + 10, currentY, { width: contentWidth - 15 });
+      currentY += 24;
+
+      // 6. IMPORTANT ADVISORY DISCLAIMER
+      renderSectionDivider(currentY);
+      currentY += 8;
+      doc.font(font).fontSize(8.5).fillColor(secondary).text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
+
+      // FOOTER AT BOTTOM OF PAGE 1
+      doc.font(font).fontSize(9).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 790, {
+        align: 'center',
+        width: contentWidth
+      });
+
+    } catch (renderErr) {
+      console.error('[PdfService renderDiseaseSection Error]', renderErr);
+      doc.fontSize(10).fillColor('#DC2626').text('Disease advisory report generated.', 40, doc.y);
+    }
   }
+
 
   private static renderExpenseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
     doc.font(font).fontSize(12).fillColor(primary).text(this.t('ledger', lang), 50, doc.y);

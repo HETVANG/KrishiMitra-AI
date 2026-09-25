@@ -11,8 +11,9 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     let authHeader = req.headers.authorization;
     
     // Support token in query parameters (required for direct window.open PDF downloads)
-    if (!authHeader && req.query.Authorization) {
-      authHeader = req.query.Authorization as string;
+    if (!authHeader && (req.query.Authorization || req.query.token)) {
+      const rawToken = (req.query.Authorization || req.query.token) as string;
+      authHeader = rawToken.startsWith('Bearer ') ? rawToken : `Bearer ${rawToken}`;
     }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -59,8 +60,9 @@ export const optionalAuthenticate = async (req: AuthRequest, res: Response, next
   try {
     let authHeader = req.headers.authorization;
     
-    if (!authHeader && req.query.Authorization) {
-      authHeader = req.query.Authorization as string;
+    if (!authHeader && (req.query.Authorization || req.query.token)) {
+      const rawToken = (req.query.Authorization || req.query.token) as string;
+      authHeader = rawToken.startsWith('Bearer ') ? rawToken : `Bearer ${rawToken}`;
     }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

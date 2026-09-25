@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout, User, Mail, Lock, Phone, UserCheck, Stethoscope, Briefcase, IndianRupee, AlertCircle } from 'lucide-react';
 
 export const Register: React.FC = () => {
-  const { register } = useAuth();
+  const { register, token } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const redirectParam = searchParams.get('redirect');
+
+  const getSafeRedirectPath = (param: string | null): string => {
+    if (!param) return '/dashboard';
+    if (param.startsWith('/') && !param.startsWith('//') && !param.includes('\\')) {
+      return param;
+    }
+    return '/dashboard';
+  };
+
+  useEffect(() => {
+    if (token) {
+      navigate(getSafeRedirectPath(redirectParam), { replace: true });
+    }
+  }, [token, redirectParam, navigate]);
 
   const [role, setRole] = useState<'farmer' | 'expert'>('farmer');
   const [name, setName] = useState('');
@@ -47,7 +64,7 @@ export const Register: React.FC = () => {
 
     try {
       await register(payload);
-      navigate('/');
+      navigate(getSafeRedirectPath(redirectParam), { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please check details.');
     } finally {

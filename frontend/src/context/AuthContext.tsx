@@ -137,8 +137,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    
     setToken(null);
     setUser(null);
+    setFarmLocation(null);
+
+    // Redirect to public landing page and trigger clean window state reset
+    window.location.href = '/';
   };
 
   const updateSettings = async (language: string, theme: 'light' | 'dark', farmLocation?: any) => {

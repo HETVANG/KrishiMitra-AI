@@ -64,6 +64,7 @@ const Support = React.lazy(() => import('./pages/Support').then(m => ({ default:
 // Protected Route Guard
 const ProtectedRoute = () => {
   const { token, isLoading } = useAuth();
+  const location = React.useMemo(() => window.location, []);
 
   if (isLoading) {
     return (
@@ -73,7 +74,13 @@ const ProtectedRoute = () => {
     );
   }
 
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!token) {
+    const targetPath = window.location.pathname + window.location.search;
+    const redirectUrl = encodeURIComponent(targetPath);
+    return <Navigate to={`/login?redirect=${redirectUrl}`} replace />;
+  }
+
+  return <Outlet />;
 };
 
 // Admin Route Guard
@@ -257,13 +264,6 @@ export const AppContent = () => {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/support" element={<Support />} />
 
-          {/* Guest Accessible Modules (with full Layout frame) */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/disease" element={<DiseaseDetection />} />
-            <Route path="/market" element={<MarketDashboard />} />
-            <Route path="/schemes" element={<GovSchemes />} />
-          </Route>
-
           {/* Public Share Landing Routes */}
           <Route path="/share/:type/:shareId" element={<PublicShare />} />
           <Route path="/share/:shareId" element={<PublicShare />} />
@@ -275,6 +275,9 @@ export const AppContent = () => {
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/disease" element={<DiseaseDetection />} />
+              <Route path="/market" element={<MarketDashboard />} />
+              <Route path="/schemes" element={<GovSchemes />} />
               <Route path="/organizations" element={<OrganizationList />} />
               <Route path="/organizations/new" element={<OrganizationOnboarding />} />
               <Route path="/organizations/:id" element={<OrganizationWorkspace />} />

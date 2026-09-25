@@ -17,10 +17,12 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 export const Landing: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { theme, toggleTheme, setLanguage } = useTheme();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const languagesList = [
@@ -86,13 +88,22 @@ export const Landing: React.FC = () => {
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
-          {/* Login Button */}
-          <NavLink
-            to="/login"
-            className="px-4 py-2 text-xs font-extrabold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-all shadow-md shadow-brand-600/10 min-h-[38px] flex items-center justify-center"
-          >
-            Log In
-          </NavLink>
+          {/* Auth State Button */}
+          {isAuthenticated && user ? (
+            <NavLink
+              to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+              className="px-4 py-2 text-xs font-extrabold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-all shadow-md shadow-brand-600/10 min-h-[38px] flex items-center justify-center"
+            >
+              Go to Dashboard
+            </NavLink>
+          ) : (
+            <NavLink
+              to="/login"
+              className="px-4 py-2 text-xs font-extrabold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-all shadow-md shadow-brand-600/10 min-h-[38px] flex items-center justify-center"
+            >
+              Log In
+            </NavLink>
+          )}
         </div>
       </header>
 

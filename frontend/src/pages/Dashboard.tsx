@@ -10,13 +10,9 @@ import {
   AlertTriangle, 
   IndianRupee,
   Layers,
-  Coins,
   ChevronRight,
-  TrendingDown,
-  Volume2,
   Search,
   ShieldAlert,
-  Activity,
   Brain,
   Droplets,
   Bot,
@@ -24,14 +20,10 @@ import {
   ScanEye
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
-import { getTranslationsForLang } from '../config/alertTranslations';
 import { RegionalSettingsModal } from '../components/RegionalSettingsModal';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
-import { ReferralWidget } from '../components/ReferralWidget';
-import { DailyBriefWidget } from '../components/DailyBriefWidget';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 
 export const Dashboard: React.FC = () => {
@@ -45,7 +37,6 @@ export const Dashboard: React.FC = () => {
   const [predictions, setPredictions] = useState<any>(null);
   const [irrigationData, setIrrigationData] = useState<any>(null);
   const [activeCropCycle, setActiveCropCycle] = useState<any>(null);
-  const [agentStatus, setAgentStatus] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingMandi, setLoadingMandi] = useState(true);
@@ -72,6 +63,11 @@ export const Dashboard: React.FC = () => {
     latitude: number | null;
     longitude: number | null;
     address: string | null;
+    village?: string;
+    city?: string;
+    district?: string;
+    state?: string;
+    postcode?: string;
   }>(() => {
     const saved = localStorage.getItem('selectedLocation');
     if (saved) {
@@ -96,7 +92,7 @@ export const Dashboard: React.FC = () => {
   });
 
   const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [, setLocationError] = useState<string | null>(null);
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showRegionalModal, setShowRegionalModal] = useState(false);
@@ -133,21 +129,15 @@ export const Dashboard: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [diseaseHistory, setDiseaseHistory] = useState<any[]>([]);
-  const [schemes, setSchemes] = useState<any[]>([]);
-
-  const lat = activeLocation.latitude || 20.5937;
-  const lon = activeLocation.longitude || 78.9629;
 
   const getTrialDaysRemaining = (): number => {
     if (!user?.trialEndDate) return 0;
     const diffTime = new Date(user.trialEndDate).getTime() - Date.now();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const trialDaysLeft = getTrialDaysRemaining();
   const isTrialActive = user?.subscriptionStatus === 'trialing' && trialDaysLeft > 0;
-  const isTrialExpired = user?.plan === 'free' && (user.subscriptionStatus === 'expired' || (user.trialEndDate && new Date(user.trialEndDate) < new Date()));
   const shouldShowExpiringAlert = isTrialActive && [30, 15, 7, 3, 1].includes(trialDaysLeft);
 
   // Geolocation effect on mount
@@ -180,7 +170,7 @@ export const Dashboard: React.FC = () => {
                     farmLocation: newLoc
                   });
                 } catch (saveErr) {
-                  console.error('Failed to save geolocated settings to backend:', saveErr);
+                  console.error('Failed to save geolocated settings:', saveErr);
                 }
               }
             }
@@ -194,7 +184,7 @@ export const Dashboard: React.FC = () => {
           }
         },
         (error) => {
-          console.warn('Geolocation access denied or failed:', error);
+          console.warn('Geolocation access denied:', error);
           setLocating(false);
           setLocationError('Permission denied');
         },
@@ -205,7 +195,7 @@ export const Dashboard: React.FC = () => {
     requestGeolocation();
   }, []);
 
-  // Suggestions search effect
+  // Search effect
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
@@ -221,7 +211,7 @@ export const Dashboard: React.FC = () => {
           setSuggestions(res.data.suggestions || []);
         }
       } catch (err) {
-        console.error('Geocoding suggestions fetch failed:', err);
+        console.error('Geocoding search failed:', err);
         setSearchError('Failed to fetch suggestions');
       } finally {
         setSearching(false);
@@ -240,7 +230,7 @@ export const Dashboard: React.FC = () => {
         return;
       }
 
-      // 1. Fetch Weather coordinates
+      // 1. Weather
       try {
         setLoadingWeather(true);
         const res = await api.get(`/weather?lat=${activeLocation.latitude}&lon=${activeLocation.longitude}&lang=${i18n.language}`);
@@ -253,14 +243,14 @@ export const Dashboard: React.FC = () => {
         setLoadingWeather(false);
       }
 
-      // 2. Fetch Mandi price trends
+      // 2. Mandi price trends
       try {
         setLoadingMandi(true);
         const addressParts = activeLocation.address?.split(',') || [];
-        const stateName = addressParts[addressParts.length - 1]?.trim() || 'Haryana';
+        const stateName = addressParts[addressParts.length - 1]?.trim() || 'Gujarat';
         const res = await api.get(`/market/search?state=${encodeURIComponent(stateName)}&crop=Wheat&lang=${i18n.language}`);
         if (res.data && res.data.success) {
-          setMandiPrices(res.data.prices.slice(0, 4));
+          setMandiPrices(res.data.prices.slice(0, 3));
         }
       } catch (err) {
         console.error('Error loading mandi prices dashboard:', err);
@@ -268,24 +258,14 @@ export const Dashboard: React.FC = () => {
         setLoadingMandi(false);
       }
 
-      // 3. Fetch Disease History
+      // 3. Disease History
       try {
-        const res = await api.get('/diseases/history?limit=3');
+        const res = await api.get('/diseases/history?limit=1');
         if (res.data && res.data.success) {
           setDiseaseHistory(res.data.history || []);
         }
       } catch (err) {
-        console.warn('Failed to load disease history for dashboard widget:', err);
-      }
-
-      // 4. Fetch Schemes List
-      try {
-        const res = await api.get('/schemes/list');
-        if (res.data && res.data.success) {
-          setSchemes(res.data.schemes || []);
-        }
-      } catch (err) {
-        console.warn('Failed to load schemes list for alerts:', err);
+        console.warn('Failed to load disease history:', err);
       }
     };
 
@@ -332,18 +312,7 @@ export const Dashboard: React.FC = () => {
           }
         }
       } catch (err) {
-        console.warn('Error loading active crop cycle for dashboard:', err);
-      }
-    };
-
-    const fetchAgentStatus = async () => {
-      try {
-        const res = await api.get('/agents/status');
-        if (res.data && res.data.success) {
-          setAgentStatus(res.data.data);
-        }
-      } catch (err) {
-        console.warn('Error loading agent status for dashboard:', err);
+        console.warn('Error loading active crop cycle:', err);
       }
     };
 
@@ -353,52 +322,24 @@ export const Dashboard: React.FC = () => {
       fetchPredictions();
       fetchIrrigation();
       fetchCropCycles();
-      fetchAgentStatus();
     }
   }, [activeLocation.latitude, activeLocation.longitude, i18n.language]);
 
-  // GIS calculation helper functions
-  const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371e3; // Earth radius in meters
-    const phi1 = (lat1 * Math.PI) / 180;
-    const phi2 = (lat2 * Math.PI) / 180;
-    const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
-    const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
-      Math.cos(phi1) * Math.cos(phi2) *
-      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  };
-
-  const calculatePerimeter = (pts: [number, number][]): number => {
-    if (pts.length < 2) return 0;
-    let total = 0;
-    for (let i = 0; i < pts.length; i++) {
-      const p1 = pts[i];
-      const p2 = pts[(i + 1) % pts.length];
-      total += getHaversineDistance(p1[0], p1[1], p2[0], p2[1]);
+  // Map boundary handler
+  const handleMapBoundaryChange = async (coords: [number, number][]) => {
+    setBoundary(coords);
+    if (coords.length > 0) {
+      try {
+        await api.post('/crops/farm', {
+          name: `${user?.name || 'Farmer'}'s Field`,
+          boundary: coords,
+          latitude: activeLocation.latitude || coords[0][0],
+          longitude: activeLocation.longitude || coords[0][1]
+        });
+      } catch (err) {
+        console.error('Failed to autosave boundary:', err);
+      }
     }
-    return total;
-  };
-
-  const calculateAreaM2 = (pts: [number, number][]): number => {
-    if (pts.length < 3) return 0;
-    let area = 0;
-    const factor = 111319.9;
-    for (let i = 0; i < pts.length; i++) {
-      const p1 = pts[i];
-      const p2 = pts[(i + 1) % pts.length];
-      const x1 = p1[1] * factor * Math.cos((p1[0] * Math.PI) / 180);
-      const y1 = p1[0] * factor;
-      const x2 = p2[1] * factor * Math.cos((p2[0] * Math.PI) / 180);
-      const y2 = p2[0] * factor;
-      area += x1 * y2 - x2 * y1;
-    }
-    return Math.abs(area) * 0.5;
   };
 
   const handleLocationSelect = async (loc: any) => {
@@ -412,10 +353,8 @@ export const Dashboard: React.FC = () => {
       state: loc.state,
       postcode: loc.postcode || ''
     };
-    
     setActiveLocation(newLoc);
     localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
-    
     if (user) {
       setFarmLocationLocally(newLoc);
       try {
@@ -425,494 +364,39 @@ export const Dashboard: React.FC = () => {
           farmLocation: newLoc
         });
       } catch (saveErr) {
-        console.error('Failed to save selected location components to backend:', saveErr);
+        console.error('Failed to save selected location:', saveErr);
       }
     }
   };
-
-  const handleMapBoundaryChange = async (coords: [number, number][]) => {
-    setBoundary(coords);
-    if (coords.length > 0) {
-      try {
-        const areaSqM = calculateAreaM2(coords);
-        const acres = Number((areaSqM * 0.000247105).toFixed(2));
-        const hectares = Number((areaSqM * 0.0001).toFixed(2));
-        const perimeter = Number(calculatePerimeter(coords).toFixed(1));
-
-        const res = await api.post('/crops/farm', {
-          name: `${user?.name || 'Farmer'}'s Field`,
-          size: acres > 0 ? acres : 1.0,
-          soilType: 'Loamy',
-          waterSource: 'Tube Well',
-          boundary: coords,
-          village: activeLocation.village || '',
-          taluka: activeLocation.city || '',
-          district: activeLocation.district || '',
-          state: activeLocation.state || '',
-          latitude: activeLocation.latitude || coords[0][0],
-          longitude: activeLocation.longitude || coords[0][1],
-          perimeter: perimeter,
-          areaHectares: hectares
-        });
-
-        if (res.data && res.data.success) {
-          const newLoc = {
-            latitude: activeLocation.latitude || coords[0][0],
-            longitude: activeLocation.longitude || coords[0][1],
-            address: activeLocation.address || 'My Field Location',
-            village: activeLocation.village || '',
-            city: activeLocation.city || '',
-            district: activeLocation.district || '',
-            state: activeLocation.state || '',
-            postcode: activeLocation.postcode || ''
-          };
-          setActiveLocation(newLoc);
-          localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
-          if (user) {
-            setFarmLocationLocally(newLoc);
-            try {
-              await api.put('/auth/settings', {
-                language: i18n.language,
-                theme: user.settings?.theme || 'light',
-                farmLocation: newLoc
-              });
-            } catch (saveErr) {
-              console.error('Failed to update farm location on boundary autosave:', saveErr);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to autosave boundary:', err);
-      }
-    }
-  };
-
-  // Text-To-Speech for weather advisory summaries
-  const speakAdvisory = () => {
-    if ('speechSynthesis' in window && weather?.aiAdvice) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(weather.aiAdvice);
-      utterance.lang = i18n.language === 'hi' ? 'hi-IN' : i18n.language === 'gu' ? 'gu-IN' : 'en-US';
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const getSeason = (): 'MONSOON' | 'WINTER' | 'SUMMER' => {
-    const month = new Date().getMonth(); // 0-indexed: 0=Jan, 11=Dec
-    if (month >= 5 && month <= 8) return 'MONSOON'; // June to Sept
-    if (month >= 9 || month <= 1) return 'WINTER';  // Oct to Feb
-    return 'SUMMER'; // March to May
-  };
-
-  // Dynamic alerts generation engine
-  const getIntelligentAlerts = () => {
-    const alerts: any[] = [];
-    const season = getSeason();
-    const month = new Date().getMonth();
-    const lang = i18n.language || 'en';
-    const trans = getTranslationsForLang(lang);
-
-    const getT = (key: string, vars: Record<string, any> = {}) => {
-      const item = trans[key] || trans['en']?.[key] || { title: key, message: '' };
-      let title = item.title || '';
-      let message = item.message || '';
-      
-      // Perform safe replacements
-      for (const k in vars) {
-        const val = vars[k] !== undefined && vars[k] !== null ? String(vars[k]) : '';
-        title = title.replaceAll(`$${k}`, val);
-        message = message.replaceAll(`$${k}`, val);
-      }
-      
-      return { title, message };
-    };
-
-    // 1. Weather alerts
-    if (weather?.current) {
-      const { temp, windSpeed, humidity, rainProb, condition } = weather.current;
-
-      // Cyclone warning (wind speed > 18 m/s or explicit cyclonic state)
-      if (windSpeed > 18 || ['Squall', 'Tornado'].includes(condition)) {
-        const cycloneInfo = getT('w_cyclone');
-        alerts.push({
-          id: 'w_cyclone',
-          type: 'critical',
-          title: cycloneInfo.title,
-          message: cycloneInfo.message
-        });
-      }
-
-      // MONSOON ALERTS
-      const hasHeavyRainPredict = rainProb >= 70 || ['Rain', 'Drizzle', 'Thunderstorm'].includes(condition);
-      if (season === 'MONSOON' || hasHeavyRainPredict) {
-        if (hasHeavyRainPredict) {
-          const rainInfo = getT('m_heavy_rain', { rainProb: rainProb || 70 });
-          alerts.push({
-            id: 'm_heavy_rain',
-            type: 'critical',
-            title: rainInfo.title,
-            message: rainInfo.message
-          });
-          const waterloggingInfo = getT('m_waterlogging');
-          alerts.push({
-            id: 'm_waterlogging',
-            type: 'critical',
-            title: waterloggingInfo.title,
-            message: waterloggingInfo.message
-          });
-          if (condition === 'Thunderstorm') {
-            const lightningInfo = getT('m_lightning');
-            alerts.push({
-              id: 'm_lightning',
-              type: 'critical',
-              title: lightningInfo.title,
-              message: lightningInfo.message
-            });
-          }
-          const delayFertInfo = getT('m_delay_fert');
-          alerts.push({
-            id: 'm_delay_fert',
-            type: 'warning',
-            title: delayFertInfo.title,
-            message: delayFertInfo.message
-          });
-          const avoidPestInfo = getT('m_avoid_pest');
-          alerts.push({
-            id: 'm_avoid_pest',
-            type: 'warning',
-            title: avoidPestInfo.title,
-            message: avoidPestInfo.message
-          });
-        }
-        if (windSpeed > 10) {
-          const strongWindInfo = getT('m_strong_wind', { windSpeed: windSpeed || 10 });
-          alerts.push({
-            id: 'm_strong_wind',
-            type: 'warning',
-            title: strongWindInfo.title,
-            message: strongWindInfo.message
-          });
-        }
-      }
-
-      // SUMMER ALERTS
-      if (season === 'SUMMER' || temp > 35) {
-        if (temp > 40) {
-          const heatwaveInfo = getT('s_heatwave', { temp: temp || 40 });
-          alerts.push({
-            id: 's_heatwave',
-            type: 'critical',
-            title: heatwaveInfo.title,
-            message: heatwaveInfo.message
-          });
-        } else {
-          const highTempInfo = getT('s_high_temp', { temp: temp || 35 });
-          alerts.push({
-            id: 's_high_temp',
-            type: 'warning',
-            title: highTempInfo.title,
-            message: highTempInfo.message
-          });
-        }
-        const irrInfo = getT('s_irrigation');
-        alerts.push({
-          id: 's_irrigation',
-          type: 'warning',
-          title: irrInfo.title,
-          message: irrInfo.message
-        });
-        const livestockInfo = getT('s_livestock');
-        alerts.push({
-          id: 's_livestock',
-          type: 'warning',
-          title: livestockInfo.title,
-          message: livestockInfo.message
-        });
-        const evapInfo = getT('s_evap');
-        alerts.push({
-          id: 's_evap',
-          type: 'info',
-          title: evapInfo.title,
-          message: evapInfo.message
-        });
-      }
-
-      // WINTER ALERTS
-      if (season === 'WINTER' || temp < 15) {
-        if (temp < 8) {
-          const coldwaveInfo = getT('w_coldwave', { temp: temp || 8 });
-          alerts.push({
-            id: 'w_coldwave',
-            type: 'critical',
-            title: coldwaveInfo.title,
-            message: coldwaveInfo.message
-          });
-          const frostInfo = getT('w_frost');
-          alerts.push({
-            id: 'w_frost',
-            type: 'critical',
-            title: frostInfo.title,
-            message: frostInfo.message
-          });
-        } else {
-          const lowTempInfo = getT('w_low_temp', { temp: temp || 15 });
-          alerts.push({
-            id: 'w_low_temp',
-            type: 'warning',
-            title: lowTempInfo.title,
-            message: lowTempInfo.message
-          });
-        }
-
-        if (humidity > 90 && ['Mist', 'Fog', 'Haze'].includes(condition)) {
-          const denseFogInfo = getT('w_dense_fog');
-          alerts.push({
-            id: 'w_dense_fog',
-            type: 'warning',
-            title: denseFogInfo.title,
-            message: denseFogInfo.message
-          });
-        }
-
-        const livestockColdInfo = getT('w_livestock_cold');
-        alerts.push({
-          id: 'w_livestock_cold',
-          type: 'info',
-          title: livestockColdInfo.title,
-          message: livestockColdInfo.message
-        });
-      }
-    }
-
-    // 2. Crop & Soil Alerts
-    if (!activeLocation.latitude || !activeLocation.longitude) {
-      const locationMissingInfo = getT('f_nolocation');
-      alerts.push({
-        id: 'f_nolocation',
-        type: 'critical',
-        title: locationMissingInfo.title,
-        message: locationMissingInfo.message
-      });
-    }
-
-    if (boundary.length === 0) {
-      const boundaryMissingInfo = getT('f_noboundary');
-      alerts.push({
-        id: 'f_noboundary',
-        type: 'info',
-        title: boundaryMissingInfo.title,
-        message: boundaryMissingInfo.message
-      });
-    } else {
-      // Crop moisture / nutrient alert based on coordinates seed
-      const seed = Math.abs(Math.sin(activeLocation.latitude || 20) * Math.cos(activeLocation.longitude || 78));
-      
-      // Low Nitrogen
-      if (seed < 0.25) {
-        const soilN = getT('c_soil_n');
-        alerts.push({
-          id: 'c_soil_n',
-          type: 'warning',
-          title: soilN.title,
-          message: soilN.message
-        });
-      }
-      
-      // Low Phosphorus
-      if (seed > 0.75) {
-        const soilP = getT('c_soil_p');
-        alerts.push({
-          id: 'c_soil_p',
-          type: 'warning',
-          title: soilP.title,
-          message: soilP.message
-        });
-      }
-      
-      // Low Potassium
-      if (seed > 0.4 && seed < 0.6) {
-        const soilK = getT('c_soil_k');
-        alerts.push({
-          id: 'c_soil_k',
-          type: 'warning',
-          title: soilK.title,
-          message: soilK.message
-        });
-      }
-
-      // Soil Moisture Low
-      if (seed < 0.35) {
-        const soilMoistureVal = Math.round(seed * 60 + 10);
-        const soilMoisture = getT('c_soil_moisture', { soilMoisture: soilMoistureVal });
-        alerts.push({
-          id: 'c_soil_moisture',
-          type: 'warning',
-          title: soilMoisture.title,
-          message: soilMoisture.message
-        });
-      }
-
-      // Soil pH
-      const phVal = Number((5.5 + seed * 3.5).toFixed(1));
-      if (phVal > 7.8) {
-        const soilPhHigh = getT('c_soil_ph_high', { ph: phVal });
-        alerts.push({
-          id: 'c_soil_ph_high',
-          type: 'warning',
-          title: soilPhHigh.title,
-          message: soilPhHigh.message
-        });
-      } else if (phVal < 6.2) {
-        const soilPhLow = getT('c_soil_ph_low', { ph: phVal });
-        alerts.push({
-          id: 'c_soil_ph_low',
-          type: 'warning',
-          title: soilPhLow.title,
-          message: soilPhLow.message
-        });
-      }
-    }
-
-    // Sowing season window alert
-    if (month === 5 || month === 6) { // June/July
-      const sowKharif = getT('c_sow_kharif');
-      alerts.push({
-        id: 'c_sow_kharif',
-        type: 'success',
-        title: sowKharif.title,
-        message: sowKharif.message
-      });
-    } else if (month === 9 || month === 10) { // Oct/Nov
-      const sowRabi = getT('c_sow_rabi');
-      alerts.push({
-        id: 'c_sow_rabi',
-        type: 'success',
-        title: sowRabi.title,
-        message: sowRabi.message
-      });
-    }
-
-    // Disease history alerts
-    if (diseaseHistory.length > 0) {
-      const latest = diseaseHistory[0];
-      const diseaseInfo = getT('c_disease_risk', { diseaseName: latest.diseaseName || 'Fungal Blight' });
-      alerts.push({
-        id: 'c_disease_risk',
-        type: 'warning',
-        title: diseaseInfo.title,
-        message: diseaseInfo.message
-      });
-    }
-
-    // 3. Mandi market alerts
-    if (mandiPrices.length > 0) {
-      const best = mandiPrices.reduce((prev, curr) => (prev.maxPrice > curr.maxPrice) ? prev : curr);
-      const bestPriceInfo = getT('m_best_price', { 
-        crop: best.crop || 'Wheat', 
-        price: best.maxPrice || best.avgPrice || 2125, 
-        market: best.mandiName || best.market || 'Nagpur' 
-      });
-      alerts.push({
-        id: 'm_best_price',
-        type: 'success',
-        title: bestPriceInfo.title,
-        message: bestPriceInfo.message
-      });
-
-      if (best.maxPrice > 2100) {
-        const priceIncInfo = getT('m_price_increase', { crop: best.crop || 'Wheat' });
-        alerts.push({
-          id: 'm_price_increase',
-          type: 'success',
-          title: priceIncInfo.title,
-          message: priceIncInfo.message
-        });
-      } else {
-        const priceDecInfo = getT('m_price_decrease', { crop: best.crop || 'Wheat' });
-        alerts.push({
-          id: 'm_price_decrease',
-          type: 'warning',
-          title: priceDecInfo.title,
-          message: priceDecInfo.message
-        });
-      }
-    }
-
-    // 4. Government schemes & alerts
-    if (schemes.length > 0) {
-      const upcoming = schemes[0];
-      const schemeInfo = getT('g_scheme_info', { scheme: upcoming.name || 'PM-KISAN' });
-      alerts.push({
-        id: 'g_scheme_info',
-        type: 'info',
-        title: schemeInfo.title,
-        message: schemeInfo.message
-      });
-
-      const pmkisanInfo = getT('g_pmkisan');
-      alerts.push({
-        id: 'g_pmkisan',
-        type: 'info',
-        title: pmkisanInfo.title,
-        message: pmkisanInfo.message
-      });
-
-      const pmfbyInfo = getT('g_pmfby');
-      alerts.push({
-        id: 'g_pmfby',
-        type: 'info',
-        title: pmfbyInfo.title,
-        message: pmfbyInfo.message
-      });
-    }
-
-    return alerts;
-  };
-
-  const dynamicAlerts = getIntelligentAlerts();
-
-  const chartData = financials?.chartData || [
-    { name: 'Seeds', value: 4500 },
-    { name: 'Fertilizer', value: 8000 },
-    { name: 'Labor', value: 12000 },
-    { name: 'Fuel', value: 3500 },
-    { name: 'Equipment', value: 6200 },
-  ];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 text-left">
       {/* Onboarding Activation Checklist */}
       <OnboardingChecklist onOpenModal={() => setShowOnboardingModal(true)} />
 
-      {/* Personalized Daily Farm Brief */}
-      <DailyBriefWidget onOpenTimeline={() => setShowTimelineModal(true)} />
-
-      {/* Farmer Referral & Growth Widget */}
-      <ReferralWidget />
-
-      {/* Welcome Title Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg text-left">
+      {/* SINGLE WELCOME & FARM SUMMARY TOP BAR */}
+      <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-[10px] font-extrabold bg-brand-600/60 px-3 py-1 rounded-full uppercase tracking-wider">
-              {user?.role} Portal
+              {user?.name ? `${user.name}'s Field` : 'My Farm'}
             </span>
-            {isTrialActive && (
-              <span className="text-[10px] font-bold bg-amber-500/80 text-white px-3 py-1 rounded-full uppercase tracking-wider">
-                Premium Trial: {trialDaysLeft} days left
+            {activeLocation.address && (
+              <span className="text-[10px] font-bold bg-brand-800/80 text-brand-100 px-3 py-1 rounded-full flex items-center gap-1">
+                <MapPin size={12} /> {activeLocation.address}
               </span>
             )}
-            {user?.plan === 'premium' && (
-              <span className="text-[10px] font-bold bg-emerald-500 text-white px-3 py-1 rounded-full uppercase tracking-wider">
-                Premium Member
+            {isTrialActive && (
+              <span className="text-[10px] font-bold bg-amber-500/80 text-white px-3 py-1 rounded-full uppercase tracking-wider">
+                Trial: {trialDaysLeft} days left
               </span>
             )}
           </div>
           <h1 className="text-xl md:text-2xl font-extrabold tracking-tight mt-2">
-            {t('dashboard.welcome')}, {user?.name}!
+            Good morning, {user?.name || 'Farmer'}
           </h1>
           <p className="text-brand-100 text-xs mt-1 font-medium">
-            Here is your localized farm dashboard intelligence summaries.
+            Here's what matters for your farm today.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -926,381 +410,269 @@ export const Dashboard: React.FC = () => {
             to="/reports" 
             className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
           >
-            <Layers size={16} /> {t('common.download')} PDF Reports
+            <Layers size={16} /> PDF Reports
           </Link>
         </div>
       </div>
 
-
-
-      {/* Trial Reminders & Alerts */}
+      {/* Trial Reminders */}
       {shouldShowExpiringAlert && (
-        <div className="bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/35 p-4 rounded-2xl text-left text-xs md:text-sm text-amber-800 dark:text-amber-400 font-bold flex flex-col sm:flex-row justify-between items-center gap-3">
-          <span>⚠️ Your Premium Trial will expire in {trialDaysLeft} day{trialDaysLeft > 1 ? 's' : ''}. Upgrade to Premium to keep using NPK fertilizer planners, expert booking, and PDF downloads.</span>
-          <Link to="/pricing" className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold text-xs shadow-sm transition-colors min-h-[36px] flex items-center shrink-0">
+        <div className="bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/35 p-4 rounded-2xl text-xs md:text-sm text-amber-800 dark:text-amber-400 font-bold flex flex-col sm:flex-row justify-between items-center gap-3">
+          <span>⚠️ Your Premium Trial will expire in {trialDaysLeft} day{trialDaysLeft > 1 ? 's' : ''}.</span>
+          <Link to="/pricing" className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold text-xs shadow-sm transition-colors shrink-0">
             Upgrade Now
           </Link>
         </div>
       )}
 
-      {isTrialExpired && (
-        <div className="bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/30 p-4 rounded-2xl text-left text-xs md:text-sm text-blue-800 dark:text-blue-400 font-bold flex flex-col sm:flex-row justify-between items-center gap-3">
-          <span>ℹ️ Your Premium Trial has ended. You are now on the Free Plan. Upgrade anytime to unlock Premium features.</span>
-          <Link to="/pricing" className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-extrabold text-xs shadow-sm transition-colors min-h-[36px] flex items-center shrink-0">
-            Upgrade to Premium
-          </Link>
-        </div>
-      )}
-
-      {/* Farm Agents Summary Card */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center shrink-0 font-bold border border-brand-500/30">
-            <Bot size={24} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-500/30 text-brand-300 px-2 py-0.5 rounded-md border border-brand-400/20">
-                Agentic Automation Engine
-              </span>
-              <span className="text-xs text-slate-400 font-medium">
-                5 Specialized Agents Active
-              </span>
-            </div>
-            <h3 className="font-extrabold text-base text-white mt-0.5">
-              Farm Monitoring &bull; Crop Health &bull; Irrigation &bull; Market &bull; Planning
-            </h3>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {agentStatus?.pendingTasksCount > 0 && (
-            <span className="px-3 py-1 bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-full text-xs font-bold animate-pulse">
-              {agentStatus.pendingTasksCount} Approval{agentStatus.pendingTasksCount > 1 ? 's' : ''} Needed
-            </span>
-          )}
-          <Link
-            to="/agents"
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-sm transition-colors flex items-center gap-1.5"
-          >
-            Open Agent Center <ChevronRight size={14} />
-          </Link>
-        </div>
-      </div>
-
-      {/* Active Farm Lifecycle Card */}
-      {activeCropCycle && (
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold">
-              <Sprout size={24} />
-            </div>
-            <div>
+      {/* SECTION 1: TODAY (Weather, Crop Lifecycle, Smart Irrigation) */}
+      <div>
+        <h2 className="text-xs font-extrabold uppercase tracking-wider text-gray-400 dark:text-dark-500 mb-3 px-1">
+          Today's Overview
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Weather Card */}
+          <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-md">
-                  Active Crop Lifecycle
-                </span>
-                <span className="text-xs text-gray-500 dark:text-dark-400 font-medium">
-                  Field: {activeCropCycle.fieldName || 'Main Field'}
-                </span>
+                <CloudSun className="text-brand-600 dark:text-brand-400" size={20} />
+                <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Weather</h3>
               </div>
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mt-0.5">
-                {activeCropCycle.cropName} {activeCropCycle.variety ? `(${activeCropCycle.variety})` : ''} &bull; Stage: <span className="text-emerald-600 dark:text-emerald-400">{activeCropCycle.currentStage}</span>
-              </h3>
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline"
+              >
+                Change Location
+              </button>
             </div>
-          </div>
-          <Link
-            to="/crop-cycles"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-colors flex items-center gap-1.5 shrink-0"
-          >
-            Manage Lifecycle <ChevronRight size={14} />
-          </Link>
-        </div>
-      )}
 
-      {/* Grid Layout Weather & Financial Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Weather Card (7 cols) */}
-        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-800 pb-4 mb-4">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <CloudSun className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.weather')}
-            </h3>
-            {activeLocation.address ? (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-700 dark:text-dark-250 font-extrabold">
-                  {activeLocation.address}
-                </span>
-                <button
-                  onClick={() => setShowLocationModal(true)}
-                  className="text-[10px] text-brand-600 dark:text-brand-400 font-bold hover:underline min-h-[32px] px-1.5 flex items-center"
-                >
-                  (Change)
-                </button>
-              </div>
+            {loadingWeather ? (
+              <div className="py-6 flex justify-center"><div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div></div>
             ) : (
-              <span className="text-xs text-gray-400 dark:text-dark-500 font-bold">
-                No Location
-              </span>
+              <div className="space-y-3">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-3xl font-extrabold text-gray-800 dark:text-dark-50">
+                    {weather?.current?.temp != null ? `${weather.current.temp}°C` : '--'}
+                  </span>
+                  <span className="text-xs font-bold text-gray-600 dark:text-dark-300 uppercase">
+                    {weather?.current?.condition || 'Clear'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px] bg-gray-50 dark:bg-dark-850 p-2.5 rounded-xl text-gray-600 dark:text-dark-300 font-medium">
+                  <div>Humidity: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.humidity || 60}%</span></div>
+                  <div>Rain Chance: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.rainProb || 10}%</span></div>
+                </div>
+              </div>
             )}
-          </div>
 
-          {!activeLocation.latitude ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500 dark:text-dark-400 w-full">
-              <CloudSun size={48} className="text-gray-300 dark:text-dark-800 mx-auto mb-3 animate-pulse" />
-              <p className="font-extrabold text-sm text-gray-700 dark:text-dark-250">
-                {locating ? 'Detecting your location...' : 'Location not selected'}
-              </p>
-              <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
-                {locating ? 'Requesting geolocation coordinates...' : 'Please enable browser geolocation permission or select a location manually to view today\'s weather.'}
-              </p>
-              {!locating && (
-                <button
-                  onClick={() => setShowLocationModal(true)}
-                  className="mt-4 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors min-h-[38px]"
-                >
-                  Choose Location
-                </button>
-              )}
-            </div>
-          ) : loadingWeather ? (
-            <div className="flex items-center justify-center py-10 text-brand-600">
-              <div className="w-8 h-8 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            <div className="space-y-4 text-left">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-dark-50 tracking-tighter">
-                    {weather?.current?.temp}°C
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-gray-700 dark:text-dark-200 uppercase tracking-wide">
-                      {weather?.current?.condition}
-                    </h4>
-                    <p className="text-xs text-gray-400 dark:text-dark-500 capitalize">
-                      {weather?.current?.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 bg-brand-50 dark:bg-brand-950/20 text-brand-800 dark:text-brand-400 font-bold rounded-lg text-xs">
-                    {t('dashboard.aqi')}: {weather?.current?.aqi}
-                  </span>
-                </div>
-              </div>
-
-              {/* Climate parameters grids */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 dark:bg-dark-850 p-4 rounded-2xl border border-gray-100/40 dark:border-dark-800/10">
-                <div className="text-center p-2 border-r border-gray-200/50 dark:border-dark-800">
-                  <span className="block text-[10px] text-gray-400 font-bold uppercase">{t('dashboard.humidity')}</span>
-                  <span className="block text-sm font-extrabold text-gray-700 dark:text-dark-200 mt-1">{weather?.current?.humidity}%</span>
-                </div>
-                <div className="text-center p-2 sm:border-r border-gray-200/50 dark:border-dark-800">
-                  <span className="block text-[10px] text-gray-400 font-bold uppercase">{t('dashboard.wind')}</span>
-                  <span className="block text-sm font-extrabold text-gray-700 dark:text-dark-200 mt-1">{weather?.current?.windSpeed} m/s</span>
-                </div>
-                <div className="text-center p-2 border-r border-gray-200/50 dark:border-dark-800">
-                  <span className="block text-[10px] text-gray-400 font-bold uppercase">{t('dashboard.rain')}</span>
-                  <span className="block text-sm font-extrabold text-gray-700 dark:text-dark-200 mt-1">{weather?.current?.rainProb}%</span>
-                </div>
-                <div className="text-center p-2">
-                  <span className="block text-[10px] text-gray-400 font-bold uppercase">Precipitation</span>
-                  <span className="block text-sm font-extrabold text-gray-700 dark:text-dark-200 mt-1">Light</span>
-                </div>
-              </div>
-
-              {/* AI Weather Advice */}
-              {weather?.aiAdvice && (
-                <div className="bg-brand-50/50 dark:bg-brand-950/20 p-4 rounded-xl border border-brand-100/50 dark:border-brand-900/10 flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <span className="block text-[10px] text-brand-700 dark:text-brand-400 font-extrabold uppercase mb-1">AI Crop Advisory Advice</span>
-                    <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed font-medium">
-                      {weather?.aiAdvice}
-                    </p>
-                  </div>
-                  <button
-                    onClick={speakAdvisory}
-                    className="p-2.5 bg-brand-100 dark:bg-brand-900/50 hover:bg-brand-200 text-brand-800 dark:text-brand-400 rounded-xl shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
-                    title={t('common.read_aloud')}
-                  >
-                    <Volume2 size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Predictive Crop Risk Outlook Widget Section */}
-        {predictions && predictions.signals && (
-          <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldAlert size={20} className="text-brand-600 dark:text-brand-400" />
-                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Predictive Farm Risk Outlook</h3>
-                <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
-                  predictions.overallOutlook === 'high' ? 'bg-red-100 text-red-700' : predictions.overallOutlook === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                }`}>
-                  {predictions.overallOutlook} Risk
-                </span>
-              </div>
-              <Link to="/predictive-intelligence" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
-                View Risk Intelligence Engine <ChevronRight size={14} />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {predictions.signals.map((sig: any) => (
-                <div key={sig.id} className="p-4 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 space-y-1.5 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">{sig.category} Risk</span>
-                    <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
-                      sig.level === 'high' ? 'bg-red-100 text-red-700' : sig.level === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                    }`}>
-                      {sig.level}
-                    </span>
-                  </div>
-                  <h4 className="font-extrabold text-xs text-gray-800 dark:text-dark-100 line-clamp-1">{sig.title}</h4>
-                  <p className="text-[11px] text-gray-500 dark:text-dark-400 leading-snug line-clamp-2">{sig.summary}</p>
-                  <div className="pt-2 text-[10px] font-bold text-brand-600 dark:text-brand-400 flex items-center justify-between border-t border-gray-200/50 dark:border-dark-800">
-                    <span>Horizon: {sig.timeframe.replace('_', ' ')}</span>
-                    <Link to="/predictive-intelligence" className="hover:underline flex items-center">
-                      Details <ChevronRight size={12} />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Smart Irrigation Dashboard Widget Section */}
-        {irrigationData && irrigationData.recommendation && (
-          <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-2xl shrink-0">
-                <Droplets size={24} />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Smart Irrigation Intelligence</h3>
-                  <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-                    {irrigationData.recommendation.status.replace(/_/g, ' ')}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed max-w-3xl">
-                  {irrigationData.recommendation.summary}
-                </p>
-                <div className="text-[10px] text-gray-400 font-semibold pt-1">
-                  Suggested Action: {irrigationData.recommendation.recommendedActions?.[0]?.title || 'Check soil moisture before watering.'}
-                </div>
-              </div>
-            </div>
-
-            <Link
-              to="/irrigation"
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 shrink-0 transition-colors"
-            >
-              <span>Smart Irrigation Hub</span>
+            <Link to="/weather" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
+              <span>View Full Forecast</span>
               <ChevronRight size={14} />
             </Link>
           </div>
-        )}
 
-        {/* Crop Health & Disease Intelligence Widget Section */}
-        <div className="lg:col-span-12 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 rounded-2xl shrink-0">
-              <ScanEye size={24} />
+          {/* Crop Status Card */}
+          <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="flex items-center gap-2">
+              <Sprout className="text-emerald-600 dark:text-emerald-400" size={20} />
+              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Crop Status</h3>
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Crop Health & Pathology Intelligence</h3>
-                <span className={`text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${
-                  diseaseHistory.length > 0 && diseaseHistory[0].condition !== 'HEALTHY'
-                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                }`}>
-                  {diseaseHistory.length > 0 ? (diseaseHistory[0].condition ? diseaseHistory[0].condition.replace(/_/g, ' ') : 'ACTIVE SCANS LOGGED') : 'MONITORING READY'}
+
+            {activeCropCycle ? (
+              <div className="space-y-2">
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  Active Crop
                 </span>
+                <h4 className="font-extrabold text-base text-gray-800 dark:text-dark-100">
+                  {activeCropCycle.cropName} {activeCropCycle.variety ? `(${activeCropCycle.variety})` : ''}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-dark-400">
+                  Stage: <span className="font-bold text-emerald-600 dark:text-emerald-400">{activeCropCycle.currentStage || 'Growing'}</span>
+                </p>
               </div>
-              <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed max-w-3xl">
-                {diseaseHistory.length > 0
-                  ? `Latest scan on ${diseaseHistory[0].crop || 'crop'}: "${diseaseHistory[0].diseaseName}" (${diseaseHistory[0].severity || 'moderate'} severity). Scanned on ${new Date(diseaseHistory[0].createdAt).toLocaleDateString()}.`
-                  : 'No active disease concerns logged. Perform routine leaf scans to monitor crop foliage and detect early pathogen signs.'
-                }
-              </p>
-              {diseaseHistory.length > 0 && diseaseHistory[0].recommendedActions?.[0] && (
-                <div className="text-[10px] text-gray-400 font-semibold pt-1">
-                  Next Step: {diseaseHistory[0].recommendedActions[0].title} — {diseaseHistory[0].recommendedActions[0].details}
-                </div>
-              )}
-            </div>
-          </div>
+            ) : (
+              <div className="space-y-1 py-2">
+                <p className="text-xs font-bold text-gray-700 dark:text-dark-200">No active crop cycle logged</p>
+                <p className="text-[11px] text-gray-400">Add a crop cycle to track stages & advisory.</p>
+              </div>
+            )}
 
-          <Link
-            to="/disease"
-            className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-2xl shadow-sm flex items-center gap-1.5 shrink-0 transition-colors"
-          >
-            <span>Disease Pathology Hub</span>
-            <ChevronRight size={14} />
-          </Link>
-        </div>
-
-        {/* Financial Expense Pie Card (5 cols) */}
-        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-800 pb-4 mb-4">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <IndianRupee className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.ledger')}
-            </h3>
-            <Link to="/expenses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center min-h-[44px] px-2">
-              Logs <ChevronRight size={14} />
+            <Link to="/crop-cycles" className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
+              <span>{activeCropCycle ? 'Manage Lifecycle' : 'Add Crop Cycle'}</span>
+              <ChevronRight size={14} />
             </Link>
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-emerald-50/50 dark:bg-emerald-950/10 p-3 rounded-xl border border-emerald-100/40 text-left">
-                <span className="block text-[10px] text-gray-400 font-bold uppercase">Income</span>
-                <span className="block text-base font-extrabold text-emerald-600 mt-1">₹{financials?.totalIncome || 0}</span>
-              </div>
-              <div className="bg-red-50/50 dark:bg-red-950/10 p-3 rounded-xl border border-red-100/40 text-left">
-                <span className="block text-[10px] text-gray-400 font-bold uppercase">Expenses</span>
-                <span className="block text-base font-extrabold text-red-600 mt-1">₹{financials?.totalExpense || 0}</span>
-              </div>
+          {/* Smart Irrigation Card */}
+          <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="flex items-center gap-2">
+              <Droplets className="text-blue-600 dark:text-blue-400" size={20} />
+              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Smart Irrigation</h3>
             </div>
 
-            <div className="h-[120px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} />
-                  <Tooltip contentStyle={{ fontSize: '10px', borderRadius: '8px' }} />
-                  <Area type="monotone" dataKey="value" stroke="#10B981" fill="#34D399" fillOpacity={0.15} />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="space-y-2">
+              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                {irrigationData?.recommendation?.status ? irrigationData.recommendation.status.replace(/_/g, ' ') : 'Normal'}
+              </span>
+              <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed line-clamp-2">
+                {irrigationData?.recommendation?.summary || 'Irrigation levels are normal today based on soil moisture and weather.'}
+              </p>
             </div>
+
+            <Link to="/irrigation" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
+              <span>View Irrigation Hub</span>
+              <ChevronRight size={14} />
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Grid Layout Farm Map & Mandi prices */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Interactive Map (7 cols) */}
-        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3">
-            <div className="text-left">
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-                <MapPin className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.map')}
-              </h3>
-              <p className="text-[11px] text-gray-400 dark:text-dark-500 mt-0.5 font-medium">Click to draw farm boundary bounds.</p>
-            </div>
-            <span className="text-xs font-semibold text-gray-400">
-              GPS Enabled
-            </span>
-          </div>
+      {/* SECTION 2: ACTION NEEDED */}
+      <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/30 p-5 rounded-3xl space-y-2">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="text-amber-600 dark:text-amber-400" size={18} />
+          <h3 className="font-extrabold text-sm text-amber-900 dark:text-amber-200">Action Needed Today</h3>
+        </div>
+        <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+          {weather?.current?.temp > 35 
+            ? 'High afternoon temperature predicted (35°C+). Inspect soil moisture levels and ensure proper field irrigation.'
+            : activeCropCycle 
+              ? `Perform routine morning field check for ${activeCropCycle.cropName} to inspect canopy growth & moisture.`
+              : 'Check nearby mandi market prices before scheduling your harvest sales.'}
+        </p>
+      </div>
 
-          <div className="h-[280px] w-full rounded-2xl overflow-hidden mt-3">
+      {/* SECTION 3: YOUR FARM (Crop Health & Today's Tasks) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Crop Health Card */}
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <div className="flex items-center gap-2">
+              <ScanEye className="text-red-500" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Crop Health</h3>
+            </div>
+            <Link to="/disease" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+              View Scan <ChevronRight size={14} />
+            </Link>
+          </div>
+          <p className="text-xs text-gray-600 dark:text-dark-300 font-medium">
+            {diseaseHistory.length > 0
+              ? `Latest scan on ${diseaseHistory[0].crop || 'crop'}: ${diseaseHistory[0].diseaseName} (${diseaseHistory[0].severity || 'moderate'} severity).`
+              : 'No recent crop scan logged. Perform a leaf scan to detect early signs of crop disease.'}
+          </p>
+          <Link
+            to="/disease"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors"
+          >
+            {diseaseHistory.length > 0 ? 'Scan Another Leaf' : 'Perform Leaf Scan'}
+          </Link>
+        </div>
+
+        {/* Today's Tasks Card */}
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Today's Tasks</h3>
+            <Link to="/crop-cycles" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+              View All Tasks →
+            </Link>
+          </div>
+          <div className="space-y-2 text-xs text-gray-700 dark:text-dark-200 font-medium">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" defaultChecked />
+              <span>Morning Soil & Canopy Check</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" />
+              <span>Weather & Irrigation Review</span>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" />
+              <span>Check Mandi Selling Price Trends</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 4: FARM INTELLIGENCE (Market & Risk Outlook) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Mandi Market Snapshot */}
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="text-brand-600 dark:text-brand-400" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Today's Market Snapshot</h3>
+            </div>
+            <Link to="/market" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+              View Market <ChevronRight size={14} />
+            </Link>
+          </div>
+          {loadingMandi ? (
+            <div className="py-4 text-center text-xs text-gray-400">Loading market prices...</div>
+          ) : mandiPrices.length > 0 ? (
+            <div className="divide-y divide-gray-100 dark:divide-dark-800">
+              {mandiPrices.slice(0, 3).map((item, idx) => (
+                <div key={idx} className="py-2 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-gray-800 dark:text-dark-100">{item.crop}</span>
+                    <span className="text-[10px] text-gray-400 block">{item.mandiName} ({item.state})</span>
+                  </div>
+                  <span className="font-extrabold text-gray-800 dark:text-dark-100">
+                    {(!item.avgPrice && item.avgPrice !== 0) || (item.avgPrice === 0 && !item.isTrulyZero) ? 'Price Not Available' : `₹${item.avgPrice} / Quintal`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-gray-400">No market prices found for nearby mandis.</p>
+          )}
+        </div>
+
+        {/* Farm Risks Snapshot */}
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="text-brand-600 dark:text-brand-400" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Risks</h3>
+            </div>
+            <Link to="/predictive-intelligence" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+              View all risks →
+            </Link>
+          </div>
+          {predictions && predictions.signals && predictions.signals.length > 0 ? (
+            <div className="space-y-2">
+              {predictions.signals.slice(0, 3).map((sig: any) => (
+                <div key={sig.id} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-dark-850 rounded-xl">
+                  <span className="font-bold text-gray-800 dark:text-dark-100 capitalize">{sig.category} Risk</span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                    sig.level === 'high' ? 'bg-red-100 text-red-700' : sig.level === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    [{sig.level}] {sig.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold py-2">
+              ✓ Your farm looks stable today. No high risks detected.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* SECTION 5: FARM LOCATION MAP & FINANCES */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Map Card */}
+        <div className="md:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="text-brand-600 dark:text-brand-400" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Location</h3>
+            </div>
+            <button onClick={() => setShowLocationModal(true)} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+              View / Edit Farm
+            </button>
+          </div>
+          <div className="h-[200px] w-full rounded-2xl overflow-hidden">
             <LeafletMap 
               initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
               boundary={boundary}
@@ -1318,90 +690,63 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Mandi Prices List (5 cols) */}
-        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-800 pb-4 mb-3">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <TrendingUp className="text-brand-600 dark:text-brand-400" size={20} /> {t('dashboard.mandi')}
-            </h3>
-            <Link to="/market" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center min-h-[44px] px-2">
-              Market <ChevronRight size={14} />
+        {/* Farm Finances */}
+        <div className="md:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
+            <div className="flex items-center gap-2">
+              <IndianRupee className="text-brand-600 dark:text-brand-400" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Finances</h3>
+            </div>
+            <Link to="/expenses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+              View finances
             </Link>
           </div>
 
-          {loadingMandi ? (
-            <div className="flex items-center justify-center py-10 text-brand-600">
-              <div className="w-6 h-6 border-3 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+              <span className="block text-[10px] font-bold text-gray-400 uppercase">Income</span>
+              <span className="block text-base font-extrabold text-emerald-600 mt-1">₹{financials?.totalIncome || 0}</span>
             </div>
-          ) : (
-            <div className="divide-y divide-gray-50 dark:divide-dark-800/50">
-              {mandiPrices.length > 0 ? (
-                mandiPrices.map((item, idx) => (
-                  <div key={idx} className="py-2.5 flex items-center justify-between">
-                    <div className="text-left">
-                      <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200">{item.crop}</h4>
-                      <p className="text-[10px] text-gray-400 dark:text-dark-500">{item.mandiName} | {item.state}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="block font-extrabold text-xs md:text-sm text-gray-800 dark:text-dark-200">
-                        {(!item.avgPrice && item.avgPrice !== 0) || (item.avgPrice === 0 && !item.isTrulyZero) ? 'Price Not Available' : `₹${item.avgPrice}`}
-                      </span>
-                      <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded uppercase">
-                        MSP Linked
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center py-6 text-xs text-gray-400">No mandi prices found.</p>
-              )}
+            <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-2xl border border-red-100 dark:border-red-900/30">
+              <span className="block text-[10px] font-bold text-gray-400 uppercase">Expenses</span>
+              <span className="block text-base font-extrabold text-red-600 mt-1">₹{financials?.totalExpense || 0}</span>
             </div>
-          )}
+          </div>
+
+          <Link to="/expenses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline block text-center pt-2 border-t border-gray-100 dark:border-dark-800">
+            {financials?.totalIncome || financials?.totalExpense ? 'Manage Ledger Logbook' : 'No financial records yet — Add record'}
+          </Link>
         </div>
       </div>
 
-      {/* Alerts and system notifications */}
-      <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm text-left">
-        <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2 mb-4 border-b border-gray-50 dark:border-dark-800 pb-4">
-          <AlertTriangle className="text-red-500" size={20} /> {t('dashboard.recent_alerts')}
-        </h3>
-        <div className="space-y-3">
-          {dynamicAlerts.length > 0 ? (
-            dynamicAlerts.map((item) => {
-              const bgColors: Record<string, string> = {
-                critical: 'bg-red-500',
-                warning: 'bg-amber-500',
-                info: 'bg-blue-500',
-                success: 'bg-emerald-500'
-              };
-
-              const borderColors: Record<string, string> = {
-                critical: 'border-red-200/60 dark:border-red-900/30',
-                warning: 'border-amber-200/60 dark:border-amber-900/30',
-                info: 'border-blue-200/60 dark:border-blue-900/30',
-                success: 'border-emerald-200/60 dark:border-emerald-900/30'
-              };
-
-              return (
-                <div 
-                  key={item.id} 
-                  className={`flex gap-3 p-3.5 bg-gray-50/50 dark:bg-dark-850/10 border ${borderColors[item.type] || 'border-gray-200/50'} rounded-2xl items-start transition-all`}
-                >
-                  <div className={`p-2 rounded-xl text-white shrink-0 ${bgColors[item.type] || 'bg-brand-500'}`}>
-                    <AlertTriangle size={15} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs md:text-sm text-gray-850 dark:text-dark-200">{item.title}</h4>
-                    <p className="text-xs text-gray-550 dark:text-dark-400 mt-0.5 leading-relaxed font-semibold">{item.message}</p>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-6 text-center text-xs text-gray-400 font-bold bg-gray-50 rounded-2xl border border-gray-150">
-              No important alerts at this time.
+      {/* SECTION 6: COMPACT INTELLIGENCE ENTRY POINTS (Copilot & Agents) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Ask Copilot Entry */}
+        <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Brain className="w-7 h-7 text-brand-200" />
+            <div>
+              <h4 className="font-extrabold text-sm">Ask your farm anything</h4>
+              <p className="text-xs text-brand-100 font-medium">"What should I do today?"</p>
             </div>
-          )}
+          </div>
+          <Link to="/copilot" className="px-4 py-2 bg-white text-brand-800 rounded-xl font-bold text-xs shadow-sm hover:bg-brand-50 transition-colors shrink-0">
+            Ask Copilot
+          </Link>
+        </div>
+
+        {/* Farm Agents Entry */}
+        <div className="bg-slate-900 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bot className="w-7 h-7 text-brand-400" />
+            <div>
+              <h4 className="font-extrabold text-sm">Farm Intelligence</h4>
+              <p className="text-xs text-slate-400 font-medium">5 specialized agents active</p>
+            </div>
+          </div>
+          <Link to="/agents" className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-sm transition-colors shrink-0">
+            Open Agent Center
+          </Link>
         </div>
       </div>
 
@@ -1437,7 +782,7 @@ export const Dashboard: React.FC = () => {
               </span>
             </div>
 
-            {/* Suggestions list container */}
+            {/* Suggestions list */}
             <div className="flex-1 overflow-y-auto mt-4 space-y-1.5 pr-1 min-h-[180px]">
               {searching ? (
                 <div className="flex items-center justify-center py-8">
@@ -1598,3 +943,5 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
+
+export default Dashboard;

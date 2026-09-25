@@ -58,6 +58,7 @@ const Contact = React.lazy(() => import('./pages/Contact').then(m => ({ default:
 const Privacy = React.lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Terms = React.lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
 const RefundPolicy = React.lazy(() => import('./pages/RefundPolicy').then(m => ({ default: m.RefundPolicy })));
+const Settings = React.lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Support = React.lazy(() => import('./pages/Support').then(m => ({ default: m.Support })));
 
 // Protected Route Guard
@@ -146,6 +147,7 @@ const DashboardLayout = () => {
     if (path === '/pricing') return 'Premium Pricing & Checkout';
     if (path === '/subscription') return 'My Subscription';
     if (path === '/billing-history') return 'Billing History';
+    if (path === '/settings') return 'Settings & Growth Center';
     if (path === '/admin') return 'Control Panel Admin dashboard';
     return 'KrishiMitra AI';
   };
@@ -297,6 +299,7 @@ export const AppContent = () => {
               <Route path="/payment/pending" element={<PaymentPending />} />
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/billing-history" element={<BillingHistory />} />
+              <Route path="/settings" element={<Settings />} />
               
               {/* Admin only dashboard portal */}
               <Route element={<AdminRoute />}>

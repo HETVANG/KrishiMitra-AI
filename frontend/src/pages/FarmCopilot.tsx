@@ -349,6 +349,13 @@ export const FarmCopilot: React.FC = () => {
         </div>
       ) : null}
 
+      {/* 3D AI Core & Farmer Interaction Visualization */}
+      <DashboardAICoreWidget
+        loading={loading}
+        contextLoading={contextLoading}
+        lastMessage={messages[messages.length - 1]}
+      />
+
       {/* Tabs Navigation */}
 
       <div className="flex border-b border-gray-200 dark:border-dark-800 overflow-x-auto gap-2">

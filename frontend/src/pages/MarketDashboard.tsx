@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
+
 
 export const MarketDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();

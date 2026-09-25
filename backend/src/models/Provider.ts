@@ -51,6 +51,14 @@ export interface IProvider extends Document {
     maxRequestsPerMinute?: number;
     quotaLimit?: number;
   };
+  enabled?: boolean;
+  priority?: number;
+  timeoutMs?: number;
+  cacheTTL?: number;
+  lastCheckedAt?: Date;
+  lastSuccessfulAt?: Date;
+  lastSyncAt?: Date;
+  lastError?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,7 +126,15 @@ const ProviderSchema: Schema = new Schema(
     rateLimits: {
       maxRequestsPerMinute: { type: Number, default: 120 },
       quotaLimit: { type: Number, default: 10000 }
-    }
+    },
+    enabled: { type: Boolean, default: true, index: true },
+    priority: { type: Number, default: 1 },
+    timeoutMs: { type: Number, default: 5000 },
+    cacheTTL: { type: Number, default: 3600 },
+    lastCheckedAt: { type: Date },
+    lastSuccessfulAt: { type: Date },
+    lastSyncAt: { type: Date },
+    lastError: { type: String, default: '' }
   },
   { timestamps: true }
 );

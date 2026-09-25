@@ -79,10 +79,11 @@ export const FarmLifecycle: React.FC = () => {
   const [intelLoading, setIntelLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showHarvestModal, setShowHarvestModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [createErrorMsg, setCreateErrorMsg] = useState<string | null>(null);
 
   // Form states
   const [createForm, setCreateForm] = useState({
@@ -119,14 +120,15 @@ export const FarmLifecycle: React.FC = () => {
     try {
       setLoading(true);
       const res = await api.get('/crop-cycles');
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setCropCycles(res.data.data);
+      const cyclesList = res.data?.data || res.data?.cycles;
+      if (res.data?.success && Array.isArray(cyclesList)) {
+        setCropCycles(cyclesList);
         // Select first active cycle by default
-        const activeCycles = res.data.data.filter((c: CropCycle) => c.status !== 'COMPLETED' && c.status !== 'CANCELLED');
+        const activeCycles = cyclesList.filter((c: CropCycle) => c.status !== 'COMPLETED' && c.status !== 'CANCELLED');
         if (activeCycles.length > 0 && !selectedCycleId) {
           setSelectedCycleId(activeCycles[0]._id);
-        } else if (res.data.data.length > 0 && !selectedCycleId) {
-          setSelectedCycleId(res.data.data[0]._id);
+        } else if (cyclesList.length > 0 && !selectedCycleId) {
+          setSelectedCycleId(cyclesList[0]._id);
         }
       }
     } catch (err) {
@@ -141,7 +143,7 @@ export const FarmLifecycle: React.FC = () => {
       setIntelLoading(true);
       const res = await api.get(`/crop-cycles/${cycleId}/intelligence`);
       if (res.data?.success) {
-        setCycleIntelligence(res.data.data);
+        setCycleIntelligence(res.data.data || res.data);
       }
     } catch (err) {
       console.error('[FarmLifecycle] Failed to fetch crop intelligence:', err);
@@ -171,12 +173,16 @@ export const FarmLifecycle: React.FC = () => {
 
   const handleCreateCycle = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateErrorMsg(null);
+    setSubmitting(true);
     try {
-      const res = await api.post('/crop-cycles', {
+      const payload = {
         ...createForm,
+        fieldName: createForm.fieldName || 'Main Field',
         areaAcres: Number(createForm.areaAcres) || 1,
         targetYieldKg: createForm.targetYieldKg ? Number(createForm.targetYieldKg) : undefined
-      });
+      };
+      const res = await api.post('/crop-cycles', payload);
       if (res.data?.success) {
         setShowCreateModal(false);
         setCreateForm({
@@ -191,12 +197,19 @@ export const FarmLifecycle: React.FC = () => {
           notes: ''
         });
         await fetchCycles();
-        if (res.data.data?._id) {
-          setSelectedCycleId(res.data.data._id);
+        const createdId = res.data.cycle?._id || res.data.data?._id;
+        if (createdId) {
+          setSelectedCycleId(createdId);
         }
+      } else {
+        setCreateErrorMsg(res.data?.message || 'Failed to create crop cycle.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[FarmLifecycle] Failed to create crop cycle:', err);
+      const msg = err.response?.data?.message || 'Unable to create crop cycle. Please check your information and try again.';
+      setCreateErrorMsg(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -853,19 +866,30 @@ export const FarmLifecycle: React.FC = () => {
                 </div>
               </div>
 
+              {createErrorMsg && (
+                <div className="p-3 bg-rose-50 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900/60 rounded-xl text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                  {createErrorMsg}
+                </div>
+              )}
+
               <div className="pt-2 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateErrorMsg(null);
+                  }}
                   className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20"
+                  disabled={submitting}
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold text-sm transition-colors shadow-md shadow-emerald-600/20 flex items-center gap-2"
                 >
-                  Create Cycle
+                  {submitting && <RefreshCw size={14} className="animate-spin" />}
+                  <span>{submitting ? 'Creating...' : 'Create Cycle'}</span>
                 </button>
               </div>
             </form>

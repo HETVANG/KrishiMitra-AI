@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { CropLifecycleService } from '../services/lifecycle/cropLifecycleService';
+import { Farm } from '../models/Farm';
 
 export class CropCycleController {
   /**
@@ -10,27 +11,43 @@ export class CropCycleController {
     try {
       if (!req.user) return res.status(401).json({ success: false, message: 'Authentication required' });
 
-      const { farmId, field, cropName, variety, plantingDate, expectedHarvestDate, area, areaUnit, seedSource, notes } = req.body;
-      if (!farmId || !cropName || !plantingDate) {
-        return res.status(400).json({ success: false, message: 'farmId, cropName, and plantingDate are required.' });
+      const { farmId, field, fieldName, cropName, variety, plantingDate, expectedHarvestDate, area, areaAcres, areaUnit, seedSource, notes } = req.body;
+      if (!cropName || !plantingDate) {
+        return res.status(400).json({ success: false, message: 'Crop name and planting date are required.' });
+      }
+
+      let targetFarmId = farmId;
+      if (!targetFarmId) {
+        let existingFarm = await Farm.findOne({ user: req.user._id });
+        if (!existingFarm) {
+          existingFarm = await Farm.create({
+            user: req.user._id,
+            name: 'Main Farm',
+            size: Number(areaAcres || area) || 2.5,
+            soilType: 'Alluvial',
+            waterSource: 'Borewell'
+          });
+        }
+        targetFarmId = existingFarm._id.toString();
       }
 
       const cycle = await CropLifecycleService.createCropCycle(req.user._id.toString(), {
-        farmId,
-        field,
+        farmId: targetFarmId,
+        field: field || fieldName || 'Main Field',
         cropName,
         variety,
         plantingDate,
         expectedHarvestDate,
-        area,
+        area: Number(area || areaAcres) || 1,
         areaUnit,
         seedSource,
         notes
       });
 
-      return res.status(201).json({ success: true, cycle });
+      return res.status(201).json({ success: true, cycle, data: cycle });
     } catch (error: any) {
-      return res.status(400).json({ success: false, message: error.message });
+      console.error('[CropCycleController.create] Error:', error);
+      return res.status(400).json({ success: false, message: error.message || 'Failed to create crop cycle' });
     }
   }
 
@@ -45,7 +62,7 @@ export class CropCycleController {
       const status = req.query.status as string | undefined;
 
       const cycles = await CropLifecycleService.getUserCropCycles(req.user._id.toString(), farmId, status);
-      return res.json({ success: true, cycles });
+      return res.json({ success: true, cycles, data: cycles });
     } catch (error) {
       next(error);
     }

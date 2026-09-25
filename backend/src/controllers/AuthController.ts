@@ -57,17 +57,18 @@ export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, email, password, phone, settings, farmLocation } = req.body;
+      const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
       const safeRole = (req.body.role === 'farmer') ? 'farmer' : 'user';
 
       // Live MongoDB Mode
-      const userExists = await User.findOne({ email: email.toLowerCase() });
+      const userExists = await User.findOne({ email: normalizedEmail });
       if (userExists) {
         return res.status(400).json({ success: false, message: 'Email already registered' });
       }
 
       const user = await User.create({
-        name,
-        email: email.toLowerCase(),
+        name: name ? String(name).trim() : 'User',
+        email: normalizedEmail,
         password,
         phone,
         role: safeRole,
@@ -111,9 +112,10 @@ export class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
+      const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
 
-      // Live Mode
-      const user = await User.findOne({ email: email.toLowerCase() });
+      // Live Mode - Explicitly select password field to guarantee availability
+      const user = await User.findOne({ email: normalizedEmail }).select('+password');
       if (!user) {
         return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }

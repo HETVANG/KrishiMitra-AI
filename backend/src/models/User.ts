@@ -110,6 +110,11 @@ UserSchema.pre('save', async function (next) {
   const user = this;
   if (!user.isModified('password')) return next();
 
+  // Prevent double-hashing if password is already a valid bcrypt hash
+  if (typeof user.password === 'string' && /^\$2[aby]\$\d+\$/.test(user.password)) {
+    return next();
+  }
+
   try {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
@@ -121,6 +126,7 @@ UserSchema.pre('save', async function (next) {
 
 // Compare password method
 UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
+  if (!this.password || !password) return false;
   return bcrypt.compare(password, this.password);
 };
 

@@ -79,6 +79,7 @@ app.use(cors({
       'http://localhost:3000',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:3000',
+      'https://krishi-mitra-ai-henna.vercel.app',
       'https://krishimitra-ai.vercel.app',
       'https://krishimitra.vercel.app'
     ];
@@ -94,7 +95,7 @@ app.use(cors({
       allowedOrigins.includes(normalizedOrigin) ||
       (process.env.NODE_ENV !== 'production') ||
       allowedOrigins.includes('*') ||
-      (normalizedOrigin.endsWith('.vercel.app') && envOrigins.some(a => a.includes('vercel.app')));
+      normalizedOrigin.endsWith('.vercel.app');
 
     if (isAllowed) {
       callback(null, true);

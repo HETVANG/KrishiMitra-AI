@@ -222,11 +222,33 @@ const pdfTranslations: Record<string, Record<string, string>> = {
   }
 };
 
+import path from 'path';
+
 export class PdfService {
   private static t(key: string, lang: string): string {
     const code = (lang || 'en').toLowerCase().slice(0, 2);
     const dict = pdfTranslations[code] || pdfTranslations.en;
     return dict[key] || pdfTranslations.en[key] || key;
+  }
+
+  private static getFontPath(filename: string): string {
+    const candidatePaths = [
+      path.resolve(process.cwd(), 'src/assets/fonts', filename),
+      path.resolve(process.cwd(), 'dist/assets/fonts', filename),
+      path.resolve(process.cwd(), 'backend/src/assets/fonts', filename),
+      path.resolve(process.cwd(), 'backend/dist/assets/fonts', filename),
+      path.resolve(__dirname, '../assets/fonts', filename),
+      path.resolve(__dirname, '../../src/assets/fonts', filename),
+      path.resolve(__dirname, '../../../src/assets/fonts', filename),
+      path.join('C:\\Windows\\Fonts', filename)
+    ];
+
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+    return '';
   }
 
   /**
@@ -250,25 +272,38 @@ export class PdfService {
     const textColor = '#1F2937';
     const secondaryColor = '#4B5563';
 
-    // Register Unicode Font for Indian scripts (Nirmala UI on Windows)
-    let fontName = 'Helvetica';
-    const nirmalaPath = 'C:\\Windows\\Fonts\\nirmala.ttf';
-    const arialPath = 'C:\\Windows\\Fonts\\arial.ttf';
-    const selectedFont = fs.existsSync(nirmalaPath) ? nirmalaPath : fs.existsSync(arialPath) ? arialPath : null;
+    // Register Canonical Unicode Fonts (Nirmala UI) for English, Gujarati, Hindi, Marathi
+    let regularFont = 'Helvetica';
+    let boldFont = 'Helvetica-Bold';
 
-    if (selectedFont) {
+    const regularPath = this.getFontPath('Nirmala.ttf');
+    const boldPath = this.getFontPath('NirmalaB.ttf');
+
+    if (regularPath) {
       try {
-        doc.registerFont('IndianFont', selectedFont);
-        fontName = 'IndianFont';
+        doc.registerFont('KrishiUnicode', regularPath);
+        regularFont = 'KrishiUnicode';
       } catch (e) {
-        console.warn('[PDF Font Warning] Failed to register font:', e);
+        console.warn('[PDF Font Warning] Failed to register regular font:', e);
       }
     }
 
-    doc.font(fontName);
+    if (boldPath) {
+      try {
+        doc.registerFont('KrishiUnicode-Bold', boldPath);
+        boldFont = 'KrishiUnicode-Bold';
+      } catch (e) {
+        console.warn('[PDF Font Warning] Failed to register bold font:', e);
+      }
+    } else if (regularFont === 'KrishiUnicode') {
+      boldFont = 'KrishiUnicode';
+    }
+
+    // Always set document font first BEFORE rendering ANY section
+    doc.font(regularFont);
 
     if (reportType === 'disease') {
-      this.renderDiseaseSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
+      this.renderDiseaseSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
       doc.end();
       return;
     }
@@ -277,10 +312,10 @@ export class PdfService {
     doc.rect(0, 0, 595.28, 120).fill(primaryColor);
 
     // Title
-    doc.fillColor('#FFFFFF').fontSize(24).text('KRISHIMITRA AI', 50, 30);
+    doc.font(boldFont).fillColor('#FFFFFF').fontSize(24).text('KRISHIMITRA AI', 50, 30);
 
     // Subtitle
-    doc.fontSize(10).text(this.t('subtitle', language), 50, 65);
+    doc.font(regularFont).fontSize(10).text(this.t('subtitle', language), 50, 65);
 
     // Date
     const reportDate = new Date().toLocaleDateString('en-IN', {
@@ -298,31 +333,31 @@ export class PdfService {
     if (reportType === 'weather') reportTitleKey = 'weatherReport';
     else if (reportType === 'expense') reportTitleKey = 'expenseReport';
 
-    doc.fontSize(14).text(this.t(reportTitleKey, language), 50, 140);
+    doc.font(boldFont).fontSize(14).text(this.t(reportTitleKey, language), 50, 140);
     
     // Decorative underline divider
     doc.moveTo(50, 160).lineTo(545.28, 160).strokeColor(primaryColor).lineWidth(2).stroke();
 
     doc.y = 180;
-    doc.fontSize(10).fillColor(secondaryColor);
+    doc.font(regularFont).fontSize(10).fillColor(secondaryColor);
 
     // Route section rendering
     switch (reportType) {
       case 'crop':
-        this.renderCropSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
+        this.renderCropSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
         break;
       case 'weather':
-        this.renderWeatherSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
+        this.renderWeatherSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
         break;
       case 'expense':
-        this.renderExpenseSection(doc, data, language, fontName, primaryColor, textColor, secondaryColor);
+        this.renderExpenseSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
         break;
       default:
         doc.text('Invalid report selection.');
     }
 
     // Footer
-    doc.fontSize(8).fillColor(secondaryColor).text(this.t('footer', language), 50, 770, {
+    doc.font(regularFont).fontSize(8).fillColor(secondaryColor).text(this.t('footer', language), 50, 770, {
       align: 'center',
       width: 495.28
     });
@@ -330,10 +365,10 @@ export class PdfService {
     doc.end();
   }
 
-  private static renderCropSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
-    doc.font(font).fontSize(12).fillColor(primary).text(this.t('farmDetails', lang), 50, doc.y);
+  private static renderCropSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
+    doc.font(boldFont).fontSize(12).fillColor(primary).text(this.t('farmDetails', lang), 50, doc.y);
     doc.y += 10;
-    doc.fontSize(10).fillColor(text);
+    doc.font(font).fontSize(10).fillColor(text);
     
     const details = [
       ['Farm Name', data.farmName || 'N/A'],
@@ -349,13 +384,13 @@ export class PdfService {
 
     if (data.recommendations && data.recommendations.length > 0) {
       doc.y += 15;
-      doc.fontSize(12).fillColor(primary).text(this.t('recCrops', lang), 50, doc.y);
+      doc.font(boldFont).fontSize(12).fillColor(primary).text(this.t('recCrops', lang), 50, doc.y);
       doc.y += 10;
 
       data.recommendations.forEach((crop: any, index: number) => {
-        doc.fontSize(11).fillColor(text).text(`${index + 1}. ${crop.name}`, 50, doc.y);
+        doc.font(boldFont).fontSize(11).fillColor(text).text(`${index + 1}. ${crop.name}`, 50, doc.y);
         doc.y += 5;
-        doc.fontSize(9).fillColor(secondary);
+        doc.font(font).fontSize(9).fillColor(secondary);
         doc.text(`${this.t('yield', lang)}: ${crop.expectedYield} kg | ${this.t('profit', lang)}: Rs. ${crop.profitEstimation}`, 65, doc.y);
         doc.y += 12;
         doc.text(`${this.t('duration', lang)}: ${crop.growingDuration} days | ${this.t('risk', lang)}: ${crop.riskLevel}`, 65, doc.y);
@@ -366,10 +401,10 @@ export class PdfService {
     }
   }
 
-  private static renderWeatherSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
-    doc.font(font).fontSize(12).fillColor(primary).text(this.t('weatherConditions', lang), 50, doc.y);
+  private static renderWeatherSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
+    doc.font(boldFont).fontSize(12).fillColor(primary).text(this.t('weatherConditions', lang), 50, doc.y);
     doc.y += 10;
-    doc.fontSize(10).fillColor(text);
+    doc.font(font).fontSize(10).fillColor(text);
 
     const weatherFields = [
       [this.t('temp', lang), `${data.current?.temp || 'N/A'}°C`],
@@ -386,13 +421,13 @@ export class PdfService {
 
     if (data.aiAdvice) {
       doc.y += 15;
-      doc.fontSize(12).fillColor(primary).text(this.t('advisory', lang), 50, doc.y);
+      doc.font(boldFont).fontSize(12).fillColor(primary).text(this.t('advisory', lang), 50, doc.y);
       doc.y += 8;
-      doc.fontSize(10).fillColor(text).text(data.aiAdvice, 50, doc.y, { width: 480 });
+      doc.font(font).fontSize(10).fillColor(text).text(data.aiAdvice, 50, doc.y, { width: 480 });
     }
   }
 
-  private static renderDiseaseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
+  private static renderDiseaseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
     try {
       // 1-PAGE FARMER-FRIENDLY DISEASE REPORT LAYOUT
       const pageWidth = 595.28;
@@ -403,8 +438,8 @@ export class PdfService {
       doc.rect(0, 0, pageWidth, 85).fill(primary);
 
       // Header Text
-      doc.font(font).fillColor('#FFFFFF').fontSize(22).text('KrishiMitra AI', leftMargin, 20);
-      doc.fontSize(12).text(this.t('pathologyTitle', lang), leftMargin, 48);
+      doc.font(boldFont).fillColor('#FFFFFF').fontSize(22).text('KrishiMitra AI', leftMargin, 20);
+      doc.font(font).fontSize(12).text(this.t('pathologyTitle', lang), leftMargin, 48);
 
       // Date on Top Right
       const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {
@@ -412,7 +447,7 @@ export class PdfService {
         month: 'short',
         year: 'numeric'
       });
-      doc.fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 48, {
+      doc.font(font).fontSize(9).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 180, 48, {
         align: 'right',
         width: 180
       });
@@ -433,11 +468,11 @@ export class PdfService {
 
       const textColWidth = data.imageBuffer ? 360 : contentWidth - 30;
 
-      doc.font(font).fillColor(text).fontSize(10);
+      doc.font(boldFont).fillColor(text).fontSize(10);
       doc.text(`${this.t('cropLabel', lang)}: `, leftMargin + 15, currentY + 12, { continued: true });
       doc.font(font).fontSize(10).text(cropName);
 
-      doc.font(font).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 15, currentY + 30, { continued: true });
+      doc.font(boldFont).fontSize(10).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 15, currentY + 30, { continued: true });
       doc.font(font).fontSize(10).text(fullDiseaseStr, { width: textColWidth });
 
       doc.font(font).fontSize(10).text(`${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   ${this.t('scanDateLabel', lang)}: ${formattedDate}`, leftMargin + 15, currentY + 70);
@@ -466,7 +501,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 8;
 
-      doc.font(font).fontSize(11).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
       currentY += 16;
       doc.font(font).fontSize(9.5).fillColor(text);
 
@@ -485,7 +520,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 8;
 
-      doc.font(font).fontSize(11).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
       currentY += 16;
       doc.font(font).fontSize(9.5).fillColor(text);
 
@@ -501,7 +536,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 8;
 
-      doc.font(font).fontSize(11).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
       currentY += 16;
       doc.font(font).fontSize(9.5).fillColor(text);
 
@@ -526,7 +561,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 8;
 
-      doc.font(font).fontSize(11).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
       currentY += 16;
       doc.font(font).fontSize(9.5).fillColor(text);
 
@@ -545,7 +580,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 8;
 
-      doc.font(font).fontSize(11).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(11).fillColor('#DC2626').text(this.t('chemicalTitle', lang), leftMargin, currentY);
       currentY += 16;
       doc.font(font).fontSize(9.5).fillColor(text);
 
@@ -565,7 +600,7 @@ export class PdfService {
       doc.font(font).fontSize(8.5).fillColor(secondary).text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
 
       // FOOTER AT BOTTOM OF PAGE 1
-      doc.font(font).fontSize(9).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 790, {
+      doc.font(boldFont).fontSize(9).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 790, {
         align: 'center',
         width: contentWidth
       });
@@ -576,14 +611,13 @@ export class PdfService {
     }
   }
 
-
-  private static renderExpenseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, primary: string, text: string, secondary: string) {
-    doc.font(font).fontSize(12).fillColor(primary).text(this.t('ledger', lang), 50, doc.y);
+  private static renderExpenseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
+    doc.font(boldFont).fontSize(12).fillColor(primary).text(this.t('ledger', lang), 50, doc.y);
     doc.y += 10;
     
     const summary = data.summary || { totalIncome: 0, totalExpense: 0, netProfit: 0 };
 
-    doc.fontSize(10).fillColor(text);
+    doc.font(font).fontSize(10).fillColor(text);
     doc.text(`${this.t('revenue', lang)}: Rs. ${summary.totalIncome}`, 60, doc.y);
     doc.y += 15;
     doc.text(`${this.t('expenses', lang)}: Rs. ${summary.totalExpense}`, 60, doc.y);
@@ -592,11 +626,11 @@ export class PdfService {
     doc.y += 20;
 
     if (data.expenses && data.expenses.length > 0) {
-      doc.fontSize(11).fillColor(primary).text(this.t('txLogs', lang), 50, doc.y);
+      doc.font(boldFont).fontSize(11).fillColor(primary).text(this.t('txLogs', lang), 50, doc.y);
       doc.y += 12;
 
       // Table Header
-      doc.fontSize(9).fillColor(text);
+      doc.font(boldFont).fontSize(9).fillColor(text);
       doc.text(this.t('date', lang), 50, doc.y, { width: 70 });
       doc.text(this.t('type', lang), 120, doc.y, { width: 70 });
       doc.text(this.t('category', lang), 190, doc.y, { width: 90 });
@@ -606,7 +640,7 @@ export class PdfService {
 
       doc.moveTo(50, doc.y - 5).lineTo(540, doc.y - 5).strokeColor('#E5E7EB').lineWidth(1).stroke();
 
-      doc.fillColor(secondary);
+      doc.font(font).fillColor(secondary);
       data.expenses.forEach((exp: any) => {
         const expDate = new Date(exp.date).toLocaleDateString('en-IN');
         doc.text(expDate, 50, doc.y, { width: 70 });

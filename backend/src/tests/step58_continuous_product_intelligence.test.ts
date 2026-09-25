@@ -55,7 +55,7 @@ async function runStep58ContinuousProductIntelligenceTests() {
     throw new Error('Test 3 Failed: Missing market price did not display "Price Not Available"');
   }
 
-  console.log(`- Monitored Providers: ${providerRecords.length} registered (${providerRecords.map(p => p.id).join(', ')})`);
+  console.log(`- Monitored Providers: ${providerRecords.length} registered (${providerRecords.map(p => p.providerId).join(', ')})`);
   console.log(`- Mandi Unpriced Display: "${marketItem.priceDisplay}" (Zero false ₹0 prices)`);
   console.log('✓ Provider Health & Data Quality Intelligence verified.');
 
@@ -100,7 +100,7 @@ async function runStep58ContinuousProductIntelligenceTests() {
     { area: 'Performance Intelligence', status: 'READY', evidence: 'Vite chunking & 100 limit query guards', notes: 'Sub-120ms API response average' },
     { area: 'Release Intelligence', status: 'READY', evidence: 'Git commit tags & .env.example configuration', notes: 'Release versioning supported' },
     { area: 'Product Improvement Loop', status: 'READY', evidence: 'Observe -> Collect -> Validate -> Fix -> Test', notes: 'Auditable improvement cycle' },
-    { area: 'Access Control & Security', status: 'READY', evidence: 'Helmet, CORS origin checks & IDOR guards', ownerAction: 'Internal intelligence secured', notes: 'Strict admin isolation' }
+    { area: 'Access Control & Security', status: 'READY', evidence: 'Helmet, CORS origin checks & IDOR guards', notes: 'Strict admin isolation' }
   ];
 
   for (const item of intelligenceMatrix) {

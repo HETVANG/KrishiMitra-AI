@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { api } from '../services/api';
+import { api, getApiBaseUrl } from '../services/api';
 import { 
   Sprout, 
   RefreshCw, 
@@ -164,7 +164,7 @@ export const SoilAnalysis: React.FC = () => {
 
   const handleDownloadPdf = () => {
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5000/api/reports/download?type=crop&lang=${i18n.language}&Authorization=Bearer ${token}`;
+    const url = `${getApiBaseUrl()}/reports/download?type=crop&lang=${i18n.language}&Authorization=Bearer ${token}`;
     window.open(url, '_blank');
   };
 

@@ -84,6 +84,21 @@ export const FarmCopilot: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [contextLoading, setContextLoading] = useState(true);
+  const [feedbackRatings, setFeedbackRatings] = useState<Record<string, { rating: 'like' | 'dislike'; reason?: string }>>({});
+
+  const handleFeedback = (msgId: string, rating: 'like' | 'dislike') => {
+    setFeedbackRatings(prev => ({
+      ...prev,
+      [msgId]: { rating, reason: prev[msgId]?.reason }
+    }));
+  };
+
+  const handleFeedbackReason = (msgId: string, reason: string) => {
+    setFeedbackRatings(prev => ({
+      ...prev,
+      [msgId]: { rating: prev[msgId]?.rating || 'dislike', reason }
+    }));
+  };
 
   // Tab Data States
   const [dailyTasks, setDailyTasks] = useState<FarmTaskItem[]>([]);
@@ -523,6 +538,47 @@ export const FarmCopilot: React.FC = () => {
                           <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold px-1">
                             <Info size={10} /> Data Sources: {struct.sources.join(' • ')}
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* AI Message Feedback */}
+                    {msg.role === 'model' && (
+                      <div className="flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-gray-100 dark:border-dark-800/60 text-[11px]">
+                        <span className="text-gray-400 font-medium">Was this helpful?</span>
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'like')}
+                          className={`px-2 py-0.5 rounded-lg border font-bold transition-all ${
+                            feedbackRatings[msg.id]?.rating === 'like'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-dark-800 dark:border-dark-700 dark:text-dark-300'
+                          }`}
+                        >
+                          👍 Helpful
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(msg.id, 'dislike')}
+                          className={`px-2 py-0.5 rounded-lg border font-bold transition-all ${
+                            feedbackRatings[msg.id]?.rating === 'dislike'
+                              ? 'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-300'
+                              : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 dark:bg-dark-800 dark:border-dark-700 dark:text-dark-300'
+                          }`}
+                        >
+                          👎 Not Helpful
+                        </button>
+
+                        {feedbackRatings[msg.id]?.rating === 'dislike' && (
+                          <select
+                            value={feedbackRatings[msg.id]?.reason || ''}
+                            onChange={(e) => handleFeedbackReason(msg.id, e.target.value)}
+                            className="text-[10px] p-1 bg-white dark:bg-dark-800 border rounded-lg text-gray-700 dark:text-dark-200"
+                          >
+                            <option value="">Select reason (optional)</option>
+                            <option value="confusing">Confusing / Unclear</option>
+                            <option value="incorrect">Incorrect details</option>
+                            <option value="incomplete">Incomplete answer</option>
+                            <option value="language">Language problem</option>
+                          </select>
                         )}
                       </div>
                     )}

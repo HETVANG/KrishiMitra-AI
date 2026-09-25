@@ -95,7 +95,8 @@ export class DiseaseIntelligenceService {
     const recommendedActions = DiseaseRecommendationService.generateActionPlan(
       analysis,
       severity,
-      envContext
+      envContext,
+      context.language || 'en'
     );
 
     // 7. Progression comparison with previous scan

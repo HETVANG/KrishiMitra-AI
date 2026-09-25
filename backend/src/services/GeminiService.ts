@@ -45,7 +45,7 @@ async function callGeminiWithRetry<T>(fn: () => Promise<T>, maxRetries = 3, init
 }
 
 // Helper to fetch localized mock data from disk
-const getLocalizedMockData = (language: string): any => {
+export const getLocalizedMockData = (language: string): any => {
   try {
     const langCode = (language || 'en').toLowerCase().slice(0, 2);
     const mockFilePath = path.join(__dirname, '..', 'locales', 'mocks', `${langCode}.json`);

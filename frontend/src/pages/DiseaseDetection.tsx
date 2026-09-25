@@ -322,10 +322,10 @@ export const DiseaseDetection: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <ScanEye size={24} className="text-emerald-300" />
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Advanced Disease Intelligence Engine</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('disease.title')}</h1>
           </div>
           <p className="text-emerald-100 text-xs md:text-sm mt-1 font-medium max-w-2xl">
-            Multimodal AI leaf analysis combined with farm context, weather risk signals, and structured agronomic action plans.
+            {t('disease.subtitle')}
           </p>
         </div>
 
@@ -338,7 +338,7 @@ export const DiseaseDetection: React.FC = () => {
                 activeTab === 'scan' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-100 hover:text-white'
               }`}
             >
-              <ScanEye size={14} /> Scan & Diagnose
+              <ScanEye size={14} /> {t('disease.tabs.scan')}
             </button>
             <button
               onClick={() => setActiveTab('history')}
@@ -346,7 +346,7 @@ export const DiseaseDetection: React.FC = () => {
                 activeTab === 'history' ? 'bg-white text-emerald-800 shadow-sm' : 'text-emerald-100 hover:text-white'
               }`}
             >
-              <History size={14} /> Scan History
+              <History size={14} /> {t('disease.tabs.history')}
             </button>
           </div>
         )}
@@ -357,7 +357,7 @@ export const DiseaseDetection: React.FC = () => {
           {/* Scanner Controls (5 cols) */}
           <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm print:hidden space-y-4">
             <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
-              <span>Leaf Photo Uploader</span>
+              <span>{t('disease.uploader.title')}</span>
               <span className="text-[10px] text-brand-600 dark:text-brand-400 font-bold uppercase bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md">
                 Step 19 Intelligence
               </span>
@@ -366,11 +366,11 @@ export const DiseaseDetection: React.FC = () => {
             {/* Farm & Crop Context Selectors */}
             {user && (
               <div className="space-y-3 bg-gray-50/70 dark:bg-dark-950/40 p-3.5 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Farm & Crop Context (Optional)</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">{t('disease.uploader.context_title')}</span>
                 
                 {farms.length > 0 && (
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">Target Farm</label>
+                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">{t('disease.uploader.target_farm')}</label>
                     <select
                       value={selectedFarmId}
                       onChange={(e) => {
@@ -391,7 +391,7 @@ export const DiseaseDetection: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">Crop Type</label>
+                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">{t('disease.uploader.crop_type')}</label>
                     <input
                       type="text"
                       placeholder="e.g. Tomato, Wheat"
@@ -401,7 +401,7 @@ export const DiseaseDetection: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">Growth Stage</label>
+                    <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">{t('disease.uploader.growth_stage')}</label>
                     <input
                       type="text"
                       placeholder="e.g. Flowering, Seedling"
@@ -413,7 +413,7 @@ export const DiseaseDetection: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">Farmer Notes / Observations</label>
+                  <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">{t('disease.uploader.farmer_notes')}</label>
                   <input
                     type="text"
                     placeholder="e.g. Yellow spots appeared 2 days ago after rain"
@@ -442,8 +442,8 @@ export const DiseaseDetection: React.FC = () => {
             {!previewUrl ? (
               <label className="border-2 border-dashed border-gray-200 dark:border-dark-850 hover:border-brand-500 rounded-3xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-200 group h-56 bg-gray-50/50 dark:bg-dark-950/25">
                 <Upload className="w-10 h-10 text-gray-400 group-hover:text-brand-500 transition-colors duration-150 mb-3" />
-                <span className="font-bold text-sm text-gray-700 dark:text-dark-200">Upload leaf photo</span>
-                <span className="text-[10px] text-gray-400 dark:text-dark-500 mt-1 font-semibold uppercase">Supports JPG, PNG, WEBP up to 10MB</span>
+                <span className="font-bold text-sm text-gray-700 dark:text-dark-200">{t('disease.uploader.drag_drop')}</span>
+                <span className="text-[10px] text-gray-400 dark:text-dark-500 mt-1 font-semibold uppercase">{t('disease.uploader.file_limits')}</span>
                 <input type="file" onChange={handleFileChange} className="hidden" accept="image/*" />
               </label>
             ) : (
@@ -455,7 +455,7 @@ export const DiseaseDetection: React.FC = () => {
                       onClick={handleReset}
                       className="absolute top-3 right-3 px-3 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded-lg hover:bg-black/80 transition-colors min-h-[30px]"
                     >
-                      Change Image
+                      {t('common.cancel')}
                     </button>
                   )}
                 </div>
@@ -469,10 +469,10 @@ export const DiseaseDetection: React.FC = () => {
                     {loading ? (
                       <>
                         <RefreshCw className="animate-spin" size={16} />
-                        <span>Analyzing leaf & farm context...</span>
+                        <span>{t('disease.uploader.btn_scanning')}</span>
                       </>
                     ) : (
-                      <span>Run Advanced Pathology Scan</span>
+                      <span>{t('disease.uploader.btn_scan')}</span>
                     )}
                   </button>
                 )}
@@ -482,7 +482,7 @@ export const DiseaseDetection: React.FC = () => {
                     onClick={handleReset}
                     className="btn-secondary w-full py-3 min-h-[44px]"
                   >
-                    Scan Another Leaf Photo
+                    {t('disease.uploader.btn_another')}
                   </button>
                 )}
               </div>
@@ -541,13 +541,13 @@ export const DiseaseDetection: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex flex-wrap gap-2 items-center">
                       <span className={`text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase border ${getConditionBadgeStyle(assessment.condition)}`}>
-                        {assessment.condition.replace(/_/g, ' ')}
+                        {t(`disease.condition.${assessment.condition}`, { defaultValue: assessment.condition.replace(/_/g, ' ') })}
                       </span>
                       <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${getSeverityBadgeStyle(assessment.severity)}`}>
-                        {assessment.severity} Severity
+                        {t(`disease.severity.${assessment.severity}`, { defaultValue: assessment.severity })}
                       </span>
                       <span className="text-[10px] font-bold bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-dark-300 px-2 py-0.5 rounded-full uppercase">
-                        {assessment.confidence} Confidence ({(assessment.confidenceScore * 100).toFixed(0)}%)
+                        {t(`disease.confidence.${assessment.confidence}`, { defaultValue: assessment.confidence })} ({(assessment.confidenceScore * 100).toFixed(0)}%)
                       </span>
                     </div>
                     
@@ -572,7 +572,7 @@ export const DiseaseDetection: React.FC = () => {
                 {assessment.environmentalContext && (
                   <div className="bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/20 p-4 rounded-2xl space-y-2">
                     <h4 className="font-bold text-xs md:text-sm text-emerald-800 dark:text-emerald-400 flex items-center gap-1.5">
-                      <Activity size={16} /> Environmental & Hydro-Risk Context
+                      <Activity size={16} /> {t('disease.sections.env_context')}
                     </h4>
                     <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed">
                       {assessment.environmentalContext.favorabilityNote}
@@ -598,7 +598,7 @@ export const DiseaseDetection: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200 flex items-center gap-1.5 mb-2">
-                      <AlertTriangle className="text-amber-500" size={16} /> Observed Symptoms
+                      <AlertTriangle className="text-amber-500" size={16} /> {t('disease.sections.symptoms')}
                     </h4>
                     <ul className="space-y-1 bg-gray-50/50 dark:bg-dark-850/30 p-3 rounded-2xl border border-gray-150 dark:border-dark-800/20">
                       {assessment.symptoms?.map((sym: string, sIdx: number) => (
@@ -612,7 +612,7 @@ export const DiseaseDetection: React.FC = () => {
 
                   <div>
                     <h4 className="font-bold text-xs md:text-sm text-gray-800 dark:text-dark-200 flex items-center gap-1.5 mb-2">
-                      <AlertTriangle className="text-red-500" size={16} /> Pathogen / Stress Causes
+                      <AlertTriangle className="text-red-500" size={16} /> {t('disease.sections.causes')}
                     </h4>
                     <ul className="space-y-1 bg-gray-50/50 dark:bg-dark-850/30 p-3 rounded-2xl border border-gray-150 dark:border-dark-800/20">
                       {assessment.possibleCauses?.map((cause: string, idx: number) => (
@@ -629,7 +629,7 @@ export const DiseaseDetection: React.FC = () => {
                 {assessment.recommendedActions && assessment.recommendedActions.length > 0 && (
                   <div className="space-y-2.5">
                     <h4 className="font-extrabold text-xs md:text-sm text-gray-800 dark:text-dark-200 flex items-center gap-1.5">
-                      <Sparkles size={16} className="text-brand-600" /> Agronomic Action Plan
+                      <Sparkles size={16} className="text-brand-600" /> {t('disease.sections.action_plan')}
                     </h4>
                     <div className="grid grid-cols-1 gap-2.5">
                       {assessment.recommendedActions.map((act: any, aIdx: number) => (
@@ -655,16 +655,16 @@ export const DiseaseDetection: React.FC = () => {
                 {assessment.pesticideDetails && (
                   <div className="bg-brand-50/20 dark:bg-brand-950/5 border border-brand-100/50 dark:border-brand-900/10 p-4 rounded-3xl space-y-3">
                     <h4 className="font-extrabold text-sm text-brand-800 dark:text-brand-400 flex items-center gap-1.5 border-b border-brand-100 dark:border-brand-900/25 pb-2">
-                      <Sparkles size={16} /> Agronomic Treatment Guidelines
+                      <Sparkles size={16} /> {t('disease.sections.treatment')}
                     </h4>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs md:text-sm">
                       <div>
-                        <span className="font-bold text-gray-400 block text-[10px] uppercase">Active Ingredient</span>
+                        <span className="font-bold text-gray-400 block text-[10px] uppercase">{t('disease.sections.active_ingredient')}</span>
                         <span className="font-bold text-gray-800 dark:text-dark-200">{assessment.pesticideDetails.localName} ({assessment.pesticideDetails.englishName})</span>
                       </div>
                       <div>
-                        <span className="font-bold text-gray-400 block text-[10px] uppercase">Example Formulations</span>
+                        <span className="font-bold text-gray-400 block text-[10px] uppercase">{t('disease.sections.formulations')}</span>
                         <span className="font-medium text-gray-800 dark:text-dark-300">{assessment.pesticideDetails.brands?.join(', ')}</span>
                       </div>
                     </div>
@@ -680,7 +680,7 @@ export const DiseaseDetection: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-emerald-50/20 dark:bg-emerald-950/5 border border-emerald-100/50 dark:border-emerald-900/10 p-4 rounded-2xl">
                     <h4 className="font-bold text-xs md:text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mb-2.5">
-                      <CheckCircle2 size={16} /> Organic & Cultural Solutions
+                      <CheckCircle2 size={16} /> {t('disease.sections.organic')}
                     </h4>
                     <ul className="space-y-1.5">
                       {assessment.organicTreatment?.map((item: string, idx: number) => (
@@ -694,7 +694,7 @@ export const DiseaseDetection: React.FC = () => {
 
                   <div className="bg-red-50/20 dark:bg-red-950/5 border border-red-100/50 dark:border-red-900/10 p-4 rounded-2xl">
                     <h4 className="font-bold text-xs md:text-sm text-red-600 dark:text-red-400 flex items-center gap-1.5 mb-2.5">
-                      <ShieldAlert size={16} /> Chemical Protection Options
+                      <ShieldAlert size={16} /> {t('disease.sections.chemical')}
                     </h4>
                     <ul className="space-y-1.5">
                       {assessment.chemicalTreatment?.map((item: string, idx: number) => (
@@ -719,7 +719,7 @@ export const DiseaseDetection: React.FC = () => {
                       onClick={handleAskExpert}
                       className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm min-h-[40px] transition-colors"
                     >
-                      <MessageSquare size={14} /> Ask an Expert Specialist
+                      <MessageSquare size={14} /> {t('disease.actions.ask_expert')}
                     </button>
                     {user && (
                       <button
@@ -727,7 +727,7 @@ export const DiseaseDetection: React.FC = () => {
                         className="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 font-bold rounded-xl text-xs flex items-center gap-1.5 border border-brand-200/50 min-h-[40px] transition-colors"
                       >
                         <Calendar size={14} /> 
-                        {assessment.followUpStatus === 'scheduled' ? 'Follow-up Scheduled' : 'Schedule Re-check'}
+                        {assessment.followUpStatus === 'scheduled' ? t('disease.actions.recheck_scheduled') : t('disease.actions.schedule_recheck')}
                       </button>
                     )}
                   </div>
@@ -736,16 +736,16 @@ export const DiseaseDetection: React.FC = () => {
                     onClick={handleDownloadPdf}
                     className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm min-h-[40px] transition-colors"
                   >
-                    <Download size={14} /> Download Report PDF
+                    <Download size={14} /> {t('disease.actions.download_pdf')}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <FileText size={48} className="text-gray-300 dark:text-dark-800 mb-3" />
-                <p className="font-bold text-sm text-gray-700 dark:text-dark-300">No active disease scan loaded</p>
+                <p className="font-bold text-sm text-gray-700 dark:text-dark-300">{t('disease.empty.title')}</p>
                 <p className="text-[11px] text-gray-400 mt-0.5 max-w-sm text-center">
-                  Upload a leaf photo on the left panel to execute an advanced pathology diagnosis.
+                  {t('disease.empty.desc')}
                 </p>
               </div>
             )}

@@ -168,6 +168,45 @@ export class DiseaseAnalysisService {
    * Return a safe fallback if Gemini service is offline
    */
   private static getFallbackResult(crop?: string, lang: string = 'en'): DiseaseAnalysisResult {
+    try {
+      const mockData = require('../GeminiService').getLocalizedMockData(lang);
+      if (mockData && mockData.disease) {
+        const d = mockData.disease;
+        return {
+          crop: crop || 'Crop Leaf',
+          condition: 'POSSIBLE_DISEASE',
+          diseaseName: d.name || 'Early Leaf Spot Symptom',
+          localName: d.localName || 'Leaf Spot / Discoloration',
+          scientificName: d.scientificName || 'Alternaria solani',
+          confidence: 'moderate',
+          confidenceScore: d.confidenceScore || 0.75,
+          severity: 'moderate',
+          symptoms: d.symptoms || ['Small dark circular spots on upper leaf surface', 'Yellow halo surrounding spot margin'],
+          evidence: [
+            { label: 'Visual Pattern', value: 'Concentric necrotic spots' },
+            { label: 'Affected Part', value: 'Leaf Blade' }
+          ],
+          possibleCauses: d.causes || ['Fungal spore germination under high humidity', 'Restricted airflow in foliage'],
+          organicTreatment: d.organicTreatment || ['Spray Neem oil formulation (5ml/L water) in early morning'],
+          chemicalTreatment: d.chemicalTreatment || ['Consult local agro-dealer for registered copper oxychloride / mancozeb spray'],
+          pesticideDetails: d.pesticideDetails,
+          preventiveTips: d.preventiveTips || ['Maintain adequate plant spacing for foliage aeration'],
+          limitations: lang === 'gu'
+            ? 'આ નિદાન એઆઈ ઇમેજ વિશ્લેષણ પર આધારિત છે. મોટો રાસાયણિક છંટકાવ કરતા પહેલા સ્થાનિક કૃષિ નિષ્ણાતની સલાહ લો.'
+            : lang === 'hi'
+            ? 'यह निदान एआई छवि विश्लेषण पर आधारित है। कोई भी प्रमुख रासायनिक छिड़काव करने से पहले स्थानीय कृषि विशेषज्ञ से सलाह लें।'
+            : 'Image analysis complete. Confirm with a field expert before applying chemical controls.',
+          chemicalSafetyNotice: lang === 'gu'
+            ? 'મહત્વપૂર્ણ સુરક્ષા સૂચના: દવા છાંટતા પહેલા હંમેશા કૃષિ નિષ્ણાત પાસેથી માત્રા અને સૂચનાઓ ચકાસો.'
+            : lang === 'hi'
+            ? 'महत्वपूर्ण सुरक्षा सूचना: कीटनाशक का उपयोग करने से पहले हमेशा कृषि विशेषज्ञ से मात्रा और सुरक्षा नियमों का सत्यापन करें।'
+            : 'Follow locally approved agricultural guidance or consult a qualified agronomist before applying chemicals.'
+        };
+      }
+    } catch (err) {
+      console.warn('[DiseaseAnalysisService] Failed to load localized mock data:', err);
+    }
+
     return {
       crop: crop || 'Crop Leaf',
       condition: 'POSSIBLE_DISEASE',

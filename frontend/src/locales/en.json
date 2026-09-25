@@ -49,7 +49,75 @@
     "read_aloud": "Read Aloud",
     "stop": "Stop",
     "copied": "Copied to clipboard!",
-    "shared": "Advisory shared successfully!"
+    "shared": "Advisory shared successfully!",
+    "success": "Success",
+    "error": "Error",
+    "retry": "Retry",
+    "next": "Next",
+    "prev": "Previous",
+    "search": "Search"
+  },
+  "disease": {
+    "title": "Advanced Disease Intelligence Engine",
+    "subtitle": "Multimodal AI leaf analysis combined with farm context, weather risk signals, and structured agronomic action plans.",
+    "tabs": {
+      "scan": "Scan & Diagnose",
+      "history": "Scan History"
+    },
+    "uploader": {
+      "title": "Leaf Photo Uploader",
+      "context_title": "Farm & Crop Context (Optional)",
+      "target_farm": "Target Farm",
+      "crop_type": "Crop Type",
+      "growth_stage": "Growth Stage",
+      "farmer_notes": "Farmer Notes / Observations",
+      "drag_drop": "Upload leaf photo",
+      "file_limits": "Supports JPG, PNG, WEBP up to 10MB",
+      "btn_scan": "Run Advanced Pathology Scan",
+      "btn_scanning": "Evaluating visual symptoms & environmental risk signals...",
+      "btn_another": "Scan Another Leaf Photo"
+    },
+    "condition": {
+      "HEALTHY": "Healthy Crop",
+      "POSSIBLE_DISEASE": "Possible Disease Infection",
+      "POSSIBLE_PEST_DAMAGE": "Possible Pest Damage",
+      "NUTRIENT_RELATED_SYMPTOMS": "Nutrient Deficiency Symptoms",
+      "ENVIRONMENTAL_STRESS": "Environmental Stress",
+      "UNCERTAIN": "Uncertain Diagnosis",
+      "INSUFFICIENT_IMAGE_QUALITY": "Image Quality Unclear"
+    },
+    "severity": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "uncertain": "Uncertain"
+    },
+    "confidence": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High"
+    },
+    "sections": {
+      "env_context": "Environmental & Hydro-Risk Context",
+      "symptoms": "Observed Symptoms",
+      "causes": "Pathogen / Stress Causes",
+      "action_plan": "Agronomic Action Plan",
+      "treatment": "Agronomic Treatment Guidelines",
+      "organic": "Organic & Cultural Solutions",
+      "chemical": "Chemical Protection Options",
+      "active_ingredient": "Active Ingredient",
+      "formulations": "Example Formulations"
+    },
+    "actions": {
+      "ask_expert": "Ask an Expert Specialist",
+      "schedule_recheck": "Schedule Re-check",
+      "recheck_scheduled": "Follow-up Scheduled",
+      "download_pdf": "Download Report PDF"
+    },
+    "empty": {
+      "title": "No active disease scan loaded",
+      "desc": "Upload a leaf photo on the left panel to execute an advanced pathology diagnosis."
+    }
   },
   "empty": {
     "no_mandi": "No mandi price is currently available for this commodity.",

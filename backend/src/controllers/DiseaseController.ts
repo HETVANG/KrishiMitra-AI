@@ -14,7 +14,8 @@ export class DiseaseController {
         return res.status(400).json({ success: false, message: 'Please upload a clear leaf image file.' });
       }
 
-      const lang = (req.query.lang as string) || (req.body.language as string) || (req.user?.settings?.language) || 'en';
+      const headerLang = (req.headers['accept-language'] as string)?.split(',')[0]?.trim();
+      const lang = (req.query.lang as string) || (req.body.language as string) || headerLang || (req.user?.settings?.language) || 'en';
       const farmId = req.body.farmId || req.query.farmId || undefined;
       const crop = req.body.crop || req.query.crop || undefined;
       const variety = req.body.variety || undefined;

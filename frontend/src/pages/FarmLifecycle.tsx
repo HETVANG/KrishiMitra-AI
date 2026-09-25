@@ -299,7 +299,19 @@ export const FarmLifecycle: React.FC = () => {
   const completedCyclesList = cropCycles.filter(c => c.status === 'COMPLETED');
 
   const currentSelectedCycle = cropCycles.find(c => c._id === selectedCycleId);
-  const intelData = cycleIntelligence?.intelligence;
+  const rawIntel = cycleIntelligence?.intelligence || cycleIntelligence?.data || cycleIntelligence;
+  const intelData = rawIntel ? {
+    ...rawIntel,
+    cropCycle: rawIntel.cropCycle || rawIntel.cycle || currentSelectedCycle,
+    growthStage: rawIntel.growthStage || rawIntel.growthStageInfo || {
+      daysSincePlanting: 0,
+      estimatedStage: currentSelectedCycle?.currentStage || 'VEGETATIVE',
+      progressPercentage: 50,
+      daysRemainingToHarvest: 60,
+      expectedHarvestDate: currentSelectedCycle?.expectedHarvestDate
+    },
+    marketPrices: rawIntel.marketPrices || rawIntel.marketIntelligence
+  } : null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 md:p-6 transition-colors">

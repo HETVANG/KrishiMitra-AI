@@ -77,7 +77,18 @@ export class CropCycleController {
 
       const cycleId = req.params.id;
       const intelligence = await CropLifecycleService.getCropCycleIntelligence(req.user._id.toString(), cycleId);
-      return res.json({ success: true, ...intelligence });
+      const normalizedIntel = {
+        ...intelligence,
+        cropCycle: intelligence.cycle,
+        growthStage: intelligence.growthStageInfo,
+        marketPrices: intelligence.marketIntelligence
+      };
+      return res.json({
+        success: true,
+        ...normalizedIntel,
+        data: normalizedIntel,
+        intelligence: normalizedIntel
+      });
     } catch (error: any) {
       return res.status(404).json({ success: false, message: error.message });
     }

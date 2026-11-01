@@ -17,7 +17,7 @@ async function runStep55FarmerPilotValidationTests() {
   // Test 1: Pilot Participant Scope & Ethical Consent Protocol Check
   console.log('\nTest 1: Auditing Pilot Scope & Participant Availability...');
   console.log('- Real Pilot Participants Status: REAL_PILOT_PARTICIPANTS_NOT_AVAILABLE');
-  console.log('- Ethical Consent Protocol: Configured (Privacy.tsx & support@krishimitra.ai purge path)');
+  console.log('- Ethical Consent Protocol: Configured (Privacy.tsx & support@thekhedut.ai purge path)');
   console.log('- Data Privacy Guard: Zero fabricated farmer identities or fake satisfaction metrics');
   console.log('✓ Pilot Scope & Participant Availability verified.');
 

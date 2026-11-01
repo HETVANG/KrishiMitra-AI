@@ -83,7 +83,7 @@ export class StripeBillingService implements IBillingService {
     return {
       success: true,
       sessionId: `stripe_sess_${Math.random().toString(36).substring(7)}`,
-      paymentUrl: `https://checkout.stripe.com/pay/mock_krishimitra_${input.planType}_${finalAmount}`,
+      paymentUrl: `https://checkout.stripe.com/pay/mock_thekhedut_${input.planType}_${finalAmount}`,
       amount: finalAmount,
       message: 'Stripe mock session created successfully.'
     };
@@ -128,8 +128,8 @@ export class UpiBillingService implements IBillingService {
     const finalAmount = DiscountEngine.calculateFinalPrice(basePrice, input);
 
     // Generate standard BHIM UPI Deep Link QR code string
-    // e.g. upi://pay?pa=krishimitra@upi&pn=KrishiMitraAI&am=Amount
-    const upiLink = `upi://pay?pa=krishimitra@upi&pn=KrishiMitra%20AI&am=${finalAmount}&cu=INR&tn=KrishiMitra%20${input.planType}%2520Upgrade`;
+    // e.g. upi://pay?pa=thekhedut@upi&pn=TheKhedut&am=Amount
+    const upiLink = `upi://pay?pa=thekhedut@upi&pn=The%20Khedut&am=${finalAmount}&cu=INR&tn=TheKhedut%20${input.planType}%2520Upgrade`;
 
     return {
       success: true,

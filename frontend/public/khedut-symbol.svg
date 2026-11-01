@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- The Khedut Standalone Emblem -->
+  <!-- Base Stalk -->
+  <path d="M18 12C18 10.8954 18.8954 10 20 10H25C26.1046 10 27 10.8954 27 12V52C27 53.1046 26.1046 54 25 54H20C18.8954 54 18 53.1046 18 52V12Z" fill="#245B38"/>
+  <!-- Leaf Upper Diagonal -->
+  <path d="M27 33C31 28 38 19 49.5 14C50.6 13.5 51.8 14.5 51.5 15.7C49 24.5 43.5 32.5 36.5 36.5L27 33Z" fill="#A5C96A"/>
+  <!-- Agricultural Contour Furrow Lower Diagonal -->
+  <path d="M31.5 31.5L47.8 49.8C48.5 50.6 47.9 52 46.8 52H39.8C39.1 52 38.4 51.6 37.9 51L27 38V31.5H31.5Z" fill="#4F8A4B"/>
+  <!-- Sprout Node -->
+  <circle cx="22.5" cy="12.5" r="2.5" fill="#A5C96A"/>
+</svg>

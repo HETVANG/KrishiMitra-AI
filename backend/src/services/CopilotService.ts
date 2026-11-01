@@ -131,7 +131,7 @@ export class CopilotService {
       try {
         const model = genAI.getGenerativeModel({ model: geminiModel });
 
-        const systemPrompt = `You are KrishiMitra AI Farm Copilot, a world-class agronomic intelligence engine.
+        const systemPrompt = `You are THE KHEDUT AI Farm Copilot, a world-class agronomic intelligence engine.
 Your task is to provide precise, multi-factor agricultural guidance based on the farmer's real context.
 
 FARM CONTEXT PROVIDED (Verified Data):
@@ -166,7 +166,7 @@ Required JSON Schema:
   "warnings": ["Warning or precaution in ${targetLang}"],
   "requiredInformation": ["Missing data field if any"],
   "confidence": 0.92,
-  "sources": ["KrishiMitra Context Engine", "Open-Meteo Weather", "Agmarknet Market", "Gemini Pathology"]
+  "sources": ["The Khedut Context Engine", "Open-Meteo Weather", "Agmarknet Market", "Gemini Pathology"]
 }`;
 
         const promptWithContext = `${systemPrompt}\n\nFarmer Question: "${question}"`;
@@ -198,7 +198,7 @@ Required JSON Schema:
           warnings: parsed.warnings || ['Consult a certified agronomist for critical crop decisions.'],
           requiredInformation: parsed.requiredInformation || context.meta.missingFields,
           confidence: parsed.confidence || 0.88,
-          sources: parsed.sources || ['KrishiMitra Farm Context Engine'],
+          sources: parsed.sources || ['The Khedut Farm Context Engine'],
           generatedAt: new Date().toISOString()
         };
       } catch (err) {
@@ -249,7 +249,7 @@ Required JSON Schema:
       actions.push({
         title: 'Run Leaf Disease Scan',
         priority: 'high',
-        reason: 'Upload a clear photograph to KrishiMitra Disease Detection to verify pathogen.'
+        reason: 'Upload a clear photograph to The Khedut Disease Detection to verify pathogen.'
       });
       actions.push({
         title: 'Apply Foliar Urea Spray',
@@ -302,7 +302,7 @@ Required JSON Schema:
       warnings,
       requiredInformation: requiredInfo,
       confidence: 0.85,
-      sources: ['KrishiMitra Context Engine', 'Local Agronomic Knowledge Base'],
+      sources: ['The Khedut Context Engine', 'Local Agronomic Knowledge Base'],
       generatedAt: new Date().toISOString()
     };
   }

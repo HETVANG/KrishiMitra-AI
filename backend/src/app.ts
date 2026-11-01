@@ -171,7 +171,7 @@ app.use('/api/video-consultation', videoConsultationRoutes);
 app.get('/', (req, res) => {
   res.status(200).json({
     status: 'online',
-    service: 'KrishiMitra AI API Server',
+    service: 'THE KHEDUT API Server',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });

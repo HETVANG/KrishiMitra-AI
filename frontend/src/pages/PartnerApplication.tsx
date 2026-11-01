@@ -84,7 +84,7 @@ export const PartnerApplication: React.FC = () => {
         </div>
         <h2 className="text-lg font-extrabold text-gray-900 dark:text-dark-50">Partner Application Submitted</h2>
         <p className="text-xs text-gray-500 max-w-md mx-auto">
-          Your application to join KrishiMitra AI's verified ecosystem network has been received. Our administrative team will review your organization details.
+          Your application to join THE KHEDUT verified ecosystem network has been received. Our administrative team will review your organization details.
         </p>
         <button
           onClick={() => navigate('/partners/portal')}
@@ -106,7 +106,7 @@ export const PartnerApplication: React.FC = () => {
           <div>
             <h1 className="text-xl font-extrabold text-gray-900 dark:text-dark-50">Partner Application</h1>
             <p className="text-xs text-gray-500">
-              Apply to join KrishiMitra AI's verified agricultural distribution & advisory network.
+              Apply to join THE KHEDUT verified agricultural distribution & advisory network.
             </p>
           </div>
         </div>

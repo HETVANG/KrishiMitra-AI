@@ -9,17 +9,25 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#F0FDF4',
-          100: '#DCFCE7',
-          200: '#BBF7D0',
-          300: '#86EFAC',
-          400: '#4ADE80',
-          500: '#22C55E', // Main primary green
-          600: '#16A34A',
-          700: '#15803D',
-          800: '#166534',
-          900: '#14532D',
-          950: '#052E16',
+          50: '#F5F8F4',  // Light warm agronomic tint
+          100: '#E6EFE4', // Soft sprout tint
+          200: '#CFE0CB', // Delicate field green
+          300: '#A5C96A', // Sunlit leaf accent
+          400: '#75AB6E', // Vibrant agronomy leaf
+          500: '#4F8A4B', // Natural secondary leaf green
+          600: '#3A723D', // Medium deep field green
+          700: '#245B38', // The Khedut Official Primary Brand Green
+          800: '#1D4A2D', // Deep forest crop green
+          900: '#153621', // Dark agricultural green
+          950: '#0C2014', // Extreme dark crop green
+        },
+        khedut: {
+          primary: '#245B38',
+          secondary: '#4F8A4B',
+          accent: '#A5C96A',
+          bg: '#F7F9F5',
+          text: '#1D2922',
+          muted: '#6B786F',
         },
         dark: {
           50: '#F8FAFC',
@@ -31,16 +39,17 @@ export default {
           600: '#475569',
           700: '#334155',
           800: '#1E293B',
+          850: '#152033',
           900: '#0F172A',
-          950: '#020617', // Dark background
+          950: '#080E1A',
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Outfit', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out forwards',
-        'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'fade-in': 'fadeIn 0.25s ease-out forwards',
+        'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
       keyframes: {
         fadeIn: {
@@ -48,7 +57,7 @@ export default {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { transform: 'translateY(15px)', opacity: '0' },
+          '0%': { transform: 'translateY(12px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         }
       }

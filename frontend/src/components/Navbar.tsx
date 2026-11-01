@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
+import { BrandLogo } from './BrandLogo';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -20,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
     { code: 'en', label: 'English' },
     { code: 'hi', label: 'हिन्दी' },
     { code: 'gu', label: 'ગુજરાતી' },
-    { code: 'mr', label: 'मરાઠી' },
+    { code: 'mr', label: 'मराठी' },
     { code: 'pa', label: 'ਪੰਜਾਬੀ' },
     { code: 'bn', label: 'বাংলা' },
     { code: 'ta', label: 'தமிழ்' },
@@ -33,17 +34,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
 
   const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const lang = e.target.value as any;
-    
-    // 1. Change language in i18next
     i18n.changeLanguage(lang);
-    
-    // 2. Set language in context
     setLanguage(lang);
-    
-    // 3. Save in local storage
     localStorage.setItem('km-lang', lang);
-    
-    // 4. Sync with database
     if (user) {
       try {
         await updateSettings(lang, theme);
@@ -56,7 +49,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
   const handleThemeToggle = async () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     toggleTheme();
-    
     if (user) {
       try {
         await updateSettings(i18n.language as any, nextTheme);
@@ -67,33 +59,41 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-dark-900/80 backdrop-blur-md border-b border-gray-100 dark:border-dark-800/50">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-3 md:px-6 py-2.5 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200/70 dark:border-dark-800/60 shadow-xs">
+      <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {/* Mobile Menu Trigger */}
         <button
           onClick={onMenuToggle}
-          className="p-2 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg lg:hidden"
+          type="button"
+          aria-label="Toggle Navigation Drawer"
+          className="flex items-center justify-center min-w-[42px] min-h-[42px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl lg:hidden transition-colors"
         >
-          <Menu size={20} />
+          <Menu size={22} />
         </button>
         
+        {/* Mobile Brand Emblem for brand presence */}
+        <div className="lg:hidden shrink-0">
+          <BrandLogo variant="symbol" size="sm" />
+        </div>
+
         {/* Page Title */}
-        <h2 className="font-bold text-sm md:text-base text-gray-800 dark:text-dark-100 md:text-xl tracking-tight">
+        <h2 className="font-extrabold text-sm md:text-lg text-slate-800 dark:text-dark-100 tracking-tight truncate">
           {title}
         </h2>
       </div>
 
-      <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex items-center gap-1.5 md:gap-3">
         {/* Workspace Switcher */}
         {user && <WorkspaceSwitcher />}
 
-        {/* Language Picker */}
-        <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-dark-800/50 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg border border-gray-200/50 dark:border-dark-700/30">
-          <Globe size={14} className="text-gray-500 dark:text-dark-400" />
+        {/* Language Selector */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/80 px-2 py-1.5 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px]">
+          <Globe size={15} className="text-slate-500 dark:text-dark-400 shrink-0" />
           <select
             value={i18n.language}
             onChange={handleLanguageChange}
-            className="text-[10px] md:text-xs font-semibold bg-transparent text-gray-700 dark:text-dark-300 focus:outline-none cursor-pointer max-w-[80px] md:max-w-none"
+            aria-label="Select Platform Language"
+            className="text-xs font-bold bg-transparent text-slate-700 dark:text-dark-200 focus:outline-none cursor-pointer max-w-[70px] sm:max-w-none"
           >
             {languagesList.map((lang) => (
               <option key={lang.code} value={lang.code} className="dark:bg-dark-900 text-xs">
@@ -103,38 +103,46 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           </select>
         </div>
 
-        {/* Regional Settings Trigger */}
+        {/* Regional Settings Modal Trigger */}
         {onOpenRegionalSettings && (
           <button
             onClick={onOpenRegionalSettings}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200/50 dark:border-brand-800/40 rounded-lg hover:bg-brand-100 transition-colors"
+            type="button"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/40 rounded-xl hover:bg-brand-100 transition-colors min-h-[38px]"
             title="Configure regional settings"
           >
             <Globe size={14} />
-            <span className="hidden sm:inline">Region</span>
+            <span>Region</span>
           </button>
         )}
 
         {/* Theme Toggle */}
         <button
           onClick={handleThemeToggle}
-          className="p-2 text-gray-600 dark:text-dark-300 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors duration-150"
-          title="Toggle light/dark mode"
+          type="button"
+          aria-label="Toggle Light and Dark Mode"
+          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors"
         >
-          {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-        {/* Avatar Card */}
-        <div className="hidden md:flex items-center gap-2.5 pl-3 border-l border-gray-200 dark:border-dark-800">
-          <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-700 dark:text-brand-400 font-bold uppercase text-xs">
-            {user?.name.slice(0, 2)}
+        {/* User Identity Avatar */}
+        <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-dark-800">
+          <div className="w-8 h-8 rounded-full bg-brand-700 text-white flex items-center justify-center font-black uppercase text-xs shadow-xs">
+            {user?.name?.slice(0, 2) || 'TK'}
           </div>
-          <div className="text-left">
-            <span className="block text-xs font-semibold text-gray-800 dark:text-dark-200 leading-none">{user?.name}</span>
-            <span className="block text-[9px] text-gray-400 font-medium uppercase mt-0.5 leading-none">{user?.role}</span>
+          <div className="text-left max-w-[120px]">
+            <span className="block text-xs font-bold text-slate-800 dark:text-dark-200 truncate leading-none">
+              {user?.name || 'Farmer'}
+            </span>
+            <span className="block text-[9px] text-slate-400 font-semibold uppercase mt-0.5 leading-none">
+              {user?.role || 'Farmer'}
+            </span>
           </div>
         </div>
       </div>
     </header>
   );
 };
+
+export default Navbar;

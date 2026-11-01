@@ -179,7 +179,7 @@ export class AppointmentController {
         }
         if (!appointment.meetLink) {
           const randRoom = Math.random().toString(36).substring(7);
-          appointment.meetLink = `https://meet.jit.si/KrishiMitraConsultation_${randRoom}`;
+          appointment.meetLink = `https://meet.jit.si/TheKhedutConsultation_${randRoom}`;
         }
       }
 

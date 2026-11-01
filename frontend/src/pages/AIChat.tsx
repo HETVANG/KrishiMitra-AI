@@ -62,9 +62,9 @@ export const AIChat: React.FC = () => {
 
   useEffect(() => {
     const greetings: Record<string, string> = {
-      en: 'Hello! I am KrishiMitra AI. I can guide you with weather summaries, crop selections, soil fertility plans, disease remedies, and mandi prices. Ask me anything!',
-      hi: 'नमस्ते! मैं कृषिमित्र एआई हूं। मैं फसल चयन, मौसम, खाद की गणना, पत्ती रोगों के उपचार और मंडी भाव में आपकी मदद कर सकता हूं। मुझसे कुछ भी पूछें!',
-      gu: 'નમસ્તે! હું કૃષિમિત્ર એઆઈ છું. હું તમને પાક પસંદગી, હવામાન, ખાતરનું આયોજન, રોગ નિયંત્રણ અને મંડી ભાવો અંગે મદદ કરી શકું છું. ગમે તે પ્રશ્ન પૂછો!'
+      en: 'Hello! I am THE KHEDUT AI. I can guide you with weather summaries, crop selections, soil fertility plans, disease remedies, and mandi prices. Ask me anything!',
+      hi: 'नमस्ते! मैं THE KHEDUT एआई हूं। मैं फसल चयन, मौसम, खाद की गणना, पत्ती रोगों के उपचार और मंडी भाव में आपकी मदद कर सकता हूं। मुझसे कुछ भी पूछें!',
+      gu: 'નમસ્તે! હું ધ ખેડૂત (THE KHEDUT) એઆઈ છું. હું તમને પાક પસંદગી, હવામાન, ખાતરનું આયોજન, રોગ નિયંત્રણ અને મંડી ભાવો અંગે મદદ કરી શકું છું. ગમે તે પ્રશ્ન પૂછો!'
     };
     const newGreeting = greetings[i18n.language] || greetings.en;
 
@@ -167,7 +167,7 @@ export const AIChat: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'KrishiMitra AI Advisory',
+          title: 'THE KHEDUT Advisory',
           text: text,
         });
       } catch (err) {

@@ -6,11 +6,11 @@ import crypto from 'crypto';
 
 export class ReferralService {
   /**
-   * Generate a unique 8-character referral code (e.g. KRISHIMITRA-A9X2B4) for a user
+   * Generate a unique 8-character referral code (e.g. TK-A9X2B4) for a user
    */
   static generateCode(): string {
     const randomHex = crypto.randomBytes(3).toString('hex').toUpperCase();
-    return `KM-${randomHex}`;
+    return `TK-${randomHex}`;
   }
 
   /**
@@ -18,7 +18,7 @@ export class ReferralService {
    */
   static async getOrCreateReferralCode(userId: string): Promise<string> {
     if (mongoose.connection.readyState !== 1) {
-      return 'KM-OFFLINE';
+      return 'TK-OFFLINE';
     }
 
     const user = await User.findById(userId);

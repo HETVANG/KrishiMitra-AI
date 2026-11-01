@@ -69,7 +69,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ feature, farmId, o
     <div className="bg-white dark:bg-dark-900 border border-gray-150 dark:border-dark-800 rounded-3xl p-5 shadow-sm space-y-3 max-w-md w-full">
       {submitted ? (
         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold py-2">
-          <Check className="w-4 h-4" /> Thank you for your feedback! It helps improve KrishiMitra.
+          <Check className="w-4 h-4" /> Thank you for your feedback! It helps improve The Khedut.
         </div>
       ) : !showDetailedForm ? (
         <div className="flex items-center justify-between gap-4">

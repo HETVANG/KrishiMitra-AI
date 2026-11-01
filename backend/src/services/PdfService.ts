@@ -24,7 +24,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     chemicalTitle: "CHEMICAL CONTROL",
     safetyWarning: "Safety Warning: Use protective gear while spraying chemicals. Consult local agricultural extension officer.",
     importantDisclaimer: "IMPORTANT: This report is an AI-generated advisory. Verify symptoms in the field before applying chemical treatment.",
-    farmerCompanion: "KrishiMitra AI - Farmer Companion",
+    farmerCompanion: "THE KHEDUT - Smart Agriculture Platform",
     farmDetails: "Farm Details",
     recCrops: "Recommended Crops",
     yield: "Expected Yield",
@@ -56,7 +56,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     category: "Category",
     amount: "Amount (Rs)",
     description: "Description",
-    footer: "© 2026 KrishiMitra AI. This is a computer-generated summary advisory report."
+    footer: "© 2026 THE KHEDUT. This is a computer-generated summary advisory report."
   },
   hi: {
     subtitle: "स्मार्ट कृषि मंच - डिजिटल मिट्टी और उपज रिपोर्ट",
@@ -78,7 +78,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     chemicalTitle: "रासायनिक नियंत्रण",
     safetyWarning: "सुरक्षा चेतावनी: रसायनों का छिड़काव करते समय सुरक्षात्मक गियर का उपयोग करें। स्थानीय कृषि विस्तार अधिकारी से परामर्श लें।",
     importantDisclaimer: "महत्वपूर्ण: यह रिपोर्ट एक एआई-जनरेटेड सलाह है। कृपया रासायनिक उपचार से पहले खेत में लक्षणों की पुष्टि करें।",
-    farmerCompanion: "कृषिमित्र एआई - किसान साथी",
+    farmerCompanion: "THE KHEDUT - किसान साथी",
     farmDetails: "खेत का विवरण",
     recCrops: "अनुशंसित फसलें",
     yield: "अपेक्षित उपज",
@@ -110,7 +110,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     category: "श्रेणी",
     amount: "राशि (रुपये)",
     description: "विवरण",
-    footer: "© 2026 कृषिमित्र एआई। यह एक कंप्यूटर जनित सलाह रिपोर्ट है।"
+    footer: "© 2026 THE KHEDUT। यह एक कंप्यूटर जनित सलाह रिपोर्ट है।"
   },
   gu: {
     subtitle: "સ્માર્ટ કૃષિ મંચ - ડિજિટલ જમીન અને પાક અહેવાલ",
@@ -132,7 +132,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     chemicalTitle: "રાસાયણિક નિયંત્રણ",
     safetyWarning: "સુરક્ષા ચેતવણી: રસાયણોનો છંટકાવ કરતી વખતે રક્ષણાત્મક સાધનોનો ઉપયોગ કરો. સ્થાનિક કૃષિ અધિકારીની સલાહ લો.",
     importantDisclaimer: "મહત્વપૂર્ણ: આ રિપોર્ટ એઆઈ દ્વારા જનરેટ કરેલ માર્ગદર્શિકા છે. રાસાયણિક સારવાર કરતા પહેલા ખેતરમાં તપાસ કરો.",
-    farmerCompanion: "કૃષિમિત્ર એઆઈ - ખેડૂત સાથી",
+    farmerCompanion: "ધ ખેડૂત (THE KHEDUT) - ખેડૂત સાથી",
     farmDetails: "ખેતરની વિગતો",
     recCrops: "ભલામણ કરેલ પાકો",
     yield: "અપેક્ષિત ઉત્પાદન",
@@ -164,7 +164,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     category: "શ્રેણી",
     amount: "રકમ (રૂ)",
     description: "વર્ણન",
-    footer: "© ૨૦૨૬ કૃષિમિત્ર એઆઈ. આ કમ્પ્યુટર દ્વારા બનાવેલ રિપોર્ટ છે."
+    footer: "© ૨૦૨૬ THE KHEDUT. આ કમ્પ્યુટર દ્વારા બનાવેલ રિપોર્ટ છે."
   },
   mr: {
     subtitle: "स्मार्ट कृषी मंच - डिजिटल माती आणि पीक अहवाल",
@@ -186,7 +186,7 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     chemicalTitle: "रासायनिक नियंत्रण",
     safetyWarning: "सुरक्षा इशारा: रसायनांची फवारणी करताना संरक्षक साधने वापरा. स्थानिक कृषी अधिकाऱ्याचा सल्ला घ्या.",
     importantDisclaimer: "महत्त्वाचे: हा अहवाल एक एआय-जनरेट केलेला सल्ला आहे. कृपया रासायनिक उपचारापूर्वी शेतात लक्षणे तपासा.",
-    farmerCompanion: "कृषिमित्र एआय - शेतकरी मित्र",
+    farmerCompanion: "THE KHEDUT - शेतकरी मित्र",
     farmDetails: "शेताचा तपशील",
     recCrops: "शिफारस केलेली पिके",
     yield: "अपेक्षित उत्पन्न",
@@ -312,7 +312,7 @@ export class PdfService {
     doc.rect(0, 0, 595.28, 120).fill(primaryColor);
 
     // Title
-    doc.font(boldFont).fillColor('#FFFFFF').fontSize(24).text('KRISHIMITRA AI', 50, 30);
+    doc.font(boldFont).fillColor('#FFFFFF').fontSize(24).text('THE KHEDUT', 50, 30);
 
     // Subtitle
     doc.font(regularFont).fontSize(10).text(this.t('subtitle', language), 50, 65);
@@ -438,7 +438,7 @@ export class PdfService {
       doc.rect(0, 0, pageWidth, 65).fill(primary);
 
       // Title at Top Left
-      doc.font(boldFont).fillColor('#FFFFFF').fontSize(18).text('KrishiMitra AI', leftMargin, 12);
+      doc.font(boldFont).fillColor('#FFFFFF').fontSize(18).text('THE KHEDUT', leftMargin, 12);
 
       // Date at Top Right
       const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {

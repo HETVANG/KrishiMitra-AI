@@ -128,13 +128,13 @@ export class DiseaseRecommendationService {
       plan.push({
         actionType: 'MONITOR',
         title: 'बीमारी के लक्षणों पर नज़र रखें',
-        details: 'अगले 48 से 72 घंटों में रोजाना प्रभावित पत्तियों की जांच करें। यदि धब्बे बढ़ते हैं तो कृषिमित्र द्वारा दोबारा स्कैन करें।'
+        details: 'अगले 48 से 72 घंटों में रोजाना प्रभावित पत्तियों की जांच करें। यदि धब्बे बढ़ते हैं तो THE KHEDUT द्वारा दोबारा स्कैन करें।'
       });
     } else {
       plan.push({
         actionType: 'MONITOR',
         title: 'Track Symptom Progression',
-        details: 'Check affected foliage daily over the next 48 to 72 hours. Re-scan using KrishiMitra if lesion size or yellowing increases.'
+        details: 'Check affected foliage daily over the next 48 to 72 hours. Re-scan using THE KHEDUT if lesion size or yellowing increases.'
       });
     }
 

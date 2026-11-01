@@ -363,7 +363,7 @@ export class WeatherService {
       forecast,
       alerts,
       aiAdvice,
-      source: 'KrishiMitra Fallback Weather Engine',
+      source: 'The Khedut Fallback Weather Engine',
       observedAt: nowIso,
       fetchedAt: nowIso,
       freshness: 'FALLBACK'

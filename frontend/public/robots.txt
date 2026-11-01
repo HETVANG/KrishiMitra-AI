@@ -1,5 +1,5 @@
 # ==========================================
-# robots.txt for KrishiMitra AI Portal
+# robots.txt for THE KHEDUT Portal
 # ==========================================
 
 User-agent: *
@@ -17,4 +17,4 @@ Disallow: /expenses/
 Disallow: /reports/
 Disallow: /pricing/
 
-Sitemap: https://krishimitra-ai.vercel.app/sitemap.xml
+Sitemap: https://thekhedut.ai/sitemap.xml

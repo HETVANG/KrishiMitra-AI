@@ -102,7 +102,7 @@ export const DEFAULT_PLATFORM_PROVIDERS: ProviderDefinition[] = [
   },
   {
     id: 'expert_consultation_network',
-    name: 'KrishiMitra Certified Agronomist Network',
+    name: 'The Khedut Certified Agronomist Network',
     slug: 'agronomist-consulting-network',
     providerType: 'EXPERT_NETWORK',
     description: 'Verified direct agricultural expert advice and plant disease diagnostic consultations.',

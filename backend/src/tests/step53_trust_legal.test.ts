@@ -20,7 +20,7 @@ async function runStep53TrustLegalTests() {
     { title: 'Privacy Policy', path: 'frontend/src/pages/Privacy.tsx', disclosures: ['Location telemetry', 'Leaf analysis uploads', 'Razorpay credentials', 'Data deletion rights'] },
     { title: 'Terms of Service', path: 'frontend/src/pages/Terms.tsx', disclosures: ['Platform usage guidelines', 'Agricultural advisory disclaimer', 'Subscription terms', 'Limitation of liability'] },
     { title: 'Refund Policy', path: 'frontend/src/pages/RefundPolicy.tsx', disclosures: ['Digital asset immediate delivery', '7-day double billing refund window', '5-7 working days processing time'] },
-    { title: 'Contact Page', path: 'frontend/src/pages/Contact.tsx', disclosures: ['support@krishimitra.ai', 'Noida, UP, India', 'Response time under 24h'] },
+    { title: 'Contact Page', path: 'frontend/src/pages/Contact.tsx', disclosures: ['support@thekhedut.ai', 'Innovation Office', 'Response time under 24h'] },
     { title: 'Support FAQ', path: 'frontend/src/pages/Support.tsx', disclosures: ['Disease scanner operation', 'AI accuracy limitations', 'Mandi unpriced warnings'] },
     { title: 'About Page', path: 'frontend/src/pages/About.tsx', disclosures: ['Mission statement', 'Farmer first native language support', 'Technology stack'] }
   ];
@@ -75,7 +75,7 @@ async function runStep53TrustLegalTests() {
     throw new Error('Test 4 Failed: Secret credentials found unmasked in environment report');
   }
 
-  console.log('- Account Purge Support Channel: support@krishimitra.ai');
+  console.log('- Account Purge Support Channel: support@thekhedut.ai');
   console.log('- Secret Masking: Verified 100% backend isolated');
   console.log('✓ Data Privacy Controls & Account Deletion Disclosures verified.');
 

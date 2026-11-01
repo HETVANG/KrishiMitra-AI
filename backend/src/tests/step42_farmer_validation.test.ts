@@ -96,14 +96,14 @@ async function runStep42FarmerValidationTests() {
   // Log interview
   const interview = await UserResearchService.logInterview({
     participantId: participant._id,
-    interviewer: 'KrishiMitra Product Specialist',
+    interviewer: 'The Khedut Product Specialist',
     workflowObserved: 'Market price check and disease scan upload',
     keyObservations: ['Farmer found market comparison table very clear', 'Audio search preferred over typing'],
     quotes: ['Voice command in Gujarati makes checking mandi prices very fast'],
     notes: 'Participant interested in follow-up research for irrigation automation.'
   });
 
-  assert.strictEqual(interview.interviewer, 'KrishiMitra Product Specialist');
+  assert.strictEqual(interview.interviewer, 'The Khedut Product Specialist');
 
   // Withdraw consent
   const withdrawn = await UserResearchService.withdrawConsent(participant._id);

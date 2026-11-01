@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Sprout, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { BRAND } from '../config/brand';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const Login: React.FC = () => {
   const { login, token } = useAuth();
@@ -47,30 +49,27 @@ export const Login: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-dark-950">
       {/* Visual Banner on Left */}
       <div className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1470')` }}>
-        <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-brand-950/60 backdrop-blur-[2px]" />
 
         <div className="absolute bottom-16 left-16 right-16 z-20 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 shadow-lg">
-              <Sprout size={28} />
-            </div>
-            <h1 className="font-extrabold text-2xl tracking-tight">KrishiMitra AI</h1>
+          <div className="mb-4">
+            <BrandLogo variant="horizontal" size="lg" className="text-white" />
           </div>
-          <h2 className="font-extrabold text-4xl mb-4 leading-tight">Empowering Indian Farmers with Smart Agricultural AI.</h2>
-          <p className="text-brand-100 font-medium max-w-md">Access hyper-local weather forecast, identify leaf diseases using image scan, verify mandi prices, check eligible subsidies, and chat with AI experts instantly.</p>
+          <h2 className="font-black text-3xl md:text-4xl mb-4 leading-tight">Empowering Indian Farmers with Smart Agricultural Intelligence.</h2>
+          <p className="text-brand-100 font-medium max-w-md">Access hyper-local weather forecast, diagnose crop diseases, verify APMC mandi prices, check eligible subsidies, and consult agronomy experts.</p>
         </div>
       </div>
 
       {/* Form Area on Right */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 dark:border-dark-800/30">
+        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-200/80 dark:border-dark-800/50">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex lg:hidden items-center justify-center w-12 h-12 bg-brand-500 rounded-2xl text-white mb-3 shadow-md shadow-brand-500/20">
-              <Sprout size={24} />
+            <div className="inline-flex lg:hidden mb-4">
+              <BrandLogo variant="horizontal" size="md" />
             </div>
-            <h2 className="text-3xl font-extrabold text-gray-800 dark:text-dark-100 tracking-tight">Welcome Back</h2>
-            <p className="text-sm text-gray-500 dark:text-dark-400 mt-1.5 font-medium">Please enter your credentials to access your account</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Welcome Back</h2>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Please enter your credentials to access your farm</p>
           </div>
 
           {/* Alerts */}

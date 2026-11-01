@@ -72,14 +72,14 @@ async function runStep58ContinuousProductIntelligenceTests() {
   // Test 5: Privacy-First Analytics & Data Purge Guard Check
   console.log('\nTest 5: Verifying Privacy-First Analytics & Data Purge Guards...');
   console.log('- Privacy Guard: Zero unmasked secrets, zero precise GPS coordinates stored in generic analytics');
-  console.log('- Account Purge Channel: support@krishimitra.ai (Privacy.tsx)');
+  console.log('- Account Purge Channel: support@thekhedut.ai (Privacy.tsx)');
   console.log('✓ Privacy-First Analytics & Data Purge Guards verified.');
 
   // Test 6: Compiling Complete Product Intelligence Matrix
   console.log('\nTest 6: Compiling Final Continuous Product Intelligence Matrix...');
   const intelligenceMatrix: IntelligenceAuditItem[] = [
     { area: 'Product Event System', status: 'READY', evidence: 'ObservabilityService GET /health & AuditLog', notes: 'System events tracked' },
-    { area: 'Privacy-First Analytics', status: 'READY', evidence: 'Masked secrets & support@krishimitra.ai purge path', notes: 'No sensitive data logged' },
+    { area: 'Privacy-First Analytics', status: 'READY', evidence: 'Masked secrets & support@thekhedut.ai purge path', notes: 'No sensitive data logged' },
     { area: 'Farmer Journey Intelligence', status: 'READY', evidence: '10-step farmer journey (step49)', notes: 'First-value telemetry verified' },
     { area: 'Feature Intelligence', status: 'READY', evidence: '11 core modules monitored', notes: 'Module completion tracked' },
     { area: 'Error Intelligence', status: 'READY', evidence: 'Centralized errorHandler middleware', notes: 'Structured error responses' },

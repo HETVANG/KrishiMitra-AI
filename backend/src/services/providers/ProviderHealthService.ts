@@ -371,7 +371,7 @@ export class ProviderHealthService {
     });
 
     // 7. Agronomist Specialist Network
-    this.updateRecord('expert_consultation_network', 'KrishiMitra Certified Agronomist Network', 'EXPERT_NETWORK', {
+    this.updateRecord('expert_consultation_network', 'The Khedut Certified Agronomist Network', 'EXPERT_NETWORK', {
       configured: true,
       reachable: true,
       authenticated: true,

@@ -239,7 +239,7 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleCopyText = () => {
     if (!assessment) return;
-    const txt = `KrishiMitra Disease Assessment:\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName} (${assessment.scientificName})\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ')}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title).join(' | ')}`;
+    const txt = `THE KHEDUT Crop Health Assessment:\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName} (${assessment.scientificName})\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ')}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title).join(' | ')}`;
     navigator.clipboard.writeText(txt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -247,11 +247,11 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleShare = async () => {
     if (!assessment) return;
-    const txt = `KrishiMitra Pathology Assessment:\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition}\nSeverity: ${assessment.severity}`;
+    const txt = `THE KHEDUT Crop Health Assessment:\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition}\nSeverity: ${assessment.severity}`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'KrishiMitra Crop Pathology Report',
+          title: 'THE KHEDUT Crop Pathology Report',
           text: txt,
         });
       } catch (err) {

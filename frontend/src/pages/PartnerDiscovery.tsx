@@ -135,7 +135,7 @@ export const PartnerDiscovery: React.FC = () => {
           <Building2 className="w-12 h-12 text-gray-300 dark:text-dark-600 mx-auto" />
           <h3 className="text-base font-bold text-gray-800 dark:text-dark-100">No Verified Partners Found</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto">
-            No verified agricultural partners match your current filters or region. Check back soon as new verified organizations join the KrishiMitra network.
+            No verified agricultural partners match your current filters or region. Check back soon as new verified organizations join THE KHEDUT network.
           </p>
         </div>
       ) : (

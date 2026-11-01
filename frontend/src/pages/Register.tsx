@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sprout, User, Mail, Lock, Phone, UserCheck, Stethoscope, Briefcase, IndianRupee, AlertCircle } from 'lucide-react';
+import { BRAND } from '../config/brand';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const Register: React.FC = () => {
   const { register, token } = useAuth();
@@ -76,25 +78,25 @@ export const Register: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50 dark:bg-dark-950">
       {/* visual banner */}
       <div className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=1470')` }}>
-        <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-brand-950/60 backdrop-blur-[2px]" />
         <div className="absolute bottom-16 left-16 right-16 z-20 text-white">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-600 shadow-lg">
-              <Sprout size={28} />
-            </div>
-            <h1 className="font-extrabold text-2xl tracking-tight">KrishiMitra AI</h1>
+          <div className="mb-4">
+            <BrandLogo variant="horizontal" size="lg" className="text-white" />
           </div>
-          <h2 className="font-extrabold text-4xl mb-4 leading-tight">Start Cultivating with Smarter Insights.</h2>
-          <p className="text-brand-100 font-medium max-w-md">Connect with top agriculture experts, track daily mandi crops pricing, analyze soil chemistry, and query our multi-lingual generative AI model.</p>
+          <h2 className="font-black text-3xl md:text-4xl mb-4 leading-tight">Start Cultivating with Smarter Insights.</h2>
+          <p className="text-brand-100 font-medium max-w-md">Connect with top agriculture experts, track daily mandi crops pricing, analyze soil chemistry, and consult our multi-lingual agronomy AI.</p>
         </div>
       </div>
 
       {/* form container */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 overflow-y-auto">
-        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-dark-800/30 my-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+        <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-200/80 dark:border-dark-800/30 my-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-extrabold text-gray-800 dark:text-dark-100 tracking-tight">Create Account</h2>
-            <p className="text-sm text-gray-500 dark:text-dark-400 mt-1.5">Join the digital farming community today</p>
+            <div className="inline-flex lg:hidden mb-4">
+              <BrandLogo variant="horizontal" size="md" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Create Account</h2>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Join the digital farming community today</p>
           </div>
 
           {/* Role selector tab */}

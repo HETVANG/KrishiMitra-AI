@@ -142,7 +142,7 @@ export class GeminiService {
       try {
         const model = genAI.getGenerativeModel({ model: geminiModel });
         
-        const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
+        const systemInstruction = `You are THE KHEDUT AI, a world-class friendly and expert agronomy assistant.
         Answer the farmer's questions clearly, concisely, and practically.
         Provide your response in two languages:
         1. Translated response in: ${targetLang} (You must respond ONLY in ${targetLang} for this part).
@@ -258,11 +258,11 @@ export class GeminiService {
       if (language === 'hi') {
         translated = 'कृषिमित्र एआई में आपका स्वागत है। मैं मौसम सलाह, मिट्टी विश्लेषण, फसल चयन, रोग स्कैनिंग और मंडी कीमतों में आपकी मदद कर सकता हूं। मैं आज आपके लिए क्या कर सकता हूं?';
       } else if (language === 'gu') {
-        translated = 'કૃષિમિત્ર એઆઈમાં તમારું સ્વાગત છે. હું હવામાન માહિતી, જમીન વિશ્લેષણ, પાક પસંદગી અને પાકના રોગ નિદાનમાં મદદ કરી શકું છું. હું આજે તમારા માટે શું કરી શકું?';
+        translated = 'ધ ખેડૂતમાં તમારું સ્વાગત છે. હું હવામાન માહિતી, જમીન વિશ્લેષણ, પાક પસંદગી અને પાકના રોગ નિદાનમાં મદદ કરી શકું છું. હું આજે તમારા માટે શું કરી શકું?';
       } else {
-        translated = `Welcome to KrishiMitra AI. I can assist you with weather advisories, soil parameters analysis, expert consults, crop choices, and disease detection leaf scanning in ${targetLang}. What can I do for you today?`;
+        translated = `Welcome to THE KHEDUT. I can assist you with weather advisories, soil parameters analysis, expert consults, crop choices, and disease detection leaf scanning in ${targetLang}. What can I do for you today?`;
       }
-      english = 'Welcome to KrishiMitra AI. I can assist you with weather advisories, soil parameters analysis, expert consults, crop choices, and disease detection leaf scanning. What can I do for you today?';
+      english = 'Welcome to THE KHEDUT. I can assist you with weather advisories, soil parameters analysis, expert consults, crop choices, and disease detection leaf scanning. What can I do for you today?';
     }
 
     return { translated, english };
@@ -297,7 +297,7 @@ export class GeminiService {
     try {
       const model = genAI.getGenerativeModel({ model: geminiModel });
 
-      const systemInstruction = `You are KrishiMitra AI, a friendly and expert agriculture assistant.
+      const systemInstruction = `You are THE KHEDUT AI, a friendly and expert agriculture assistant.
       The user is sending an audio voice recording.
       1. Transcribe the user's spoken voice command/question from the audio into written text.
       2. Answer the user's question clearly, concisely, and practically.

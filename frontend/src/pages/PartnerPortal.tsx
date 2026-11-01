@@ -89,7 +89,7 @@ export const PartnerPortal: React.FC = () => {
         <Building2 className="w-12 h-12 text-gray-300 dark:text-dark-600 mx-auto" />
         <h2 className="text-base font-bold text-gray-800 dark:text-dark-100">No Partner Profile Linked</h2>
         <p className="text-xs text-gray-500">
-          You currently have no partner account linked. Apply to join KrishiMitra AI's partner network.
+          You currently have no partner account linked. Apply to join THE KHEDUT partner network.
         </p>
         <a href="/partners/apply" className="inline-block px-5 py-2.5 bg-brand-500 text-white font-bold text-xs rounded-xl shadow-md">
           Submit Partner Application

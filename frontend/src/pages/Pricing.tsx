@@ -126,9 +126,9 @@ export const Pricing: React.FC = () => {
           key: orderData.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
           amount: Math.round(orderData.amount * 100),
           currency: orderData.currency || 'INR',
-          name: 'KrishiMitra AI',
+          name: 'THE KHEDUT',
           description: `${billingCycle.toUpperCase()} Premium Plan Upgrade`,
-          image: 'https://krishimitra-ai.vercel.app/favicon.svg',
+          image: '/pwa-icon-192.svg',
           order_id: orderData.id,
           handler: async function (response: any) {
             try {
@@ -236,7 +236,7 @@ export const Pricing: React.FC = () => {
           </div>
           <h2 className="text-2xl font-extrabold text-gray-800 dark:text-dark-50">Premium Activated Successfully!</h2>
           <p className="text-xs md:text-sm text-gray-500 dark:text-dark-300">
-            Thank you for supporting KrishiMitra AI. Your subscription is active. All premium calculators, yield predictors, unlimited chat capacity, and PDF templates are now unlocked.
+            Thank you for supporting THE KHEDUT. Your subscription is active. All premium calculators, yield predictors, unlimited chat capacity, and PDF templates are now unlocked.
           </p>
           <div className="bg-gray-50 dark:bg-dark-950 p-4 rounded-2xl border text-xs text-gray-600 dark:text-dark-400 space-y-1">
             <div className="flex justify-between">

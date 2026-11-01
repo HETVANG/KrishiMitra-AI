@@ -23,20 +23,20 @@ export const generateInvoicePDF = (payment: any, user: any, stream: NodeJS.Writa
       doc.fillColor('#ffffff')
          .fontSize(14)
          .font('Helvetica-Bold')
-         .text('KM', 48, 53, { width: 24, align: 'center' });
+         .text('TK', 48, 53, { width: 24, align: 'center' });
 
       // Company title
       doc.fillColor('#1f2937')
          .fontSize(20)
          .font('Helvetica-Bold')
-         .text('KrishiMitra AI', 90, 45);
+         .text('THE KHEDUT', 90, 45);
       
       doc.fontSize(8)
          .font('Helvetica')
          .fillColor('#4b5563')
          .text('121 Agritech Innovation Park, Sector 62', 90, 67)
          .text('Noida, Uttar Pradesh, India - 201301', 90, 77)
-         .text('Support: support@krishimitra.ai | GSTIN: 09AAPCK1208M1Z2', 90, 87);
+         .text('Support: support@thekhedut.ai | GSTIN: 09AAPCK1208M1Z2', 90, 87);
 
       // Tax Invoice Title block
       doc.fillColor('#059669')
@@ -132,7 +132,7 @@ export const generateInvoicePDF = (payment: any, user: any, stream: NodeJS.Writa
 
       doc.font('Helvetica-Bold')
          .fontSize(9)
-         .text(`KrishiMitra AI - ${planDisplayName} Subscription Upgrade`, 50, rowTop)
+         .text(`THE KHEDUT - ${planDisplayName} Subscription Upgrade`, 50, rowTop)
          .font('Helvetica')
          .fontSize(8)
          .fillColor('#6b7280')
@@ -202,12 +202,12 @@ export const generateInvoicePDF = (payment: any, user: any, stream: NodeJS.Writa
          .fillColor('#6b7280')
          .text('1. This is a computer-generated tax invoice and does not require a physical signature.', 40, 550)
          .text('2. Subscription charges are billed in advance based on the selected cycle.', 40, 562)
-         .text('3. For support or refund queries, contact our finance team at support@krishimitra.ai.', 40, 574);
+         .text('3. For support or refund queries, contact our finance team at support@thekhedut.ai.', 40, 574);
 
       doc.fillColor('#059669')
          .fontSize(11)
          .font('Helvetica-Bold')
-         .text('Thank you for choosing KrishiMitra AI.', 40, 620, { align: 'center' });
+         .text('Thank you for choosing THE KHEDUT.', 40, 620, { align: 'center' });
 
       doc.fillColor('#9ca3af')
          .fontSize(7)

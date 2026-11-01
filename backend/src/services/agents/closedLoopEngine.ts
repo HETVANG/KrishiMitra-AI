@@ -545,7 +545,7 @@ export class ClosedLoopEngine {
     const context = await CopilotContextService.getFarmContext(userId, farmId);
     const weekly = await this.runWeeklyFarmReview(userId, farmId);
 
-    return `KrishiMitra Autonomous Operations Report for ${context.farm.name}:\n` +
+    return `THE KHEDUT Autonomous Operations Report for ${context.farm.name}:\n` +
       `- Period: ${weekly.period}\n` +
       `- Total Closed-Loop Evaluated Cycles: ${weekly.totalRuns}\n` +
       `- Verified Actions Executed: ${weekly.approvedCount}\n` +

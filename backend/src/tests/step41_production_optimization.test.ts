@@ -66,7 +66,7 @@ async function runStep41ProductionOptimizationTests() {
   const fallbackProvider = new FallbackRuleAIProvider();
   const fallbackRes = await fallbackProvider.generateAdvisory('How much water does wheat need?');
   assert.strictEqual(fallbackRes.success, true);
-  assert.strictEqual(fallbackRes.providerName, 'KrishiMitra Deterministic Agronomic Rule Engine');
+  assert.strictEqual(fallbackRes.providerName, 'The Khedut Deterministic Agronomic Rule Engine');
 
   // Vision leaf diagnosis fallback when no image provided
   const dummyBuffer = Buffer.from('fake image content');

@@ -9,8 +9,10 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 // Import Layouts & widgets
 import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import { RegionalSettingsModal } from './components/RegionalSettingsModal';
+import { BRAND } from './config/brand';
 
 // Lazy Loaded Pages for performance route splitting
 const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -156,7 +158,7 @@ const DashboardLayout = () => {
     if (path === '/billing-history') return 'Billing History';
     if (path === '/settings') return 'Settings & Growth Center';
     if (path === '/admin') return 'Control Panel Admin dashboard';
-    return 'KrishiMitra AI';
+    return BRAND.name;
   };
 
   return (
@@ -177,11 +179,14 @@ const DashboardLayout = () => {
           onOpenRegionalSettings={() => setShowRegionalModal(true)} 
         />
 
-        {/* View content pages */}
-        <main className="flex-grow p-4 md:p-6 overflow-y-auto">
+        {/* View content pages with bottom padding on mobile for MobileBottomNav */}
+        <main className="flex-grow p-3.5 sm:p-4 md:p-6 pb-24 lg:pb-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Persistent 1-tap farmer navigation) */}
+      <MobileBottomNav onOpenMenu={() => setSidebarOpen(true)} />
 
       {/* Voice Assistant Widget floating */}
       {user && <VoiceAssistant />}
@@ -201,7 +206,7 @@ const HomeRoute = () => {
 };
 
 export const AppContent = () => {
-  console.log('[KrishiMitra Startup Log] Loading Routes & React Router');
+  console.log('[The Khedut Startup Log] Loading Routes & React Router');
 
   React.useEffect(() => {
     const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -326,7 +331,7 @@ export const AppContent = () => {
 };
 
 export const App = () => {
-  console.log('[KrishiMitra Startup Log] React Mounted - App initialized - Loading Context & Providers');
+  console.log('[The Khedut Startup Log] React Mounted - App initialized - Loading Context & Providers');
   return (
     <ErrorBoundary>
       <AuthProvider>

@@ -53,7 +53,7 @@ export const BillingHistory: React.FC = () => {
       const paymentItem = payments.find((p) => p._id === paymentId);
       const invSerial = paymentId.slice(-6).toUpperCase();
       const invYear = paymentItem ? new Date(paymentItem.createdAt).getFullYear() : new Date().getFullYear();
-      link.setAttribute('download', `KrishiMitra_Invoice_KM-INV-${invYear}-${invSerial}.pdf`);
+      link.setAttribute('download', `TheKhedut_Invoice_TK-INV-${invYear}-${invSerial}.pdf`);
 
       document.body.appendChild(link);
       link.click();

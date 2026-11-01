@@ -45,7 +45,7 @@ export class GeminiAIProvider implements IAIProvider {
         success: true,
         code: 'SUCCESS',
         answer: res.translated || res.english,
-        sources: ['KrishiMitra Agricultural Knowledge Engine', 'ICAR Agronomic Guidelines'],
+        sources: ['The Khedut Agricultural Knowledge Engine', 'ICAR Agronomic Guidelines'],
         confidence: 'HIGH',
         confidenceScore: 0.92,
         providerName: this.name
@@ -117,7 +117,7 @@ export class GeminiAIProvider implements IAIProvider {
 
 export class FallbackRuleAIProvider implements IAIProvider {
   id = 'fallback_rule_engine';
-  name = 'KrishiMitra Deterministic Agronomic Rule Engine';
+  name = 'The Khedut Deterministic Agronomic Rule Engine';
 
   isAvailable(): boolean {
     return true;
@@ -139,7 +139,7 @@ export class FallbackRuleAIProvider implements IAIProvider {
       success: true,
       code: 'SUCCESS',
       answer,
-      sources: ['KrishiMitra Deterministic Agronomic Knowledge Base'],
+      sources: ['The Khedut Deterministic Agronomic Knowledge Base'],
       confidence: 'MODERATE',
       confidenceScore: 0.75,
       providerName: this.name

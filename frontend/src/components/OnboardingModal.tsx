@@ -116,7 +116,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               <Sprout className="w-7 h-7 text-emerald-200" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Welcome to KrishiMitra AI</h2>
+              <h2 className="text-xl font-bold">Welcome to THE KHEDUT</h2>
               <p className="text-xs text-emerald-100">Set up your smart farm workspace in under 60 seconds</p>
             </div>
           </div>
@@ -146,7 +146,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 Select Preferred Language & Region
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                KrishiMitra AI will customize voice advisories, market updates, and copilot responses in your chosen language.
+                THE KHEDUT will customize voice advisories, market updates, and copilot responses in your chosen language.
               </p>
 
               <div>

@@ -102,7 +102,7 @@ async function runStep44AutonomousOperationsTests() {
   // 8. Copilot Activity Explanation Integration
   console.log('\nTest 8: Verifying Copilot Activity Explanation Integration...');
   const copilotExplanation = await ClosedLoopEngine.getAutonomousActivityExplanation(mockUserId, mockFarmId);
-  assert.ok(copilotExplanation.includes('KrishiMitra Autonomous Operations Report'), 'Copilot explanation header present');
+  assert.ok(copilotExplanation.includes('THE KHEDUT Autonomous Operations Report'), 'Copilot explanation header present');
   assert.ok(copilotExplanation.includes('Total Closed-Loop Evaluated Cycles'), 'Closed-loop metric summarized for Copilot');
   console.log('✓ Copilot Activity Explanation Integration verified.');
 

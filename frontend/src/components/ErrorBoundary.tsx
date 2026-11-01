@@ -47,9 +47,9 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-xl font-extrabold text-gray-805 dark:text-dark-50 tracking-tight">Application Crash Intercepted</h2>
-              <p className="text-xs text-gray-505 dark:text-dark-400 leading-relaxed font-medium">
-                KrishiMitra AI encountered an unexpected rendering error. This could be due to a corrupt local cache, session timeout, or system asset updates on Vercel.
+              <h2 className="text-xl font-extrabold text-slate-800 dark:text-dark-50 tracking-tight">Application Crash Intercepted</h2>
+              <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed font-medium">
+                THE KHEDUT encountered an unexpected rendering error. This could be due to a corrupt local cache, session timeout, or system asset updates.
               </p>
             </div>
 

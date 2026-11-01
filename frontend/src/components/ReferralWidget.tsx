@@ -55,7 +55,7 @@ export const ReferralWidget: React.FC = () => {
 
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(
-      `Join me on KrishiMitra AI to get smart crop advisory, disease scanning & market prices for your farm! Register using my code ${referralCode}: ${referralLink}`
+      `Join me on THE KHEDUT to get smart crop advisory, disease scanning & mandi prices for your farm! Register using my code ${referralCode}: ${referralLink}`
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
@@ -70,7 +70,7 @@ export const ReferralWidget: React.FC = () => {
           <div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Invite Farmers & Earn Credits</h3>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Share KrishiMitra AI with fellow farmers in your region
+              Share THE KHEDUT with fellow farmers in your region
             </p>
           </div>
         </div>

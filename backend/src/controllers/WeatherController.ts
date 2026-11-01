@@ -78,7 +78,7 @@ export class WeatherController {
       try {
         const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`;
         const geoRes = await axios.get(url, {
-          headers: { 'User-Agent': 'KrishiMitra-AI-Agent/1.0' }
+          headers: { 'User-Agent': 'The-Khedut-Platform/1.0' }
         });
         if (geoRes.data) {
           const address = geoRes.data.address || {};
@@ -150,7 +150,7 @@ export class WeatherController {
       try {
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query as string)}&format=json&limit=5&countrycodes=in&accept-language=en&addressdetails=1`;
         const geoRes = await axios.get(url, {
-          headers: { 'User-Agent': 'KrishiMitra-AI-Agent/1.0' }
+          headers: { 'User-Agent': 'The-Khedut-Platform/1.0' }
         });
         if (geoRes.data && geoRes.data.length > 0) {
           const suggestions = geoRes.data.map((item: any) => {

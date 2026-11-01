@@ -138,7 +138,7 @@ export const SoilAnalysis: React.FC = () => {
 
   const handleCopyText = () => {
     if (!result) return;
-    const txt = `KrishiMitra Soil Report:\nCrops Suitability: ${result.suitability?.join(', ')}\nImprovement: ${result.soilImprovementSuggestions?.join('\n')}`;
+    const txt = `THE KHEDUT Soil Report:\nCrops Suitability: ${result.suitability?.join(', ')}\nImprovement: ${result.soilImprovementSuggestions?.join('\n')}`;
     navigator.clipboard.writeText(txt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -150,7 +150,7 @@ export const SoilAnalysis: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'KrishiMitra Soil Analysis',
+          title: 'THE KHEDUT Soil Analysis',
           text: txt,
         });
       } catch (err) {

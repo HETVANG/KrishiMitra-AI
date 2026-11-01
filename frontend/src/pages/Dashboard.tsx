@@ -27,7 +27,7 @@ import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 
 export const Dashboard: React.FC = () => {
-  console.log('[KrishiMitra Startup Log] Loading Dashboard');
+  console.log('[The Khedut Startup Log] Loading Dashboard');
   const { user, setFarmLocationLocally } = useAuth();
   const { t, i18n } = useTranslation();
 

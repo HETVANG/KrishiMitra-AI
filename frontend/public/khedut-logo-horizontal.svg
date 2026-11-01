@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 56" fill="none">
+  <!-- The Khedut Horizontal Logo - Light Background -->
+  <g transform="translate(4, 4)">
+    <!-- Symbol container -->
+    <rect width="48" height="48" rx="12" fill="#245B38"/>
+    <!-- Vertical Stalk -->
+    <path d="M14 11C14 10.4477 14.4477 10 15 10H18C18.5523 10 19 10.4477 19 11V37C19 37.5523 18.5523 38 18 38H15C14.4477 38 14 37.5523 14 37V11Z" fill="#F7F9F5"/>
+    <!-- Leaf arm -->
+    <path d="M19 25C21.5 22 26 16.5 33.5 13C34.2 12.7 35 13.3 34.8 14.1C33.2 20 29.5 25.5 25.2 27.8L19 25Z" fill="#A5C96A"/>
+    <!-- Furrow arm -->
+    <path d="M22.5 24L33.2 36.2C33.7 36.8 33.3 37.8 32.5 37.8H27.8C27.3 37.8 26.8 37.5 26.5 37.1L19 28V24H22.5Z" fill="#4F8A4B"/>
+    <!-- Node -->
+    <circle cx="16.5" cy="11.5" r="1.5" fill="#A5C96A"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="64" y="32" font-family="'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="800" font-size="22" letter-spacing="-0.02em" fill="#1D2922">THE KHEDUT</text>
+  <text x="64" y="45" font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="9" letter-spacing="0.16em" fill="#4F8A4B">SMART AGRICULTURE PLATFORM</text>
+</svg>

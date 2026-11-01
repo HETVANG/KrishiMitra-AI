@@ -175,11 +175,11 @@ export class ReportController {
       }
 
       // Configure filename
-      let fileName = `KrishiMitra_${reportType}_Report.pdf`;
+      let fileName = `TheKhedut_${reportType}_Report.pdf`;
       if (reportType === 'disease') {
         const rawName = reportData.diseaseName || 'Disease';
         const cleanName = rawName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-        fileName = `KrishiMitra_Disease_Report_${cleanName || 'Diagnosis'}.pdf`;
+        fileName = `TheKhedut_Disease_Report_${cleanName || 'Diagnosis'}.pdf`;
       }
 
       // Set headers for PDF streaming (defaults to inline for browser preview)

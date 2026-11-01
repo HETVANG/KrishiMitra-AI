@@ -29,7 +29,7 @@ export class PartnerCopilotService {
       answer = `No verified agricultural partners are currently registered for ${region || 'your region'}. Check back soon as new FPOs and partner organizations are onboarded.`;
     } else {
       const names = matchedPartners.map(p => `${p.organizationName} (${p.partnerType})`).join(', ');
-      answer = `Verified KrishiMitra partners in your region: ${names}. All listed partners hold verified status.`;
+      answer = `Verified THE KHEDUT partners in your region: ${names}. All listed partners hold verified status.`;
     }
 
     return {

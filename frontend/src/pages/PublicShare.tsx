@@ -56,7 +56,7 @@ export const PublicShare: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-xs text-gray-500 font-medium">Loading KrishiMitra Shared Advisory...</p>
+          <p className="text-xs text-gray-500 font-medium">Loading THE KHEDUT Shared Advisory...</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ export const PublicShare: React.FC = () => {
             to="/register"
             className="inline-flex items-center justify-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow transition-all gap-1.5"
           >
-            Explore KrishiMitra AI <ArrowRight className="w-4 h-4" />
+            Explore THE KHEDUT <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -94,7 +94,7 @@ export const PublicShare: React.FC = () => {
               <Sprout className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold tracking-tight text-gray-900 dark:text-white">KrishiMitra AI</h1>
+              <h1 className="text-base font-bold tracking-tight text-gray-900 dark:text-white">THE KHEDUT</h1>
               <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">
                 Verified Agriculture Advisory
               </p>

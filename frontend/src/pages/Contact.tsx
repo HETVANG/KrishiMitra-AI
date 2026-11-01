@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Sprout, ArrowLeft, Mail, MapPin, Send, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, Send, MessageSquare } from 'lucide-react';
+import { BRAND } from '../config/brand';
+import { BrandLogo } from '../components/BrandLogo';
 
 export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -13,7 +15,7 @@ export const Contact: React.FC = () => {
       setTimeout(() => {
         setSent(false);
         setFormData({ name: '', email: '', message: '' });
-        alert('Thank you! Your message has been sent to support@krishimitra.ai.');
+        alert(`Thank you! Your message has been sent to ${BRAND.supportEmail}.`);
       }, 1000);
     }
   };
@@ -22,104 +24,101 @@ export const Contact: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200">
       
       {/* Header */}
-      <header className="bg-white dark:bg-dark-900 border-b border-slate-100 dark:border-dark-850 px-4 md:px-8 py-4 flex items-center justify-between">
-        <NavLink to="/" className="flex items-center gap-2 text-brand-600 font-extrabold text-xs">
+      <header className="bg-white dark:bg-dark-900 border-b border-slate-200/80 dark:border-dark-850 px-4 md:px-8 py-3.5 flex items-center justify-between">
+        <NavLink to="/" className="flex items-center gap-2 text-brand-700 dark:text-brand-400 font-extrabold text-xs hover:underline">
           <ArrowLeft size={16} /> Back to Home
         </NavLink>
-        <div className="flex items-center gap-2">
-          <Sprout size={18} className="text-brand-500" />
-          <span className="font-extrabold text-sm text-slate-900 dark:text-white">KrishiMitra AI</span>
-        </div>
+        <BrandLogo variant="horizontal" size="sm" />
       </header>
 
       {/* Main Content */}
       <main className="flex-grow max-w-4xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
         
         {/* Contact Info (5 cols) */}
-        <div className="md:col-span-5 bg-white dark:bg-dark-900 p-6 rounded-3xl border border-slate-100 dark:border-dark-800/50 shadow-sm space-y-6 text-left">
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Contact Support</h2>
+        <div className="md:col-span-5 bg-white dark:bg-dark-900 p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-dark-800/50 shadow-xs space-y-6 text-left">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Contact Support</h2>
           <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed font-medium">
-            Have questions about your subscription, technical issues, or agricultural AI tools? Reach out to our support agronomy desk.
+            Have questions about your subscription, technical issues, or agronomy recommendations? Reach out to our expert desk.
           </p>
 
           <div className="space-y-4 pt-2">
             <div className="flex items-start gap-3 text-xs">
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-655 rounded-lg shrink-0">
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 rounded-xl shrink-0">
                 <Mail size={16} />
               </div>
               <div>
                 <span className="font-bold block text-slate-400 uppercase text-[9px]">Email Address</span>
-                <span className="font-semibold text-slate-700 dark:text-dark-200">support@krishimitra.ai</span>
+                <span className="font-semibold text-slate-800 dark:text-dark-200">{BRAND.supportEmail}</span>
               </div>
             </div>
 
             <div className="flex items-start gap-3 text-xs">
-              <div className="p-2 bg-brand-50 dark:bg-brand-950/20 text-brand-605 rounded-lg shrink-0">
+              <div className="p-2.5 bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 rounded-xl shrink-0">
                 <MapPin size={16} />
               </div>
               <div>
-                <span className="font-bold block text-slate-400 uppercase text-[9px]">Innovation Office</span>
-                <span className="font-semibold text-slate-700 dark:text-dark-200">Sector 62, Noida, UP, India</span>
+                <span className="font-bold block text-slate-400 uppercase text-[9px]">Headquarters</span>
+                <span className="font-semibold text-slate-800 dark:text-dark-200">Agritech Hub, Gujarat / NCR, India</span>
               </div>
             </div>
 
             <div className="flex items-start gap-3 text-xs">
-              <div className="p-2 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 rounded-lg shrink-0">
+              <div className="p-2.5 bg-indigo-50 dark:bg-indigo-955/30 text-indigo-600 rounded-xl shrink-0">
                 <MessageSquare size={16} />
               </div>
               <div>
-                <span className="font-bold block text-slate-400 uppercase text-[9px]">Response Window</span>
-                <span className="font-semibold text-slate-700 dark:text-dark-200">Typically under 24 hours</span>
+                <span className="font-bold block text-slate-400 uppercase text-[9px]">Turnaround SLA</span>
+                <span className="font-semibold text-slate-800 dark:text-dark-200">Typical response under 24 hours</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Contact Form (7 cols) */}
-        <div className="md:col-span-7 bg-white dark:bg-dark-900 p-6 rounded-3xl border border-slate-100 dark:border-dark-800/50 shadow-sm text-left">
-          <h3 className="font-extrabold text-base text-slate-800 dark:text-white mb-4">Send a Message</h3>
-          
+        <div className="md:col-span-7 bg-white dark:bg-dark-900 p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-dark-800/50 shadow-xs space-y-5 text-left">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white">Send Us a Direct Message</h3>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase">Your Name</label>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-dark-300 uppercase mb-1.5">Your Full Name</label>
               <input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="custom-input text-xs"
-                placeholder="Name"
+                placeholder="Ramesh Patel"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-dark-750 bg-slate-50 dark:bg-dark-850 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[42px]"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase">Email Address</label>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-dark-300 uppercase mb-1.5">Email Address</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="custom-input text-xs"
-                placeholder="Email Address"
+                placeholder="ramesh@farm.com"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-dark-750 bg-slate-50 dark:bg-dark-850 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[42px]"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase">Message / Query</label>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 dark:text-dark-300 uppercase mb-1.5">Message / Inquiry</label>
               <textarea
-                required
                 rows={4}
+                required
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="custom-input text-xs"
-                placeholder="Enter details here..."
-              ></textarea>
+                placeholder="Please describe your crop or platform query..."
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-dark-750 bg-slate-50 dark:bg-dark-850 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
             </div>
 
             <button
               type="submit"
               disabled={sent}
-              className="btn-primary w-full py-3.5 text-xs font-bold shadow-md shadow-brand-600/10 min-h-[40px]"
+              className="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 min-h-[44px]"
             >
               <Send size={14} /> {sent ? 'Sending...' : 'Send Message'}
             </button>
@@ -128,11 +127,12 @@ export const Contact: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-500 py-6 text-center text-[10px] border-t border-slate-800">
-        &copy; 2026 KrishiMitra AI. Empowering the Indian Farming Community.
+      <footer className="bg-slate-900 text-slate-400 py-6 text-center text-[10px] border-t border-slate-800">
+        {BRAND.copyright} Designed for the Indian Agricultural Community.
       </footer>
 
     </div>
   );
 };
+
 export default Contact;

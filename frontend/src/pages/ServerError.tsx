@@ -15,7 +15,7 @@ export const ServerError: React.FC = () => {
         <div className="space-y-2">
           <h2 className="text-2xl font-extrabold text-gray-800 dark:text-dark-50">500 - Internal Server Error</h2>
           <p className="text-xs md:text-sm text-gray-500 dark:text-dark-400 leading-relaxed">
-            The KrishiMitra backend is experiencing temporary high request load or database timeout buffering. Let's refresh the session check.
+            THE KHEDUT backend is experiencing temporary high request load or database timeout buffering. Let's refresh the session check.
           </p>
         </div>
         <button

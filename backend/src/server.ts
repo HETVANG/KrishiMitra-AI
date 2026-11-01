@@ -28,7 +28,7 @@ const startServer = async () => {
     }
 
     const server = app.listen(PORT, () => {
-      console.log(`[Server] KrishiMitra AI Server listening on port ${PORT}`);
+      console.log(`[Server] THE KHEDUT Server listening on port ${PORT}`);
       console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 

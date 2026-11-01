@@ -75,7 +75,7 @@ export class BillingController {
       // Set headers for file download response
       const invoiceYear = payment.createdAt ? new Date(payment.createdAt).getFullYear() : new Date().getFullYear();
       const invoiceSerial = payment._id.toString().slice(-6).toUpperCase();
-      const filename = `KrishiMitra_Invoice_KM-INV-${invoiceYear}-${invoiceSerial}.pdf`;
+      const filename = `TheKhedut_Invoice_TK-INV-${invoiceYear}-${invoiceSerial}.pdf`;
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { PdfService } from '../services/PdfService';
 import { ReportService } from '../services/ReportService';
+import { WatermarkAssets } from '../services/pdf/watermarkAssets';
 
 async function runTestSuite() {
   console.log('====================================================');
@@ -170,8 +171,55 @@ async function runTestSuite() {
   assert(Buffer.isBuffer(bufExpense), 'Expense PDF returns valid Buffer');
   assert(bufExpense.length > 3000, `Expense PDF size (${bufExpense.length} bytes) is adequate`);
 
-  // TEST 6: Report ID Format Validation
-  console.log('\nExecuting Test 6: Report ID Format Validation...');
+  // TEST 6: Generate Soil Analysis PDF Buffer
+  console.log('\nExecuting Test 6: Soil Analysis PDF Generation...');
+  const bufSoil = await PdfService.generateReportBuffer('soil', {
+    soilType: 'Medium Black Clayey Loam',
+    nitrogen: 'Medium (240 kg/ha)',
+    phosphorus: 'Low (14 kg/ha)',
+    potassium: 'High (320 kg/ha)',
+    ph: '7.4 (Slightly Alkaline)',
+    recommendations: 'Apply single superphosphate (SSP) @ 50 kg/acre. Supplement with organic compost.'
+  }, 'en', {
+    reportId: 'REP-TEST-SOIL-006',
+    farmerName: 'Kishore Bhai',
+    cropName: 'Groundnut',
+    cropStage: 'Vegetative',
+    farmLocation: 'Junagadh, Gujarat',
+    farmArea: '4.5 Acres'
+  });
+  assert(Buffer.isBuffer(bufSoil), 'Soil PDF returns valid Buffer');
+  assert(bufSoil.length > 3000, `Soil PDF size (${bufSoil.length} bytes) is adequate`);
+
+  // TEST 7: Generate Crop Advisory PDF Buffer
+  console.log('\nExecuting Test 7: Crop Advisory PDF Generation...');
+  const bufCrop = await PdfService.generateReportBuffer('crop', {
+    crop: 'Wheat (GW-496)',
+    variety: 'Certified Hybrid',
+    currentStage: 'Crown Root Initiation (CRI)',
+    recommendations: 'First irrigation essential at 21 days after sowing. Apply top-dressing of nitrogen.',
+    irrigationSchedule: 'Next watering in 4 days'
+  }, 'gu', {
+    reportId: 'REP-TEST-CROP-007',
+    farmerName: 'પ્રવીણભાઈ વાઘેલા',
+    cropName: 'ઘઉં (Wheat)',
+    cropStage: 'મૂળ વિકાસ (CRI)',
+    farmLocation: 'રાજકોટ, ગુજરાત',
+    farmArea: '3.0 એકર'
+  });
+  assert(Buffer.isBuffer(bufCrop), 'Crop PDF in Gujarati returns valid Buffer');
+  assert(bufCrop.length > 3000, `Crop PDF size (${bufCrop.length} bytes) is adequate`);
+
+  // TEST 8: QR Code Buffer Generation
+  console.log('\nExecuting Test 8: QR Code Buffer Generation...');
+  const qrBuf = await WatermarkAssets.generateVerificationQr('https://thekhedut.ai/verify/report/REP-TEST-001');
+  assert(Buffer.isBuffer(qrBuf), 'QR generator returns valid Buffer');
+  assert(qrBuf.length > 500, `QR code PNG buffer length (${qrBuf.length} bytes) is valid`);
+  // PNG signature: 89 50 4E 47
+  assert(qrBuf[0] === 0x89 && qrBuf[1] === 0x50 && qrBuf[2] === 0x4E && qrBuf[3] === 0x47, 'QR buffer has valid PNG header');
+
+  // TEST 9: Report ID Format Validation
+  console.log('\nExecuting Test 9: Report ID Format Validation...');
   const testRepId = ReportService.generateReportId();
   assert(/^REP-\d{8}-[A-F0-9]{6}$/.test(testRepId), `Report ID ${testRepId} conforms to REP-YYYYMMDD-XXXXXX standard`);
 
@@ -181,6 +229,8 @@ async function runTestSuite() {
   fs.writeFileSync(path.join(sampleDir, 'verified_khedut_en.pdf'), bufEn);
   fs.writeFileSync(path.join(sampleDir, 'verified_khedut_gu.pdf'), bufGu);
   fs.writeFileSync(path.join(sampleDir, 'verified_khedut_hi.pdf'), bufHi);
+  fs.writeFileSync(path.join(sampleDir, 'verified_khedut_soil.pdf'), bufSoil);
+  fs.writeFileSync(path.join(sampleDir, 'verified_khedut_crop_gu.pdf'), bufCrop);
   console.log('\nPersisted verified sample PDFs into test_fixtures/samples/');
 
   console.log('\n====================================================');

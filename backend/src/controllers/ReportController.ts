@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
+import { Types } from 'mongoose';
 import { AuthRequest } from '../middleware/auth';
+import { Report } from '../models/Report';
 import { ReportService } from '../services/ReportService';
 import { PdfService, PdfReportOptions } from '../services/PdfService';
 import { Farm } from '../models/Farm';
@@ -221,6 +223,65 @@ export class ReportController {
         success: false,
         message: error.message || 'Report not found'
       });
+    }
+  }
+
+  /**
+   * Public Report Verification Endpoint (Scanned from PDF QR code)
+   * Validates authenticity without revealing private personal farmer credentials
+   */
+  static async verifyReportPublic(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reportId = req.params.reportId;
+      if (!reportId) {
+        return res.status(400).json({ success: false, verified: false, message: 'Report identifier is required' });
+      }
+
+      let query: any = {};
+      if (Types.ObjectId.isValid(reportId)) {
+        query.$or = [{ _id: reportId }, { reportId }];
+      } else {
+        query.reportId = reportId;
+      }
+
+      const report = await Report.findOne(query).lean();
+      if (!report || report.status === 'failed') {
+        return res.status(404).json({
+          success: false,
+          verified: false,
+          message: 'This document could not be verified or has not been recognized by The Khedut validation registry.'
+        });
+      }
+
+      const categoryTitles: Record<string, string> = {
+        disease: 'Crop Disease Detection & Pathology Report',
+        crop: 'Farm Crop Suitability & Soil Advisory Statement',
+        weather: 'Agricultural Weather Advisory Statement',
+        expense: 'Farm Financial Ledger & Cost Statement'
+      };
+
+      return res.json({
+        success: true,
+        verified: true,
+        report: {
+          reportId: report.reportId || report._id,
+          type: report.type,
+          categoryTitle: categoryTitles[report.type] || 'Agricultural Advisory Statement',
+          cropName: report.cropName || 'Field Crop',
+          diseaseName: report.diseaseName,
+          severity: report.severity,
+          confidenceScore: report.confidenceScore,
+          generatedAt: report.createdAt,
+          status: report.status || 'completed',
+          language: report.language || 'en',
+          summary: report.summary,
+          platform: 'The Khedut Autonomous Agricultural Intelligence Platform',
+          issuer: 'THE KHEDUT Agricultural Technologies',
+          verificationStamp: 'AUTHENTIC_DIGITAL_RECORD'
+        }
+      });
+    } catch (error) {
+      next(error);
     }
   }
 

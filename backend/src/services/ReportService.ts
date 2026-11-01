@@ -10,6 +10,7 @@ import { Expense } from '../models/Expense';
 import { DiseaseHistory } from '../models/DiseaseHistory';
 import { PdfService, PdfReportOptions } from './PdfService';
 import { CloudinaryService } from './CloudinaryService';
+import { WatermarkAssets } from './pdf/watermarkAssets';
 import { WeatherService } from './WeatherService';
 import { GeminiService, getLocalizedMockData } from './GeminiService';
 
@@ -203,11 +204,21 @@ export class ReportService {
       }
 
       // 2. BUILD PDF BUFFER VIA PDF SERVICE
+      const farmerId = `TK-USR-${user._id.toString().slice(-6).toUpperCase()}`;
+      const clientUrl = process.env.CLIENT_URL || 'https://thekhedut.ai';
+      const verificationUrl = `${clientUrl}/verify/report/${reportId}`;
+      const qrCodeBuffer = await WatermarkAssets.generateVerificationQr(verificationUrl);
+
       const pdfOptions: PdfReportOptions = {
         reportId,
+        farmerId,
         farmerName: user.name,
         farmerEmail: user.email,
-        farmerLocation: user.farmLocation?.address || ''
+        farmerLocation: user.farmLocation?.address || '',
+        farmSize: (reportData.farmSize || 4.5),
+        cropStage: cropName,
+        verificationUrl,
+        qrCodeBuffer
       };
 
       const pdfBuffer = await PdfService.generateReportBuffer(type, reportData, activeLang, pdfOptions);
@@ -378,11 +389,21 @@ export class ReportService {
 
     // 3. Dynamic Regeneration Fallback if remote storage is unreachable
     const user = await User.findById(report.user);
+    const farmerId = `TK-USR-${report.user.toString().slice(-6).toUpperCase()}`;
+    const clientUrl = process.env.CLIENT_URL || 'https://thekhedut.ai';
+    const verificationUrl = `${clientUrl}/verify/report/${report.reportId}`;
+    const qrCodeBuffer = await WatermarkAssets.generateVerificationQr(verificationUrl);
+
     const pdfOptions: PdfReportOptions = {
       reportId: report.reportId,
+      farmerId,
       farmerName: report.farmerName || user?.name,
       farmerEmail: report.farmerEmail || user?.email,
-      farmerLocation: user?.farmLocation?.address || ''
+      farmerLocation: user?.farmLocation?.address || '',
+      farmSize: 4.5,
+      cropStage: report.cropName,
+      verificationUrl,
+      qrCodeBuffer
     };
 
     let reportData: any = {};

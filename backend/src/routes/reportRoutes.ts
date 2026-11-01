@@ -4,6 +4,9 @@ import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();
 
+// Public Report Authenticity Verification (QR scan target)
+router.get('/verify/:reportId', ReportController.verifyReportPublic);
+
 // Existing download route kept for full backward compatibility
 router.get('/download', authenticate, ReportController.downloadReport);
 

@@ -46,6 +46,7 @@ const AdminGrowth = React.lazy(() => import('./pages/AdminGrowth').then(m => ({ 
 const AdminSuccess = React.lazy(() => import('./pages/AdminSuccess').then(m => ({ default: m.AdminSuccess })));
 const AdminAIGovernance = React.lazy(() => import('./pages/AdminAIGovernance').then(m => ({ default: m.AdminAIGovernance })));
 const PublicShare = React.lazy(() => import('./pages/PublicShare').then(m => ({ default: m.PublicShare })));
+const PublicReportVerify = React.lazy(() => import('./pages/PublicReportVerify').then(m => ({ default: m.PublicReportVerify })));
 const Pricing = React.lazy(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
 const PaymentSuccess = React.lazy(() => import('./pages/PaymentSuccess').then(m => ({ default: m.PaymentSuccess })));
 const PaymentFailed = React.lazy(() => import('./pages/PaymentFailed').then(m => ({ default: m.PaymentFailed })));
@@ -254,7 +255,6 @@ export const AppContent = () => {
           <div className="w-10 h-10 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
         </div>
       }>
-        <ToastContainer position="top-right" autoClose={3000} />
         <Routes>
           {/* Public auth pages */}
           <Route path="/login" element={<Login />} />
@@ -267,6 +267,10 @@ export const AppContent = () => {
           <Route path="/terms" element={<Terms />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/support" element={<Support />} />
+
+          {/* Public Report Authenticity Verification (QR code target) */}
+          <Route path="/verify/report/:reportId" element={<PublicReportVerify />} />
+          <Route path="/verify/:reportId" element={<PublicReportVerify />} />
 
           {/* Public Share Landing Routes */}
           <Route path="/share/:type/:shareId" element={<PublicShare />} />

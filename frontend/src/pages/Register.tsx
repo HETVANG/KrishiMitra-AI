@@ -81,7 +81,7 @@ export const Register: React.FC = () => {
         <div className="absolute inset-0 bg-brand-950/60 backdrop-blur-[2px]" />
         <div className="absolute bottom-16 left-16 right-16 z-20 text-white">
           <div className="mb-4">
-            <BrandLogo variant="horizontal" size="lg" className="text-white" />
+            <BrandLogo variant="full" size="lg" className="text-white" />
           </div>
           <h2 className="font-black text-3xl md:text-4xl mb-4 leading-tight">Start Cultivating with Smarter Insights.</h2>
           <p className="text-brand-100 font-medium max-w-md">Connect with top agriculture experts, track daily mandi crops pricing, analyze soil chemistry, and consult our multi-lingual agronomy AI.</p>
@@ -92,8 +92,8 @@ export const Register: React.FC = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
         <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-200/80 dark:border-dark-800/30 my-8">
           <div className="text-center mb-6">
-            <div className="inline-flex lg:hidden mb-4">
-              <BrandLogo variant="horizontal" size="md" />
+            <div className="inline-flex lg:hidden mb-4 justify-center">
+              <BrandLogo variant="full" size="md" />
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Create Account</h2>
             <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Join the digital farming community today</p>

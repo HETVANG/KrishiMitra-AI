@@ -218,6 +218,28 @@ export class PdfService {
     return '';
   }
 
+  private static getBrandImagePath(filename: string): string {
+    const candidatePaths = [
+      path.resolve(process.cwd(), 'src/assets/brand', filename),
+      path.resolve(process.cwd(), 'dist/assets/brand', filename),
+      path.resolve(process.cwd(), 'backend/src/assets/brand', filename),
+      path.resolve(process.cwd(), 'backend/dist/assets/brand', filename),
+      path.resolve(__dirname, '../assets/brand', filename),
+      path.resolve(__dirname, '../../src/assets/brand', filename),
+      path.resolve(__dirname, '../../../../frontend/public/brand', filename),
+      path.resolve(__dirname, '../../../frontend/public/brand', filename),
+      path.resolve(process.cwd(), '../frontend/public/brand', filename),
+      path.resolve(process.cwd(), 'frontend/public/brand', filename)
+    ];
+
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        return p;
+      }
+    }
+    return '';
+  }
+
   /**
    * Generates an official The Khedut PDF Report as an in-memory Buffer in the selected language
    */
@@ -345,43 +367,57 @@ export class PdfService {
 
     doc.font(regularFont);
 
-    // 2. EMBED WATERMARK (Farmer Ploughing with Two Oxen) at 4.8% Opacity behind content
-    WatermarkAssets.renderOxenWatermark(doc, pageWidth / 2, 420, 0.9);
+    // 2. EMBED WATERMARK USING APPROVED MASTER ARTWORK (4.8% Opacity behind content)
+    const masterLogoPath = this.getBrandImagePath('the-khedut-pdf-logo.png') || 
+                           this.getBrandImagePath('the-khedut-full.png') || 
+                           this.getBrandImagePath('the-khedut-master.jpg');
+    const watermarkPath = this.getBrandImagePath('the-khedut-pdf-watermark.png') || 
+                          this.getBrandImagePath('the-khedut-symbol.png') || 
+                          masterLogoPath;
+
+    if (watermarkPath && fs.existsSync(watermarkPath)) {
+      doc.save();
+      doc.opacity(0.048);
+      doc.image(watermarkPath, (pageWidth - 280) / 2, 330, { width: 280 });
+      doc.restore();
+    } else {
+      WatermarkAssets.renderOxenWatermark(doc, pageWidth / 2, 420, 0.9);
+    }
 
     // 3. HEADER (Top-Left: Official Logo & Tagline; Top-Right: Support & IDs)
     let currentY = 24;
 
-    // Top-Left: Official The Khedut Farmer & Two Oxen Emblem
-    doc.save();
-    doc.translate(leftMargin, currentY);
-    doc.roundedRect(0, 0, 26, 26, 6).fillColor(primaryGreen).fill();
-    doc.scale(0.38);
-    // Sun
-    doc.circle(21, 22, 8).fillColor(accentGreen).fillOpacity(0.3).fill();
-    doc.fillOpacity(1);
-    // Furrows
-    doc.lineWidth(1.5).strokeColor(accentGreen).moveTo(6, 52).bezierCurveTo(16, 50, 28, 53, 40, 51).stroke();
-    // Farmer
-    doc.circle(17.5, 23, 3.6).fillColor('#FFFFFF').fill();
-    doc.path('M 15 26.5 L 19.5 26.5 L 21.5 39 L 14 39 Z').fillColor('#FFFFFF').fill();
-    doc.path('M 14 39 L 17 51 L 19 51 L 17.5 39 Z').fillColor('#FFFFFF').fill();
-    doc.path('M 18.5 39 L 22 50.5 L 24 50.5 L 21 39 Z').fillColor('#FFFFFF').fill();
-    // Plough & Yoke
-    doc.path('M 24 32.5 L 30 46 L 28.5 46.5 L 22.5 33 Z').fillColor(accentGreen).fill();
-    doc.path('M 29.5 45.5 L 46 31.5 L 47 32.8 L 30.5 46.8 Z').fillColor(accentGreen).fill();
-    doc.path('M 37 30 L 54 28.5 L 54 30.2 L 37 31.7 Z').fillColor('#FFFFFF').fill();
-    // Oxen
-    doc.path('M 38 28.5 C 37 24.5 40 21.5 43 23.5 C 45 25 46 27.5 46 29.5 Z').fillColor(secondaryGreen).fill();
-    doc.path('M 42 26.5 C 41 21.5 45 18.5 48.5 20.5 C 51 22 52 25.5 52 27.5 Z').fillColor('#FFFFFF').fill();
-    doc.path('M 52 19.5 C 54 14.5 58 10.5 60 8.5 C 59 12.5 57 16.5 54.5 21.5 Z').fillColor(accentGreen).fill();
-    doc.path('M 41 30.5 C 38 30.5 37 32.5 37 35.5 C 37 39.5 40 42.5 45 42.5 L 54 40.5 C 56 38.5 57 33.5 55 29.5 Z').fillColor('#FFFFFF').fill();
-    doc.path('M 50 40.5 L 53 50.5 L 54.5 50.5 L 52 40.5 Z').fillColor('#FFFFFF').fill();
-    doc.path('M 38 38.5 L 39.5 50.5 L 41 50.5 L 40 40.5 Z').fillColor('#FFFFFF').fill();
-    doc.restore();
+    if (masterLogoPath && fs.existsSync(masterLogoPath)) {
+      // Official Master Logo Artwork: Farmer, two oxen, sunrise, tree, birds, farmhouse & The Khedut typography
+      doc.image(masterLogoPath, leftMargin, currentY - 2, { height: 40 });
+    } else {
+      // Fallback Vector Emblem
+      doc.save();
+      doc.translate(leftMargin, currentY);
+      doc.roundedRect(0, 0, 26, 26, 6).fillColor(primaryGreen).fill();
+      doc.scale(0.38);
+      doc.circle(21, 22, 8).fillColor(accentGreen).fillOpacity(0.3).fill();
+      doc.fillOpacity(1);
+      doc.lineWidth(1.5).strokeColor(accentGreen).moveTo(6, 52).bezierCurveTo(16, 50, 28, 53, 40, 51).stroke();
+      doc.circle(17.5, 23, 3.6).fillColor('#FFFFFF').fill();
+      doc.path('M 15 26.5 L 19.5 26.5 L 21.5 39 L 14 39 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 14 39 L 17 51 L 19 51 L 17.5 39 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 18.5 39 L 22 50.5 L 24 50.5 L 21 39 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 24 32.5 L 30 46 L 28.5 46.5 L 22.5 33 Z').fillColor(accentGreen).fill();
+      doc.path('M 29.5 45.5 L 46 31.5 L 47 32.8 L 30.5 46.8 Z').fillColor(accentGreen).fill();
+      doc.path('M 37 30 L 54 28.5 L 54 30.2 L 37 31.7 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 38 28.5 C 37 24.5 40 21.5 43 23.5 C 45 25 46 27.5 46 29.5 Z').fillColor(secondaryGreen).fill();
+      doc.path('M 42 26.5 C 41 21.5 45 18.5 48.5 20.5 C 51 22 52 25.5 52 27.5 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 52 19.5 C 54 14.5 58 10.5 60 8.5 C 59 12.5 57 16.5 54.5 21.5 Z').fillColor(accentGreen).fill();
+      doc.path('M 41 30.5 C 38 30.5 37 32.5 37 35.5 C 37 39.5 40 42.5 45 42.5 L 54 40.5 C 56 38.5 57 33.5 55 29.5 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 50 40.5 L 53 50.5 L 54.5 50.5 L 52 40.5 Z').fillColor('#FFFFFF').fill();
+      doc.path('M 38 38.5 L 39.5 50.5 L 41 50.5 L 40 40.5 Z').fillColor('#FFFFFF').fill();
+      doc.restore();
 
-    // Application Title & Tagline
-    doc.font(boldFont).fontSize(19).fillColor(primaryGreen).text('THE KHEDUT', leftMargin + 32, currentY);
-    doc.font(regularFont).fontSize(8.5).fillColor(secondaryGreen).text('Smart Agriculture. Better Decisions.', leftMargin + 33, currentY + 22);
+      // Application Title & Tagline
+      doc.font(boldFont).fontSize(19).fillColor(primaryGreen).text('THE KHEDUT', leftMargin + 32, currentY);
+      doc.font(regularFont).fontSize(8.5).fillColor(secondaryGreen).text('Smart Agriculture. Better Decisions.', leftMargin + 33, currentY + 22);
+    }
 
     // Top-Right: Support Email, Website, Report ID, Date
     const formattedDateTime = data.scanDate ? new Date(data.scanDate).toLocaleString('en-IN', {

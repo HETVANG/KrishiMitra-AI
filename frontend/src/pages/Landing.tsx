@@ -267,7 +267,7 @@ export const Landing: React.FC = () => {
       <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 px-4 md:px-8 py-12 mt-auto text-xs">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="space-y-3">
-            <BrandLogo variant="horizontal" size="sm" showTagline={false} className="text-white" />
+            <BrandLogo variant="full" size="sm" showTagline={false} className="text-white" />
             <p className="text-[10px] text-slate-500 leading-relaxed max-w-[200px]">
               Empowering farmers across India with AI agronomy, Mandi indices, and scientific crop care.
             </p>

@@ -53,7 +53,7 @@ export const Login: React.FC = () => {
 
         <div className="absolute bottom-16 left-16 right-16 z-20 text-white">
           <div className="mb-4">
-            <BrandLogo variant="horizontal" size="lg" className="text-white" />
+            <BrandLogo variant="full" size="lg" className="text-white" />
           </div>
           <h2 className="font-black text-3xl md:text-4xl mb-4 leading-tight">Empowering Indian Farmers with Smart Agricultural Intelligence.</h2>
           <p className="text-brand-100 font-medium max-w-md">Access hyper-local weather forecast, diagnose crop diseases, verify APMC mandi prices, check eligible subsidies, and consult agronomy experts.</p>
@@ -65,8 +65,8 @@ export const Login: React.FC = () => {
         <div className="w-full max-w-md bg-white dark:bg-dark-900 rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-200/80 dark:border-dark-800/50">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex lg:hidden mb-4">
-              <BrandLogo variant="horizontal" size="md" />
+            <div className="inline-flex lg:hidden mb-4 justify-center">
+              <BrandLogo variant="full" size="md" />
             </div>
             <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Welcome Back</h2>
             <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Please enter your credentials to access your farm</p>

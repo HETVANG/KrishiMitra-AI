@@ -26,11 +26,14 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import { ReportPreviewModal } from '../components/ReportPreviewModal';
 
 export const DiseaseDetection: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { token, user } = useAuth();
+  const { notify } = useNotification();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'scan' | 'history'>('scan');
@@ -53,6 +56,9 @@ export const DiseaseDetection: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [generatingPdf, setGeneratingPdf] = useState<boolean>(false);
+  const [previewReport, setPreviewReport] = useState<any | null>(null);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   
   // Audio & Utilities
   const [speaking, setSpeaking] = useState<boolean>(false);
@@ -242,6 +248,7 @@ export const DiseaseDetection: React.FC = () => {
     const txt = `THE KHEDUT Crop Health Assessment:\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName} (${assessment.scientificName})\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ')}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title).join(' | ')}`;
     navigator.clipboard.writeText(txt);
     setCopied(true);
+    notify.success('Assessment summary copied to clipboard!', 'Copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -259,14 +266,13 @@ export const DiseaseDetection: React.FC = () => {
       }
     } else {
       handleCopyText();
-      alert('Copied assessment summary to clipboard!');
     }
   };
 
   const handleDownloadPdf = async () => {
     if (!assessment) return;
     if (!token) {
-      alert('Please create a free account to view PDF reports.');
+      notify.warning('Please create an account or sign in to export official PDF diagnosis statements.', 'Sign In Required');
       navigate('/register');
       return;
     }
@@ -274,36 +280,65 @@ export const DiseaseDetection: React.FC = () => {
     if (generatingPdf) return;
 
     setGeneratingPdf(true);
+    notify.info('Generating official The Khedut pathology diagnostic statement...', 'Processing PDF');
 
     try {
-      const response = await api.get('/reports/download', {
-        params: {
-          type: 'disease',
-          diseaseName: assessment.diseaseName,
-          lang: i18n.language,
-          disposition: 'inline'
-        },
-        responseType: 'blob'
+      // 1. Generate & persist report in MongoDB & storage
+      const genRes = await api.post('/reports/generate', {
+        type: 'disease',
+        scanId: assessment._id,
+        diseaseName: assessment.diseaseName,
+        lang: i18n.language
       });
 
-      if (response.data) {
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
+      if (genRes.data?.success && genRes.data.report) {
+        const rep = genRes.data.report;
+        notify.success('Diagnostic statement generated & archived!', 'Report Ready');
 
-        // Revoke object URL after 60 seconds to avoid memory leak
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
+        // 2. Fetch preview blob
+        const prevRes = await api.get(`/reports/${rep.reportId || rep.id}/preview`, {
+          responseType: 'blob'
+        });
+
+        if (prevRes.data) {
+          const blob = new Blob([prevRes.data], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          setPreviewBlobUrl(blobUrl);
+          setPreviewReport(rep);
+          setIsPreviewOpen(true);
+        }
       } else {
-        throw new Error('PDF payload empty');
+        throw new Error(genRes.data?.message || 'Report generation failed');
       }
     } catch (err: any) {
       console.error('PDF Preview generation error:', err);
-      const errMsg = t('disease.pdf_error', 'Unable to generate the report. Please try again.');
-      alert(errMsg);
+      notify.error(err.response?.data?.message || err.message || t('disease.pdf_error', 'Unable to generate report. Please try again.'), 'Generation Failed');
     } finally {
       setGeneratingPdf(false);
+    }
+  };
+
+  const handleDownloadFromPreview = async () => {
+    if (!previewReport?.reportId && !previewReport?.id) return;
+    const repId = previewReport.reportId || previewReport.id;
+    try {
+      const res = await api.get(`/reports/${repId}/download`, {
+        responseType: 'blob'
+      });
+      if (res.data) {
+        const blob = new Blob([res.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `TheKhedut_Disease_${assessment?.crop || 'Leaf'}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        notify.success('Pathology PDF downloaded successfully!', 'Download Complete');
+      }
+    } catch (err) {
+      notify.error('Download failed. Please try again.', 'Download Error');
     }
   };
 
@@ -931,6 +966,19 @@ export const DiseaseDetection: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* THE KHEDUT DIAGNOSTIC REPORT PREVIEW MODAL */}
+      <ReportPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setPreviewBlobUrl(null);
+        }}
+        report={previewReport}
+        pdfBlobUrl={previewBlobUrl}
+        onDownload={handleDownloadFromPreview}
+        showViewMyReports={true}
+      />
     </div>
   );
 };

@@ -224,6 +224,13 @@ const pdfTranslations: Record<string, Record<string, string>> = {
 
 import path from 'path';
 
+export interface PdfReportOptions {
+  reportId?: string;
+  farmerName?: string;
+  farmerEmail?: string;
+  farmerLocation?: string;
+}
+
 export class PdfService {
   private static t(key: string, lang: string): string {
     const code = (lang || 'en').toLowerCase().slice(0, 2);
@@ -252,25 +259,69 @@ export class PdfService {
   }
 
   /**
+   * Generates a PDF Report as an in-memory Buffer in the selected language
+   */
+  static generateReportBuffer(
+    reportType: 'crop' | 'weather' | 'disease' | 'expense',
+    data: any,
+    language: string = 'en',
+    options?: PdfReportOptions
+  ): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          size: 'A4',
+          margins: { top: 35, bottom: 35, left: 35, right: 35 },
+          autoFirstPage: true
+        });
+
+        const buffers: Buffer[] = [];
+        doc.on('data', chunk => buffers.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', err => reject(err));
+
+        this.buildPdfDocument(doc, reportType, data, language, options);
+        doc.end();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  /**
    * Generates a PDF Report directly to an Express HTTP Response in the selected language
    */
   static generateReport(
     res: Response,
     reportType: 'crop' | 'weather' | 'disease' | 'expense',
     data: any,
-    language: string = 'en'
+    language: string = 'en',
+    options?: PdfReportOptions
   ): void {
     const doc = new PDFDocument({
       size: 'A4',
-      margins: { top: 40, bottom: 40, left: 40, right: 40 },
+      margins: { top: 35, bottom: 35, left: 35, right: 35 },
+      autoFirstPage: true
     });
 
     doc.pipe(res);
+    this.buildPdfDocument(doc, reportType, data, language, options);
+    doc.end();
+  }
 
-    // Color Palette
-    const primaryColor = '#10B981';
-    const textColor = '#1F2937';
-    const secondaryColor = '#4B5563';
+  private static buildPdfDocument(
+    doc: PDFKit.PDFDocument,
+    reportType: 'crop' | 'weather' | 'disease' | 'expense',
+    data: any,
+    language: string,
+    options?: PdfReportOptions
+  ): void {
+    // Official Brand Palette
+    const primaryColor = '#245B38';   // Deep Crop Emerald
+    const secondaryColor = '#4F8A4B'; // Leaf Green
+    const accentColor = '#A5C96A';    // Harvest Accent
+    const textColor = '#1D2922';      // Deep Soil Text
+    const mutedColor = '#475569';     // Slate 600
 
     // Register Canonical Unicode Fonts (Nirmala UI) for English, Gujarati, Hindi, Marathi
     let regularFont = 'Helvetica';
@@ -281,8 +332,8 @@ export class PdfService {
 
     if (regularPath) {
       try {
-        doc.registerFont('KrishiUnicode', regularPath);
-        regularFont = 'KrishiUnicode';
+        doc.registerFont('TheKhedutUnicode', regularPath);
+        regularFont = 'TheKhedutUnicode';
       } catch (e) {
         console.warn('[PDF Font Warning] Failed to register regular font:', e);
       }
@@ -290,79 +341,101 @@ export class PdfService {
 
     if (boldPath) {
       try {
-        doc.registerFont('KrishiUnicode-Bold', boldPath);
-        boldFont = 'KrishiUnicode-Bold';
+        doc.registerFont('TheKhedutUnicode-Bold', boldPath);
+        boldFont = 'TheKhedutUnicode-Bold';
       } catch (e) {
         console.warn('[PDF Font Warning] Failed to register bold font:', e);
       }
-    } else if (regularFont === 'KrishiUnicode') {
-      boldFont = 'KrishiUnicode';
+    } else if (regularFont === 'TheKhedutUnicode') {
+      boldFont = 'TheKhedutUnicode';
     }
 
-    // Always set document font first BEFORE rendering ANY section
     doc.font(regularFont);
 
+    // Render subtle background watermark
+    try {
+      doc.save();
+      doc.opacity(0.035);
+      doc.font(boldFont).fontSize(54).fillColor(primaryColor);
+      doc.text('THE KHEDUT', 50, 380, { align: 'center', width: 495.28 });
+      doc.restore();
+    } catch (wmErr) {
+      // Non-critical watermark
+    }
+
     if (reportType === 'disease') {
-      this.renderDiseaseSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
-      doc.end();
+      this.renderDiseaseSection(doc, data, language, regularFont, boldFont, primaryColor, secondaryColor, accentColor, textColor, mutedColor, options);
       return;
     }
 
-    // Header Banner background
-    doc.rect(0, 0, 595.28, 120).fill(primaryColor);
+    const pageWidth = 595.28;
+    const leftMargin = 35;
+    const contentWidth = pageWidth - (leftMargin * 2);
 
-    // Title
-    doc.font(boldFont).fillColor('#FFFFFF').fontSize(24).text('THE KHEDUT', 50, 30);
+    // Header Banner
+    doc.rect(0, 0, pageWidth, 90).fill(primaryColor);
 
-    // Subtitle
-    doc.font(regularFont).fontSize(10).text(this.t('subtitle', language), 50, 65);
+    // Accent line at bottom of header
+    doc.rect(0, 88, pageWidth, 2).fill(accentColor);
 
-    // Date
+    // Brand Title & Tagline
+    doc.font(boldFont).fillColor('#FFFFFF').fontSize(22).text('THE KHEDUT', leftMargin, 20);
+    doc.font(regularFont).fontSize(9.5).fillColor('#E2E8F0').text('Smart Agriculture. Better Decisions.', leftMargin, 48);
+    doc.font(regularFont).fontSize(8.5).fillColor('#CBD5E1').text(this.t('subtitle', language), leftMargin, 63);
+
+    // Header Right Info: Report ID & Generation Date
     const reportDate = new Date().toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
     });
-    doc.text(`${this.t('generated', language)}: ${reportDate}`, 400, 65, { align: 'right' });
+    const repIdStr = options?.reportId ? `ID: ${options.reportId}` : `ID: REP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+
+    doc.font(boldFont).fontSize(8.5).fillColor('#FFFFFF').text(repIdStr, pageWidth - leftMargin - 220, 24, { align: 'right', width: 220 });
+    doc.font(regularFont).fontSize(8).fillColor('#E2E8F0').text(`${this.t('generated', language)}: ${reportDate}`, pageWidth - leftMargin - 220, 42, { align: 'right', width: 220 });
+
+    if (options?.farmerName) {
+      doc.font(regularFont).fontSize(8).fillColor('#CBD5E1').text(`Farmer: ${options.farmerName}`, pageWidth - leftMargin - 220, 58, { align: 'right', width: 220 });
+    }
 
     // Document Body Header
-    doc.y = 140;
+    doc.y = 110;
     doc.fillColor(textColor);
-    
+
     let reportTitleKey = 'cropReport';
     if (reportType === 'weather') reportTitleKey = 'weatherReport';
     else if (reportType === 'expense') reportTitleKey = 'expenseReport';
 
-    doc.font(boldFont).fontSize(14).text(this.t(reportTitleKey, language), 50, 140);
-    
-    // Decorative underline divider
-    doc.moveTo(50, 160).lineTo(545.28, 160).strokeColor(primaryColor).lineWidth(2).stroke();
+    doc.font(boldFont).fontSize(13).fillColor(primaryColor).text(this.t(reportTitleKey, language), leftMargin, 110);
+    doc.moveTo(leftMargin, 128).lineTo(leftMargin + contentWidth, 128).strokeColor(accentColor).lineWidth(1.5).stroke();
 
-    doc.y = 180;
-    doc.font(regularFont).fontSize(10).fillColor(secondaryColor);
+    doc.y = 142;
+    doc.font(regularFont).fontSize(9.5).fillColor(mutedColor);
 
     // Route section rendering
     switch (reportType) {
       case 'crop':
-        this.renderCropSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
+        this.renderCropSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, mutedColor);
         break;
       case 'weather':
-        this.renderWeatherSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
+        this.renderWeatherSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, mutedColor);
         break;
       case 'expense':
-        this.renderExpenseSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, secondaryColor);
+        this.renderExpenseSection(doc, data, language, regularFont, boldFont, primaryColor, textColor, mutedColor);
         break;
       default:
         doc.text('Invalid report selection.');
     }
 
     // Footer
-    doc.font(regularFont).fontSize(8).fillColor(secondaryColor).text(this.t('footer', language), 50, 770, {
-      align: 'center',
-      width: 495.28
-    });
-
-    doc.end();
+    const footerY = 800;
+    doc.moveTo(leftMargin, footerY - 10).lineTo(leftMargin + contentWidth, footerY - 10).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
+    doc.font(regularFont).fontSize(7.5).fillColor(mutedColor).text(
+      `THE KHEDUT • Smart Agriculture. Better Decisions. • ${this.t('footer', language)}`,
+      leftMargin,
+      footerY,
+      { align: 'center', width: contentWidth }
+    );
   }
 
   private static renderCropSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
@@ -427,40 +500,69 @@ export class PdfService {
     }
   }
 
-  private static renderDiseaseSection(doc: PDFKit.PDFDocument, data: any, lang: string, font: string, boldFont: string, primary: string, text: string, secondary: string) {
+  private static renderDiseaseSection(
+    doc: PDFKit.PDFDocument,
+    data: any,
+    lang: string,
+    font: string,
+    boldFont: string,
+    primary: string,
+    secondary: string,
+    accent: string,
+    text: string,
+    muted: string,
+    options?: PdfReportOptions
+  ) {
     try {
       // 1-PAGE FARMER-FRIENDLY DISEASE REPORT LAYOUT
       const pageWidth = 595.28;
-      const leftMargin = 40;
-      const contentWidth = 515.28;
+      const leftMargin = 35;
+      const contentWidth = pageWidth - (leftMargin * 2);
 
-      // 1. TOP HEADER BANNER (Height: 65)
-      doc.rect(0, 0, pageWidth, 65).fill(primary);
+      // 1. TOP HEADER BANNER (Height: 70)
+      doc.rect(0, 0, pageWidth, 70).fill(primary);
+      doc.rect(0, 68, pageWidth, 2).fill(accent);
 
       // Title at Top Left
       doc.font(boldFont).fillColor('#FFFFFF').fontSize(18).text('THE KHEDUT', leftMargin, 12);
+      doc.font(font).fontSize(8.5).fillColor('#E2E8F0').text('Smart Agriculture. Better Decisions.', leftMargin, 34);
+      doc.font(font).fontSize(9.5).fillColor('#FFFFFF').text(this.t('pathologyTitle', lang), leftMargin, 48, {
+        width: contentWidth - 220
+      });
 
-      // Date at Top Right
-      const formattedDate = data.scanDate || new Date().toLocaleDateString('en-IN', {
+      // Right Column: Report ID & Generation Date
+      const repIdStr = options?.reportId ? `ID: ${options.reportId}` : `ID: REP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+      const formattedDate = data.scanDate ? new Date(data.scanDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      }) : new Date().toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
         year: 'numeric'
       });
-      doc.font(font).fontSize(8.5).text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 200, 14, {
+
+      doc.font(boldFont).fontSize(8.5).fillColor('#FFFFFF').text(repIdStr, pageWidth - leftMargin - 220, 14, {
         align: 'right',
-        width: 200
+        width: 220
+      });
+      doc.font(font).fontSize(8).fillColor('#E2E8F0').text(`${this.t('scanDateLabel', lang)}: ${formattedDate}`, pageWidth - leftMargin - 220, 29, {
+        align: 'right',
+        width: 220
       });
 
-      // Subtitle below Title
-      doc.font(font).fontSize(10).text(this.t('pathologyTitle', lang), leftMargin, 38, {
-        width: contentWidth
-      });
+      if (options?.farmerName) {
+        doc.font(font).fontSize(8).fillColor('#CBD5E1').text(`Farmer: ${options.farmerName}`, pageWidth - leftMargin - 220, 44, {
+          align: 'right',
+          width: 220
+        });
+      }
 
-      let currentY = 75;
+      let currentY = 82;
 
       // 2. ISOLATED SUMMARY OVERVIEW BOX (Text Column vs Image Column)
       const hasImage = data.imageBuffer && Buffer.isBuffer(data.imageBuffer);
-      const imageWidth = hasImage ? 80 : 0;
+      const imageWidth = hasImage ? 85 : 0;
       const textColWidth = hasImage ? (contentWidth - imageWidth - 20) : (contentWidth - 20);
 
       const cropName = data.crop || 'Crop Leaf';
@@ -485,10 +587,10 @@ export class PdfService {
       const summaryContentHeight = 10 + 14 + diseaseValHeight + 6 + metricsHeight + 10;
       const boxHeight = Math.max(summaryContentHeight, hasImage ? 85 : 65);
 
-      // Render summary card background
-      doc.rect(leftMargin, currentY, contentWidth, boxHeight).fillAndStroke('#F9FAFB', '#E5E7EB');
+      // Render summary card background (#F7F9F5 canvas with subtle border)
+      doc.rect(leftMargin, currentY, contentWidth, boxHeight).fillAndStroke('#F7F9F5', '#E2E8F0');
 
-      // Render Text Column (Strictly bounded within leftMargin + 10, width textColWidth)
+      // Render Text Column
       let innerY = currentY + 10;
 
       // Row 1: Crop
@@ -496,15 +598,15 @@ export class PdfService {
       doc.font(font).fontSize(9.5).text(cropName);
       innerY += 15;
 
-      // Row 2: Disease Name (bounded horizontally to prevent image overlap)
+      // Row 2: Disease Name
       doc.font(boldFont).fillColor(text).fontSize(9.5).text(`${this.t('diseaseLabel', lang)}: `, leftMargin + 10, innerY, { continued: true });
       doc.font(font).fontSize(9.5).text(fullDiseaseStr, { width: textColWidth });
       innerY += Math.max(diseaseValHeight, 14) + 6;
 
       // Row 3: Confidence / Severity / Date Metrics
-      doc.font(font).fillColor(secondary).fontSize(8.5).text(metricsStr, leftMargin + 10, innerY, { width: textColWidth });
+      doc.font(font).fillColor(muted).fontSize(8.5).text(metricsStr, leftMargin + 10, innerY, { width: textColWidth });
 
-      // Optional Leaf Image on RIGHT Column (Strictly at x = leftMargin + contentWidth - imageWidth - 5)
+      // Optional Leaf Image on RIGHT Column
       if (hasImage) {
         try {
           doc.image(data.imageBuffer, leftMargin + contentWidth - imageWidth - 5, currentY + 5, {
@@ -528,7 +630,7 @@ export class PdfService {
       };
 
       const renderSectionDivider = (yPos: number) => {
-        doc.moveTo(leftMargin, yPos).lineTo(leftMargin + contentWidth, yPos).strokeColor('#E5E7EB').lineWidth(1).stroke();
+        doc.moveTo(leftMargin, yPos).lineTo(leftMargin + contentWidth, yPos).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
       };
 
       // 1. SYMPTOMS SECTION
@@ -608,7 +710,7 @@ export class PdfService {
       renderSectionDivider(currentY);
       currentY += 5;
 
-      doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('organicTitle', lang), leftMargin, currentY);
+      doc.font(boldFont).fontSize(10).fillColor(secondary).text(this.t('organicTitle', lang), leftMargin, currentY);
       currentY += 13;
       doc.font(font).fontSize(8.5).fillColor(text);
 
@@ -650,15 +752,21 @@ export class PdfService {
       checkPageBreak(25);
       renderSectionDivider(currentY);
       currentY += 5;
-      doc.font(font).fontSize(7.5).fillColor(secondary);
+      doc.font(font).fontSize(7.5).fillColor(muted);
       const discH = doc.heightOfString(this.t('importantDisclaimer', lang), { width: contentWidth });
       doc.text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
 
       // 7. FOOTER AT BOTTOM OF PAGE 1 (Fixed at y = 780)
-      doc.font(boldFont).fontSize(8).fillColor(primary).text(this.t('farmerCompanion', lang), leftMargin, 780, {
-        align: 'center',
-        width: contentWidth
-      });
+      doc.moveTo(leftMargin, 775).lineTo(leftMargin + contentWidth, 775).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
+      doc.font(boldFont).fontSize(8).fillColor(primary).text(
+        `THE KHEDUT • Smart Agriculture. Better Decisions. • ${this.t('farmerCompanion', lang)}`,
+        leftMargin,
+        780,
+        {
+          align: 'center',
+          width: contentWidth
+        }
+      );
 
     } catch (renderErr) {
       console.error('[PdfService renderDiseaseSection Error]', renderErr);

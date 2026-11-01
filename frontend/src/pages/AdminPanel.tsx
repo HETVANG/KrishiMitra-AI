@@ -24,8 +24,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from 'lucide-react';
+import { AdminReportManagement } from '../components/admin/AdminReportManagement';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -93,7 +95,7 @@ const SkeletonTable = () => (
 );
 
 export const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'analytics' | 'users' | 'schemes' | 'mandi' | 'forum' | 'audit' | 'broadcast'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'users' | 'schemes' | 'mandi' | 'forum' | 'audit' | 'broadcast'>('dashboard');
   
   // Dashboard & Health Stats
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -492,12 +494,18 @@ export const AdminPanel: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 bg-white dark:bg-dark-900 p-2 border border-gray-100 dark:border-dark-800/40 rounded-3xl shadow-sm">
+      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2 bg-white dark:bg-dark-900 p-2 border border-gray-150 dark:border-dark-800 rounded-3xl shadow-sm">
         <button
           onClick={() => setActiveTab('dashboard')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'dashboard' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
           <Activity size={14} /> Dashboard
+        </button>
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'reports' ? 'bg-brand-700 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
+        >
+          <FileText size={14} /> Reports
         </button>
         <button
           onClick={() => setActiveTab('analytics')}
@@ -692,6 +700,11 @@ export const AdminPanel: React.FC = () => {
               <p className="text-center py-10 text-xs text-gray-400">Failed to render dashboard summaries.</p>
             )}
           </div>
+        )}
+
+        {/* TAB: REPORT MANAGEMENT */}
+        {activeTab === 'reports' && (
+          <AdminReportManagement />
         )}
 
         {/* TAB 2: ANALYTICS */}

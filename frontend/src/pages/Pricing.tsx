@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { api } from '../services/api';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { 
   Check, 
   Sparkles, 
@@ -20,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 export const Pricing: React.FC = () => {
   const { user, updateUser } = useAuth();
+  const { notify } = useNotification();
   const { t } = useTranslation();
 
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -150,7 +150,7 @@ export const Pricing: React.FC = () => {
                   paymentProvider: 'razorpay'
                 });
                 setSuccess(true);
-                toast.success('Subscription activated successfully');
+                notify.success('Subscription activated successfully', 'Payment Confirmed');
               } else {
                 throw new Error('Unable to complete payment verification');
               }
@@ -158,7 +158,7 @@ export const Pricing: React.FC = () => {
               console.error('Razorpay verification error:', err);
               const message = err.response?.data?.message || 'Payment verification failed.';
               setError(message);
-              toast.error(message);
+              notify.error(message, 'Payment Error');
             } finally {
               setLoading(false);
             }
@@ -169,13 +169,13 @@ export const Pricing: React.FC = () => {
             contact: user?.phone || ''
           },
           theme: {
-            color: '#059669' // Emerald-600
+            color: '#245B38' // The Khedut Emerald
           },
           modal: {
             ondismiss: function () {
               setLoading(false);
               setError('Payment cancelled or failed.');
-              toast.error('Payment cancelled or failed.');
+              notify.warning('Payment cancelled or failed.', 'Payment Notice');
             }
           }
         };
@@ -184,7 +184,7 @@ export const Pricing: React.FC = () => {
         rzp.on('payment.failed', function (response: any) {
           setLoading(false);
           setError(response.error.description || 'Payment failed.');
-          toast.error(response.error.description || 'Payment failed.');
+          notify.error(response.error.description || 'Payment failed.', 'Transaction Failed');
         });
         rzp.open();
       }
@@ -192,7 +192,7 @@ export const Pricing: React.FC = () => {
       console.error('Checkout error:', err);
       const message = err.response?.data?.message || 'Failed to initialize subscription checkout.';
       setError(message);
-      toast.error(message);
+      notify.error(message, 'Checkout Error');
     } finally {
       // Razorpay loading is resolved asynchronously in callbacks
     }

@@ -1,4 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs';
+import path from 'path';
 
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -132,7 +134,7 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'krishimitra-docs',
+          folder: 'the-khedut-docs',
           resource_type: 'auto',
         },
         (error, result) => {
@@ -143,6 +145,74 @@ export class CloudinaryService {
             resolve(result.secure_url);
           } else {
             reject(new Error('Cloudinary file upload returned empty result'));
+          }
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+  }
+
+  /**
+   * Uploads a generated Report PDF buffer to Cloudinary with secure parameters
+   * Falls back to disk buffer if Cloudinary is not configured or fails
+   */
+  static async uploadReportPdf(buffer: Buffer, filename: string): Promise<{ url: string; publicId: string; storageType: 'cloudinary' | 'local' }> {
+    this.validateFilePayload(buffer, 'application/pdf', 'DOC');
+
+    if (!isCloudinaryConfigured) {
+      console.warn('[Cloudinary Service] Cloudinary keys not configured. Storing report in local persistent cache.');
+      const localDir = path.resolve(process.cwd(), 'uploads/reports');
+      if (!fs.existsSync(localDir)) {
+        fs.mkdirSync(localDir, { recursive: true });
+      }
+      const cleanFileName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = path.join(localDir, cleanFileName);
+      fs.writeFileSync(filePath, buffer);
+
+      return {
+        url: `/api/reports/storage/${cleanFileName}`,
+        publicId: `local_${cleanFileName}`,
+        storageType: 'local'
+      };
+    }
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'the-khedut-reports',
+          resource_type: 'raw',
+          public_id: filename.replace(/\.pdf$/i, ''),
+          format: 'pdf',
+          access_mode: 'public'
+        },
+        (error, result) => {
+          if (error) {
+            console.error('[Cloudinary Report Upload Error]', error);
+            // Fallback to local storage on network/API failure
+            try {
+              const localDir = path.resolve(process.cwd(), 'uploads/reports');
+              if (!fs.existsSync(localDir)) {
+                fs.mkdirSync(localDir, { recursive: true });
+              }
+              const cleanFileName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+              fs.writeFileSync(path.join(localDir, cleanFileName), buffer);
+              return resolve({
+                url: `/api/reports/storage/${cleanFileName}`,
+                publicId: `local_${cleanFileName}`,
+                storageType: 'local'
+              });
+            } catch (localErr) {
+              return reject(error);
+            }
+          } else if (result) {
+            resolve({
+              url: result.secure_url,
+              publicId: result.public_id,
+              storageType: 'cloudinary'
+            });
+          } else {
+            reject(new Error('Cloudinary report upload returned empty result'));
           }
         }
       );

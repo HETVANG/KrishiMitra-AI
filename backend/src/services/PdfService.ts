@@ -351,17 +351,32 @@ export class PdfService {
     // 3. HEADER (Top-Left: Official Logo & Tagline; Top-Right: Support & IDs)
     let currentY = 24;
 
-    // Top-Left: Stylized The Khedut Stalk & Sprout Icon
+    // Top-Left: Official The Khedut Farmer & Two Oxen Emblem
     doc.save();
-    doc.translate(leftMargin, currentY + 1);
-    doc.scale(0.48);
-    // Base stalk
-    doc.path('M 18 10 H 26 V 52 H 18 Z').fillColor(primaryGreen).fill();
-    // Leaf diagonal
-    doc.path('M 26 32 C 30 27 38 18 49 14 C 50 14 51 15 50 16 C 48 24 43 32 36 36 Z').fillColor(accentGreen).fill();
-    // Furrow diagonal
-    doc.path('M 31 31 L 47 49 H 40 L 26 38 Z').fillColor(secondaryGreen).fill();
-    doc.circle(22, 11, 2.5).fillColor(accentGreen).fill();
+    doc.translate(leftMargin, currentY);
+    doc.roundedRect(0, 0, 26, 26, 6).fillColor(primaryGreen).fill();
+    doc.scale(0.38);
+    // Sun
+    doc.circle(21, 22, 8).fillColor(accentGreen).fillOpacity(0.3).fill();
+    doc.fillOpacity(1);
+    // Furrows
+    doc.lineWidth(1.5).strokeColor(accentGreen).moveTo(6, 52).bezierCurveTo(16, 50, 28, 53, 40, 51).stroke();
+    // Farmer
+    doc.circle(17.5, 23, 3.6).fillColor('#FFFFFF').fill();
+    doc.path('M 15 26.5 L 19.5 26.5 L 21.5 39 L 14 39 Z').fillColor('#FFFFFF').fill();
+    doc.path('M 14 39 L 17 51 L 19 51 L 17.5 39 Z').fillColor('#FFFFFF').fill();
+    doc.path('M 18.5 39 L 22 50.5 L 24 50.5 L 21 39 Z').fillColor('#FFFFFF').fill();
+    // Plough & Yoke
+    doc.path('M 24 32.5 L 30 46 L 28.5 46.5 L 22.5 33 Z').fillColor(accentGreen).fill();
+    doc.path('M 29.5 45.5 L 46 31.5 L 47 32.8 L 30.5 46.8 Z').fillColor(accentGreen).fill();
+    doc.path('M 37 30 L 54 28.5 L 54 30.2 L 37 31.7 Z').fillColor('#FFFFFF').fill();
+    // Oxen
+    doc.path('M 38 28.5 C 37 24.5 40 21.5 43 23.5 C 45 25 46 27.5 46 29.5 Z').fillColor(secondaryGreen).fill();
+    doc.path('M 42 26.5 C 41 21.5 45 18.5 48.5 20.5 C 51 22 52 25.5 52 27.5 Z').fillColor('#FFFFFF').fill();
+    doc.path('M 52 19.5 C 54 14.5 58 10.5 60 8.5 C 59 12.5 57 16.5 54.5 21.5 Z').fillColor(accentGreen).fill();
+    doc.path('M 41 30.5 C 38 30.5 37 32.5 37 35.5 C 37 39.5 40 42.5 45 42.5 L 54 40.5 C 56 38.5 57 33.5 55 29.5 Z').fillColor('#FFFFFF').fill();
+    doc.path('M 50 40.5 L 53 50.5 L 54.5 50.5 L 52 40.5 Z').fillColor('#FFFFFF').fill();
+    doc.path('M 38 38.5 L 39.5 50.5 L 41 50.5 L 40 40.5 Z').fillColor('#FFFFFF').fill();
     doc.restore();
 
     // Application Title & Tagline

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { MessageSquare, Heart, Share2, Tag, Calendar, Plus, MessageCircle, AlertCircle, HelpCircle } from 'lucide-react';
 
 export const Forum: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,7 +47,7 @@ export const Forum: React.FC = () => {
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) {
-      setError('Title and content are required.');
+      setError(t('forum.title_content_req') || 'Title and content are required.');
       return;
     }
 
@@ -99,22 +101,6 @@ export const Forum: React.FC = () => {
     }
   };
 
-  const loadComments = async (postId: string) => {
-    try {
-      const res = await api.get(`/community/posts/${postId}/comments`);
-      if (res.data?.success) {
-        setActivePost((prev: any) => {
-          if (prev && prev._id === postId) {
-            return { ...prev, comments: res.data.comments };
-          }
-          return prev;
-        });
-      }
-    } catch (err) {
-      console.error('Failed to load comments:', err);
-    }
-  };
-
   const handleExpandPost = async (postId: string) => {
     try {
       const res = await api.get(`/forum/details/${postId}`);
@@ -129,7 +115,6 @@ export const Forum: React.FC = () => {
           console.error('Failed to load comments sequentially:', commErr);
         }
         setActivePost(post);
-        // Scroll to comments panel on mobile/tablet screens
         setTimeout(() => {
           commentsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
@@ -156,14 +141,12 @@ export const Forum: React.FC = () => {
 
       if (res.data && res.data.success) {
         setCommentInput('');
-        
         setActivePost((prev: any) => ({
           ...prev,
           comments: res.data.comments
         }));
-
         setPosts(prev => prev.map(p => {
-          if (p._id === activePost._id) {
+          if (p._id === activePost?._id) {
             return {
               ...p,
               comments: res.data.comments
@@ -173,33 +156,25 @@ export const Forum: React.FC = () => {
         }));
       }
     } catch (err) {
-      console.error('Failed to submit comment:', err);
+      console.error('Failed to post comment:', err);
     } finally {
       setSubmittingComment(false);
     }
   };
 
-  const handleEditComment = async (commentId: string, text: string) => {
-    if (!text.trim()) return;
-    if (text.length > 500) {
-      alert('Comment cannot exceed 500 characters.');
-      return;
-    }
-
+  const handleEditComment = async (commentId: string, newText: string) => {
+    if (!newText.trim()) return;
     try {
       const res = await api.put(`/community/comments/${commentId}`, {
-        text: text.trim()
+        text: newText.trim()
       });
 
       if (res.data && res.data.success) {
         setEditingCommentId(null);
-        setEditingCommentText('');
-
         setActivePost((prev: any) => ({
           ...prev,
           comments: res.data.comments
         }));
-
         setPosts(prev => prev.map(p => {
           if (p._id === activePost?._id) {
             return {
@@ -216,7 +191,7 @@ export const Forum: React.FC = () => {
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    if (!window.confirm(t('common.confirm') || 'Are you sure you want to delete this comment?')) return;
 
     try {
       const res = await api.delete(`/community/comments/${commentId}`);
@@ -225,7 +200,6 @@ export const Forum: React.FC = () => {
           ...prev,
           comments: res.data.comments
         }));
-
         setPosts(prev => prev.map(p => {
           if (p._id === activePost?._id) {
             return {
@@ -250,18 +224,22 @@ export const Forum: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12 max-w-3xl mx-auto">
+    <div className="space-y-6 pb-12 max-w-3xl mx-auto text-left">
       {/* Banner */}
-      <div className="bg-gradient-to-r from-emerald-600 to-green-700 text-white p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-emerald-600 to-green-700 text-white p-5 sm:p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Community Forum Board</h1>
-          <p className="text-emerald-100 text-xs md:text-sm mt-1 font-medium">Ask questions, share crop results, discuss weather alerts, and consult certified experts.</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
+            {t('forum.title') || 'Community Farmers Forum'}
+          </h1>
+          <p className="text-emerald-100 text-xs sm:text-sm mt-1 font-medium">
+            {t('forum.subtitle') || 'Ask questions, share crop results, discuss weather alerts, and consult certified experts.'}
+          </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shrink-0 shadow-sm"
+          className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs sm:text-sm transition-all duration-150 flex items-center gap-1.5 shrink-0 shadow-sm min-h-[44px]"
         >
-          <Plus size={16} /> Create Thread
+          <Plus size={16} /> <span>{t('forum.ask_question') || 'Create Thread'}</span>
         </button>
       </div>
 
@@ -278,37 +256,37 @@ export const Forum: React.FC = () => {
               <div
                 key={item._id}
                 onClick={() => handleExpandPost(item._id)}
-                className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/40 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer text-left transition-all duration-150"
+                className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/40 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md cursor-pointer text-left transition-all duration-150"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/50 rounded-full flex items-center justify-center font-bold text-brand-700 dark:text-brand-400 text-xs uppercase">
-                      {item.author?.name?.slice(0, 2)}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-9 h-9 bg-brand-100 dark:bg-brand-900/50 rounded-full flex items-center justify-center font-bold text-brand-700 dark:text-brand-400 text-xs uppercase shrink-0">
+                      {item.author?.name?.slice(0, 2) || 'TK'}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-gray-800 dark:text-dark-200">{item.author?.name}</h4>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-gray-150 dark:bg-dark-800 text-gray-505 dark:text-dark-400 font-bold rounded uppercase">
-                        {item.author?.role}
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-gray-800 dark:text-dark-200 truncate">{item.author?.name}</h4>
+                      <span className="text-[9px] px-1.5 py-0.5 bg-gray-150 dark:bg-dark-800 text-gray-500 dark:text-dark-400 font-bold rounded uppercase">
+                        {item.author?.role || 'Farmer'}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-0.5">
+                  <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-0.5 shrink-0">
                     <Calendar size={11} /> {formatPostDate(item.createdAt)}
                   </span>
                 </div>
 
-                <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-50 tracking-tight mt-4 line-clamp-2 leading-tight">
+                <h3 className="font-extrabold text-sm sm:text-base text-gray-800 dark:text-dark-50 tracking-tight mt-3 sm:mt-4 line-clamp-2 leading-tight">
                   {item.title}
                 </h3>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-dark-400 mt-2 line-clamp-3 leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-400 mt-2 line-clamp-3 leading-relaxed">
                   {item.content}
                 </p>
 
                 {/* Tags */}
                 {item.tags && item.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-4">
+                  <div className="flex flex-wrap gap-1 mt-3 sm:mt-4">
                     {item.tags.map((tag: string, tIdx: number) => (
-                      <span key={tIdx} className="px-2 py-0.5 bg-gray-100 dark:bg-dark-800/60 text-gray-505 dark:text-dark-400 font-semibold rounded text-[10px] flex items-center gap-0.5">
+                      <span key={tIdx} className="px-2 py-0.5 bg-gray-100 dark:bg-dark-800/60 text-gray-600 dark:text-dark-300 font-semibold rounded text-[10px] flex items-center gap-0.5">
                         <Tag size={9} /> #{tag}
                       </span>
                     ))}
@@ -316,7 +294,7 @@ export const Forum: React.FC = () => {
                 )}
 
                 {/* Actions summary */}
-                <div className="border-t border-gray-50 dark:border-dark-850 mt-5 pt-3.5 flex items-center gap-6">
+                <div className="border-t border-gray-50 dark:border-dark-850 mt-4 sm:mt-5 pt-3.5 flex items-center gap-6">
                   <button
                     onClick={(e) => handleLike(item._id, e)}
                     className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${
@@ -334,44 +312,48 @@ export const Forum: React.FC = () => {
                       e.stopPropagation();
                       void handleExpandPost(item._id);
                     }}
-                    className="flex items-center gap-1.5 text-xs text-gray-500 font-bold hover:text-brand-650 transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-gray-500 font-bold hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                   >
                     <MessageCircle size={15} />
-                    <span>{item.comments?.length || 0} Comments</span>
+                    <span>{item.comments?.length || 0} {t('forum.comments') || 'Responses'}</span>
                   </button>
                 </div>
               </div>
             );
           })
         ) : (
-          <div className="bg-white dark:bg-dark-900 rounded-3xl p-12 text-center border">
+          <div className="bg-white dark:bg-dark-900 rounded-3xl p-8 sm:p-12 text-center border">
             <HelpCircle size={48} className="text-gray-300 dark:text-dark-800 mx-auto mb-3" />
-            <p className="font-bold text-sm text-gray-700 dark:text-dark-200">No community posts yet</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Be the first to ask a question! Click Create Thread above.</p>
+            <p className="font-bold text-sm text-gray-700 dark:text-dark-200">
+              {t('forum.no_posts') || 'No community discussions found. Be the first to start a conversation!'}
+            </p>
           </div>
         )}
       </div>
 
       {/* COMMENTS MODAL */}
       {activePost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative flex flex-col max-h-[80vh] text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div 
+            ref={commentsPanelRef}
+            className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl relative flex flex-col max-h-[85vh] text-left"
+          >
             <button
               onClick={() => { setActivePost(null); setEditingCommentId(null); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2 min-w-[36px] min-h-[36px] flex items-center justify-center"
             >
               ✕
             </button>
 
-            <h2 className="text-xl font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-2 pr-8 truncate">
+            <h2 className="text-lg sm:text-xl font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-2 pr-8 truncate">
               {activePost.title}
             </h2>
-            <p className="text-[10px] text-gray-400 mb-4">
+            <p className="text-[10px] text-gray-400 mb-3">
               Posted by {activePost.author?.name} on {formatPostDate(activePost.createdAt)}
             </p>
 
             {/* Comments list container */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 my-4 border-y border-gray-100 dark:border-dark-800/40 py-4 min-h-[150px]">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 my-3 border-y border-gray-100 dark:border-dark-800/40 py-3.5 min-h-[140px]">
               {activePost.comments && activePost.comments.length > 0 ? (
                 activePost.comments.map((comm: any, cIdx: number) => {
                   const commentOwnerId = comm.userId || (comm.author && typeof comm.author === 'object' ? comm.author._id : comm.author);
@@ -380,14 +362,14 @@ export const Forum: React.FC = () => {
                   const commentUsername = comm.username || comm.name || (comm.author && typeof comm.author === 'object' ? comm.author.name : 'User');
                   
                   return (
-                    <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
+                    <div key={comm._id || cIdx} className="text-xs bg-gray-50/50 dark:bg-dark-850/20 p-3 sm:p-3.5 rounded-2xl border border-gray-150/40 dark:border-dark-800/30 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 bg-brand-100 dark:bg-brand-900/40 rounded-full flex items-center justify-center font-bold text-[9px] text-brand-700 dark:text-brand-400 uppercase">
                             {(commentUsername || 'U').slice(0, 2)}
                           </div>
                           <div>
-                            <span className="font-extrabold text-gray-700 dark:text-dark-250 block leading-tight">
+                            <span className="font-extrabold text-gray-700 dark:text-dark-200 block leading-tight">
                               {commentUsername}
                             </span>
                             <span className="text-[8px] text-gray-400 font-semibold block mt-0.5">
@@ -409,7 +391,7 @@ export const Forum: React.FC = () => {
                                 onClick={() => setEditingCommentId(null)}
                                 className="text-[9px] font-bold text-gray-400 hover:text-gray-600 transition-colors"
                               >
-                                Cancel
+                                {t('forum.cancel') || 'Cancel'}
                               </button>
                             ) : (
                               <button
@@ -450,7 +432,7 @@ export const Forum: React.FC = () => {
                           </button>
                         </div>
                       ) : (
-                        <p className="text-gray-655 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
+                        <p className="text-gray-600 dark:text-dark-300 leading-relaxed font-medium pl-1 whitespace-pre-wrap">
                           {commentText}
                         </p>
                       )}
@@ -458,8 +440,8 @@ export const Forum: React.FC = () => {
                   );
                 })
               ) : (
-                <p className="text-center text-xs text-gray-450 py-8">
-                  No comments yet. Be the first to comment.
+                <p className="text-center text-xs text-gray-400 py-8">
+                  {t('forum.add_comment') || 'No comments yet. Be the first to comment.'}
                 </p>
               )}
             </div>
@@ -471,7 +453,7 @@ export const Forum: React.FC = () => {
                   type="text"
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
-                  placeholder="Write a comment..."
+                  placeholder={t('forum.add_comment') || 'Write a response...'}
                   className="custom-input text-xs"
                   disabled={submittingComment}
                   maxLength={500}
@@ -479,9 +461,9 @@ export const Forum: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submittingComment || !commentInput.trim()}
-                  className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-150 text-white rounded-xl text-xs font-bold shrink-0 transition-colors"
+                  className="px-4 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-150 text-white rounded-xl text-xs font-bold shrink-0 transition-colors min-h-[40px]"
                 >
-                  Post
+                  {t('forum.reply') || 'Post'}
                 </button>
               </form>
             ) : (
@@ -501,17 +483,17 @@ export const Forum: React.FC = () => {
 
       {/* CREATE POST MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative animate-fade-in text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative animate-fade-in text-left max-h-[85vh] overflow-y-auto">
             <button
               onClick={() => { setShowCreateModal(false); setError(''); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2 min-w-[36px] min-h-[36px] flex items-center justify-center"
             >
               ✕
             </button>
 
             <h2 className="text-xl font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-4">
-              Create Forum Thread
+              {t('forum.create_post_title') || 'Create Forum Thread'}
             </h2>
 
             {error && (
@@ -523,35 +505,41 @@ export const Forum: React.FC = () => {
 
             <form onSubmit={handleCreatePost} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">Thread Title</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">
+                  {t('forum.post_title_label') || 'Thread Title'}
+                </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Help needed with whitefly infestation in cotton"
+                  placeholder={t('forum.post_title_placeholder') || 'e.g. Best organic pesticide for cotton pink bollworm?'}
                   className="custom-input text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">Question Description</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">
+                  {t('forum.post_content_label') || 'Discussion Content'}
+                </label>
                 <textarea
                   required
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Provide details about symptoms, field location, sowing dates..."
+                  placeholder={t('forum.post_content_placeholder') || 'Describe your farm situation, crop variety, symptoms or observations...'}
                   className="custom-input h-32 resize-none py-2 text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">Category Tags (comma separated)</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1">
+                  {t('forum.post_tags_label') || 'Category Tags (comma separated)'}
+                </label>
                 <input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. cotton, pests, disease"
+                  placeholder={t('forum.post_tags_placeholder') || 'cotton, pest, organic, gujarat'}
                   className="custom-input text-xs"
                 />
               </div>
@@ -559,9 +547,9 @@ export const Forum: React.FC = () => {
               <button
                 type="submit"
                 disabled={creating}
-                className="btn-primary w-full py-3 mt-2"
+                className="btn-primary w-full py-3 mt-2 min-h-[44px]"
               >
-                {creating ? 'Submitting post...' : 'Publish Thread'}
+                {creating ? 'Submitting post...' : (t('forum.post_button') || 'Publish Thread')}
               </button>
             </form>
           </div>
@@ -570,3 +558,5 @@ export const Forum: React.FC = () => {
     </div>
   );
 };
+
+export default Forum;

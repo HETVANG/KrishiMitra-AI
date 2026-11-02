@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import {
   ShieldCheck, Activity, Server, RefreshCw, CheckCircle2, AlertTriangle,
@@ -52,6 +53,7 @@ export interface ProviderLogItem {
 }
 
 export const AdminProviders: React.FC = () => {
+  const { t } = useTranslation();
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -299,13 +301,13 @@ export const AdminProviders: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 p-6 rounded-3xl shadow-sm">
         <div>
           <div className="flex items-center gap-2 text-brand-600 font-extrabold text-xs uppercase tracking-wider mb-1">
-            <Server className="w-4 h-4" /> Global Infrastructure Control
+            <Server className="w-4 h-4" /> {t('admin.providers', 'Global Infrastructure Control')}
           </div>
           <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-dark-100">
-            Provider Ecosystem & Health Hub
+            {t('admin.providers', 'Provider Ecosystem & Health Hub')}
           </h1>
           <p className="text-xs text-gray-500 dark:text-dark-400 mt-1">
-            Operational provider management, real-time connectivity testing, credential isolation, and audit telemetry.
+            {t('admin.subtitle', 'Operational provider management, real-time connectivity testing, credential isolation, and audit telemetry.')}
           </p>
         </div>
 

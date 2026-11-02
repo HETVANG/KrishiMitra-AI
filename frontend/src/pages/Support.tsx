@@ -1,52 +1,52 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const Support: React.FC = () => {
+  const { t } = useTranslation();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const faqs = [
     {
-      q: 'How does the Crop Disease Scanner work?',
-      a: 'The pathology scanner uses computer vision algorithms. By uploading a clear photograph of the crop foliage, the model analyzes cell discoloration, spots, or decay symptoms and matches them with known plant diseases. It then provides organic remedies and chemical treatments.'
+      q: t('support.faq_1_q') || 'How does the Crop Disease Scanner work?',
+      a: t('support.faq_1_a') || 'The pathology scanner uses computer vision algorithms. By uploading a clear photograph of the crop foliage, the model analyzes cell discoloration, spots, or decay symptoms and matches them with known plant diseases. It then provides organic remedies and chemical treatments.'
     },
     {
-      q: 'Are the AI agronomy recommendations accurate?',
-      a: 'AI recommendations represent generalized suggestions. Because local climate variables, water levels, and soil compositions vary, advisories should be corroborated with field conditions. Consult local agricultural extension officers before using high quantities of chemical fertilizers.'
+      q: t('support.faq_2_q') || 'Where do the Mandi commodity prices come from?',
+      a: t('support.faq_2_a') || 'Daily prices are fetched in real-time from official Agmarknet APMC government databases across Gujarat, Maharashtra, and India.'
     },
     {
-      q: 'Why does a commodity show "Price Not Available" in Mandi Prices?',
-      a: 'This status appears when the live government Agmarknet servers have not yet uploaded price logs for that specific commodity and market on the chosen day. We display this clear notice instead of showing an incorrect ₹0 price.'
+      q: t('support.faq_3_q') || 'How do I switch the platform language to Gujarati or Hindi?',
+      a: t('support.faq_3_a') || 'Click the globe icon in the top navigation bar or go to Settings > Regional Configuration to choose English, Gujarati, or Hindi.'
     },
     {
-      q: 'How do I cancel my subscription or request a refund?',
-      a: `Go to "My Subscription" to cancel your plan. In case of payment gateway errors or duplicate charges, email ${BRAND.supportEmail} with your Razorpay payment details within 7 days to request a refund.`
-    },
-    {
-      q: 'Can I request help if advisors are offline?',
-      a: 'Yes! If no advisory experts are online, use the Video Consultation Request module inside the "Book Expert" section. Record or upload a short video (under 2 minutes) describing the crop problem, and a certified agronomist will review it.'
+      q: t('support.faq_4_q') || 'How do I export official PDF statements?',
+      a: t('support.faq_4_a') || 'Navigate to PDF Reports from the sidebar to generate, preview, and download authenticated multi-lingual crop, pathology, and expense statements.'
     }
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200 text-left">
       
       {/* Header */}
       <header className="bg-white dark:bg-dark-900 border-b border-slate-200/80 dark:border-dark-850 px-4 md:px-8 py-3.5 flex items-center justify-between">
         <NavLink to="/" className="flex items-center gap-2 text-brand-700 dark:text-brand-400 font-extrabold text-xs hover:underline">
-          <ArrowLeft size={16} /> Back to Home
+          <ArrowLeft size={16} /> <span>{t('support.back_to_home') || 'Back to Home'}</span>
         </NavLink>
         <BrandLogo variant="horizontal" size="sm" />
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-3xl mx-auto px-4 py-12 space-y-8 text-left">
+      <main className="flex-grow max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-6 sm:space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tight">Support FAQ</h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            {t('support.title') || 'Support FAQ'}
+          </h1>
           <p className="text-xs text-slate-500 dark:text-dark-400 leading-relaxed font-semibold">
-            Common questions and answers regarding {BRAND.name} features, plans, and billing.
+            {t('support.subtitle') || `Common questions and answers regarding ${BRAND.name} features, plans, and billing.`}
           </p>
         </div>
 
@@ -69,6 +69,10 @@ export const Support: React.FC = () => {
               )}
             </div>
           ))}
+        </div>
+
+        <div className="bg-brand-50/70 dark:bg-brand-950/20 p-5 rounded-2xl border border-brand-200/50 dark:border-brand-900/30 text-center text-xs text-brand-800 dark:text-brand-300 font-bold">
+          {t('support.contact_support') || 'Need direct assistance? Contact our agritech support team.'}
         </div>
       </main>
 

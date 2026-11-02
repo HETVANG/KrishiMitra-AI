@@ -1,50 +1,56 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const Privacy: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200 text-left">
       
       {/* Header */}
       <header className="bg-white dark:bg-dark-900 border-b border-slate-200/80 dark:border-dark-850 px-4 md:px-8 py-3.5 flex items-center justify-between">
         <NavLink to="/" className="flex items-center gap-2 text-brand-700 dark:text-brand-400 font-extrabold text-xs hover:underline">
-          <ArrowLeft size={16} /> Back to Home
+          <ArrowLeft size={16} /> <span>{t('privacy.back_to_home') || 'Back to Home'}</span>
         </NavLink>
         <BrandLogo variant="horizontal" size="sm" />
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-3xl mx-auto px-4 py-12 space-y-8 text-left">
+      <main className="flex-grow max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-6 sm:space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl font-black tracking-tight">Privacy Policy</h1>
-          <p className="text-xs text-slate-400 font-semibold uppercase">Last Updated: November 2026</p>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            {t('privacy.title') || 'Privacy Policy'}
+          </h1>
+          <p className="text-xs text-slate-400 font-semibold uppercase">
+            {t('privacy.updated') || 'Last Updated: November 2026'}
+          </p>
         </div>
 
-        <div className="bg-white dark:bg-dark-900 p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-dark-800/50 shadow-xs space-y-6 text-xs md:text-sm text-slate-600 dark:text-dark-300 leading-relaxed font-medium">
+        <div className="bg-white dark:bg-dark-900 p-5 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-dark-800/50 shadow-xs space-y-6 text-xs md:text-sm text-slate-600 dark:text-dark-300 leading-relaxed font-medium">
           <div className="flex items-center gap-2 text-brand-700 dark:text-brand-400 font-extrabold border-b border-slate-100 dark:border-dark-800 pb-2">
             <Shield size={16} />
-            <span>1. Information Collection and Telemetry</span>
+            <span>{t('privacy.section_1_title') || '1. Data Collection'}</span>
           </div>
           <p>
-            We collect basic crop profile details, farm location coordinates, and uploaded leaf pathology photos. Location metadata is required to supply hyper-local weather advisory alerts, regional mandi price index tracking, and government seed subsidy mappings.
+            {t('privacy.section_1_desc') || 'We collect only data necessary for delivering agricultural intelligence: location coordinates (for weather and APMC mandis), crop scans, and optional farm ledger notes.'}
           </p>
 
-          <h3 className="font-bold text-slate-900 dark:text-white pt-2">2. Leaf Analysis Uploads</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white pt-2">
+            {t('privacy.section_2_title') || '2. Farmer Ownership'}
+          </h3>
           <p>
-            Uploaded crop leaf images are processed through Gemini Vision API frameworks to perform pathology classification. These photos are cached in secure Cloudinary containers and are never sold or shared with third-party advertisers. Unregistered guests may upload leaf photos to run analyses, but their scan history logs are not permanently tied to any user record.
+            {t('privacy.section_2_desc') || 'Your farm data belongs to you. We do not sell your personal, financial, or yield records to third-party commercial marketing entities.'}
           </p>
 
-          <h3 className="font-bold text-slate-900 dark:text-white pt-2">3. Subscription Billing & Razorpay Credentials</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white pt-2">
+            {t('privacy.section_3_title') || '3. Data Security'}
+          </h3>
           <p>
-            All financial operations are verified directly via Razorpay Secure gateways. {BRAND.name} servers do not store your physical bank numbers or full credit card numbers. Your active key secrets are securely contained on backend environmental nodes.
-          </p>
-
-          <h3 className="font-bold text-slate-900 dark:text-white pt-2">4. User Rights and Data Deletion</h3>
-          <p>
-            Registered users can modify or request complete purge deletion of their coordinates, leaf logs, and authentication credentials at any time by contacting our support team at {BRAND.supportEmail}.
+            {t('privacy.section_3_desc') || 'All data in transit and at rest is protected by industry standard encryption protocols.'}
           </p>
         </div>
       </main>

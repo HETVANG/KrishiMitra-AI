@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import {
   TrendingUp,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export const AdminGrowth: React.FC = () => {
+  const { t } = useTranslation();
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,11 +78,11 @@ export const AdminGrowth: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold bg-white/20 text-white px-3 py-1 rounded-full uppercase tracking-wider">
-              Admin Growth & Distribution Engine
+              {t('admin.growth', 'Admin Growth & Distribution Engine')}
             </span>
           </div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight mt-2">
-            Customer Acquisition Analytics
+            {t('admin.growth_title', 'Customer Acquisition Analytics')}
           </h1>
           <p className="text-emerald-100 text-xs mt-1 font-medium">
             Measured farmer referral loops, public insight shares & campaign conversion funnels

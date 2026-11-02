@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { 
   ShieldAlert, 
@@ -95,6 +96,7 @@ const SkeletonTable = () => (
 );
 
 export const AdminPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'analytics' | 'users' | 'schemes' | 'mandi' | 'forum' | 'audit' | 'broadcast'>('dashboard');
   
   // Dashboard & Health Stats
@@ -487,9 +489,9 @@ export const AdminPanel: React.FC = () => {
       <div className="bg-gradient-to-r from-red-600 to-red-800 text-white p-6 rounded-3xl shadow-lg flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <ShieldAlert size={28} /> Control Center Admin Panel
+            <ShieldAlert size={28} /> {t('admin.title', 'Control Center Admin Panel')}
           </h1>
-          <p className="text-red-100 text-xs md:text-sm mt-1 font-medium">Audit logs, analyze system health telemetry, block accounts, broadcast announcements, and publish mandi pricing and subsidies.</p>
+          <p className="text-red-100 text-xs md:text-sm mt-1 font-medium">{t('admin.subtitle', 'Audit logs, analyze system health telemetry, block accounts, broadcast announcements, and publish mandi pricing and subsidies.')}</p>
         </div>
       </div>
 
@@ -499,25 +501,25 @@ export const AdminPanel: React.FC = () => {
           onClick={() => setActiveTab('dashboard')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'dashboard' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
-          <Activity size={14} /> Dashboard
+          <Activity size={14} /> {t('admin.overview_tab', 'Dashboard')}
         </button>
         <button
           onClick={() => setActiveTab('reports')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'reports' ? 'bg-brand-700 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
-          <FileText size={14} /> Reports
+          <FileText size={14} /> {t('reports.title', 'Reports')}
         </button>
         <button
           onClick={() => setActiveTab('analytics')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'analytics' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
-          <TrendingUp size={14} /> Analytics
+          <TrendingUp size={14} /> {t('admin.analytics', 'Analytics')}
         </button>
         <button
           onClick={() => setActiveTab('users')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'users' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
-          <Users size={14} /> Users
+          <Users size={14} /> {t('admin.users_tab', 'Users')}
         </button>
         <button
           onClick={() => setActiveTab('schemes')}
@@ -541,7 +543,7 @@ export const AdminPanel: React.FC = () => {
           onClick={() => setActiveTab('audit')}
           className={`py-2 px-1 text-xs font-bold rounded-2xl flex items-center justify-center gap-1.5 transition-all ${activeTab === 'audit' ? 'bg-red-600 text-white shadow-md' : 'text-gray-600 dark:text-dark-300 hover:bg-gray-50'}`}
         >
-          <History size={14} /> Audit Logs
+          <History size={14} /> {t('admin.security_tab', 'Audit Logs')}
         </button>
         <button
           onClick={() => setActiveTab('broadcast')}
@@ -667,33 +669,35 @@ export const AdminPanel: React.FC = () => {
                 <div className="bg-white dark:bg-dark-900 border border-gray-150 dark:border-dark-800 rounded-2xl overflow-hidden mt-6">
                   <div className="p-4 border-b border-gray-150 flex justify-between items-center bg-gray-50 dark:bg-dark-850">
                     <h4 className="font-extrabold text-sm text-gray-800 dark:text-dark-150 flex items-center gap-1">
-                      <History size={16} /> Recent Logins Activity History
+                      <History size={16} /> {t('admin.recent_logins', 'Recent Logins Activity History')}
                     </h4>
                   </div>
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-gray-100 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
-                      <tr>
-                        <th className="p-3">User</th>
-                        <th className="p-3">Email</th>
-                        <th className="p-3">Login Time</th>
-                        <th className="p-3">Browser</th>
-                        <th className="p-3">Device</th>
-                        <th className="p-3">IP Address</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
-                      {dashboardData.recentActivity?.map((activity: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-gray-55/50">
-                          <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{activity.name}</td>
-                          <td className="p-3 text-gray-500">{activity.email}</td>
-                          <td className="p-3 text-gray-500">{new Date(activity.loginTime).toLocaleString('en-IN')}</td>
-                          <td className="p-3 text-gray-400 font-semibold">{activity.browser}</td>
-                          <td className="p-3 text-gray-400 capitalize">{activity.device}</td>
-                          <td className="p-3 text-gray-400 font-bold">{activity.ipAddress}</td>
+                  <div className="overflow-x-auto scrollbar-thin">
+                    <table className="w-full text-left text-xs min-w-[650px]">
+                      <thead className="bg-gray-100 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
+                        <tr>
+                          <th className="p-3">{t('admin.user_col', 'User')}</th>
+                          <th className="p-3">{t('admin.email_col', 'Email')}</th>
+                          <th className="p-3">{t('admin.login_time_col', 'Login Time')}</th>
+                          <th className="p-3">{t('admin.browser_col', 'Browser')}</th>
+                          <th className="p-3">{t('admin.device_col', 'Device')}</th>
+                          <th className="p-3">{t('admin.ip_col', 'IP Address')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
+                        {dashboardData.recentActivity?.map((activity: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-gray-55/50">
+                            <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{activity.name}</td>
+                            <td className="p-3 text-gray-500">{activity.email}</td>
+                            <td className="p-3 text-gray-500">{new Date(activity.loginTime).toLocaleString('en-IN')}</td>
+                            <td className="p-3 text-gray-400 font-semibold">{activity.browser}</td>
+                            <td className="p-3 text-gray-400 capitalize">{activity.device}</td>
+                            <td className="p-3 text-gray-400 font-bold">{activity.ipAddress}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -907,41 +911,43 @@ export const AdminPanel: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <div className="border border-gray-150 dark:border-dark-800 rounded-2xl overflow-hidden bg-white">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-gray-50 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
-                      <tr>
-                        <th className="p-3">User Name</th>
-                        <th className="p-3">Email Address</th>
-                        <th className="p-3">Role</th>
-                        <th className="p-3">Active Plan</th>
-                        <th className="p-3">Last Login</th>
-                        <th className="p-3 text-center">Moderation Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
-                      {usersList.map((item) => (
-                        <tr key={item._id} className="hover:bg-gray-50/50 dark:hover:bg-dark-850/10">
-                          <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{item.name}</td>
-                          <td className="p-3 text-gray-500 font-medium">{item.email}</td>
-                          <td className="p-3 capitalize font-bold">
-                            <span className={`px-2 py-0.5 rounded text-[10px] ${item.role === 'admin' ? 'bg-red-50 text-red-600' : 'bg-brand-50 text-brand-700'}`}>
-                              {item.role}
-                            </span>
-                          </td>
-                          <td className="p-3 text-gray-500 font-semibold uppercase">{item.plan || 'free'}</td>
-                          <td className="p-3 text-gray-450">{item.lastLogin ? new Date(item.lastLogin).toLocaleString('en-IN') : 'Never'}</td>
-                          <td className="p-3 text-center">
-                            <button
-                              onClick={() => handleToggleBlock(item._id)}
-                              className={`px-3 py-1 rounded-xl text-[10px] font-bold transition-colors ${item.isBlocked ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
-                            >
-                              {item.isBlocked ? 'Unblock Account' : 'Block Account'}
-                            </button>
-                          </td>
+                  <div className="overflow-x-auto scrollbar-thin">
+                    <table className="w-full text-left text-xs min-w-[700px]">
+                      <thead className="bg-gray-50 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
+                        <tr>
+                          <th className="p-3">{t('admin.user_col', 'User Name')}</th>
+                          <th className="p-3">{t('admin.email_col', 'Email Address')}</th>
+                          <th className="p-3">{t('admin.role_col', 'Role')}</th>
+                          <th className="p-3">{t('admin.plan_col', 'Active Plan')}</th>
+                          <th className="p-3">{t('admin.last_login_col', 'Last Login')}</th>
+                          <th className="p-3 text-center">{t('admin.action_col', 'Moderation Action')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
+                        {usersList.map((item) => (
+                          <tr key={item._id} className="hover:bg-gray-50/50 dark:hover:bg-dark-850/10">
+                            <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{item.name}</td>
+                            <td className="p-3 text-gray-500 font-medium">{item.email}</td>
+                            <td className="p-3 capitalize font-bold">
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${item.role === 'admin' ? 'bg-red-50 text-red-600' : 'bg-brand-50 text-brand-700'}`}>
+                                {item.role}
+                              </span>
+                            </td>
+                            <td className="p-3 text-gray-500 font-semibold uppercase">{item.plan || 'free'}</td>
+                            <td className="p-3 text-gray-450">{item.lastLogin ? new Date(item.lastLogin).toLocaleString('en-IN') : 'Never'}</td>
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={() => handleToggleBlock(item._id)}
+                                className={`px-3 py-1 rounded-xl text-[10px] font-bold transition-colors ${item.isBlocked ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                              >
+                                {item.isBlocked ? 'Unblock Account' : 'Block Account'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Pagination */}
@@ -1360,28 +1366,30 @@ export const AdminPanel: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <div className="border border-gray-150 dark:border-dark-800 rounded-2xl overflow-hidden bg-white">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-gray-50 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
-                      <tr>
-                        <th className="p-3">Timestamp</th>
-                        <th className="p-3">Admin</th>
-                        <th className="p-3">Action</th>
-                        <th className="p-3">Target</th>
-                        <th className="p-3">Details</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
-                      {auditLogsList.map((log) => (
-                        <tr key={log._id} className="hover:bg-gray-50/50">
-                          <td className="p-3 text-gray-400 font-semibold">{new Date(log.timestamp).toLocaleString('en-IN')}</td>
-                          <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{log.adminId?.name || 'Admin'}</td>
-                          <td className="p-3 capitalize font-bold text-red-600">{log.action}</td>
-                          <td className="p-3 text-gray-500 font-semibold">{log.target}</td>
-                          <td className="p-3 text-gray-550 leading-relaxed">{log.details}</td>
+                  <div className="overflow-x-auto scrollbar-thin">
+                    <table className="w-full text-left text-xs min-w-[650px]">
+                      <thead className="bg-gray-50 dark:bg-dark-800 text-gray-500 font-bold border-b border-gray-150">
+                        <tr>
+                          <th className="p-3">{t('admin.timestamp_col', 'Timestamp')}</th>
+                          <th className="p-3">{t('admin.admin_col', 'Admin')}</th>
+                          <th className="p-3">{t('admin.action_col', 'Action')}</th>
+                          <th className="p-3">{t('admin.target_col', 'Target')}</th>
+                          <th className="p-3">{t('admin.details_col', 'Details')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-dark-800/40">
+                        {auditLogsList.map((log) => (
+                          <tr key={log._id} className="hover:bg-gray-50/50">
+                            <td className="p-3 text-gray-400 font-semibold">{new Date(log.timestamp).toLocaleString('en-IN')}</td>
+                            <td className="p-3 font-bold text-gray-800 dark:text-dark-200">{log.adminId?.name || 'Admin'}</td>
+                            <td className="p-3 capitalize font-bold text-red-600">{log.action}</td>
+                            <td className="p-3 text-gray-500 font-semibold">{log.target}</td>
+                            <td className="p-3 text-gray-550 leading-relaxed">{log.details}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Pagination */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Building2, Plus, Users, Sprout, ArrowRight, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +18,7 @@ interface Organization {
 }
 
 export const OrganizationList: React.FC = () => {
+  const { t } = useTranslation();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -55,10 +57,10 @@ export const OrganizationList: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-extrabold text-gray-900 dark:text-dark-50">
-                Organizations & FPO Enterprise Hub
+                {t('organizations.title', 'Organizations & FPO Enterprise Hub')}
               </h1>
               <p className="text-xs text-gray-500 dark:text-dark-400">
-                Manage multi-farm operations, cooperatives, agronomist advisory teams, and enterprise agricultural units.
+                {t('organizations.subtitle', 'Manage multi-farm operations, cooperatives, agronomist advisory teams, and enterprise agricultural units.')}
               </p>
             </div>
           </div>
@@ -69,7 +71,7 @@ export const OrganizationList: React.FC = () => {
           className="flex items-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-md transition-all self-start md:self-auto"
         >
           <Plus className="w-4 h-4" />
-          Create New Organization
+          {t('organizations.create_fpo', 'Create New Organization')}
         </button>
       </div>
 

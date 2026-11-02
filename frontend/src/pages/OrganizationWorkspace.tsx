@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react';
 
 export const OrganizationWorkspace: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'farms' | 'members' | 'tasks' | 'reports' | 'copilot' | 'import' | 'settings'>('dashboard');

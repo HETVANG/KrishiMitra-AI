@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 export const Experts: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isExpert = user?.role === 'expert';
 
@@ -219,8 +221,8 @@ export const Experts: React.FC = () => {
     <div className="space-y-6 pb-12">
       {/* Banner */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-805 text-white p-6 rounded-3xl shadow-lg text-left">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Agricultural Expert Advisory Consultation</h1>
-        <p className="text-emerald-100 text-xs md:text-sm mt-1 font-medium">Connect directly with certified agronomists, soil pathologists, and veterinary advisors.</p>
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('experts.title', 'Agricultural Expert Advisory Consultation')}</h1>
+        <p className="text-emerald-100 text-xs md:text-sm mt-1 font-medium">{t('experts.subtitle', 'Connect directly with certified agronomists, soil pathologists, and veterinary advisors.')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -235,12 +237,12 @@ export const Experts: React.FC = () => {
                 onClick={() => { setSelectedExpert(null); setShowBookingForm(false); setError(''); }}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-xs"
               >
-                ✕ Cancel
+                ✕ {t('common.cancel', 'Cancel')}
               </button>
 
               <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mb-4 flex items-center gap-2 border-b pb-3">
                 <Calendar size={18} className="text-brand-600" /> 
-                {selectedExpert ? `Book slot with ${selectedExpert.name}` : 'Request Advisory Consultation'}
+                {selectedExpert ? `${t('experts.book_consultation', 'Book slot with')} ${selectedExpert.name}` : t('experts.book_consultation', 'Request Advisory Consultation')}
               </h3>
 
               {error && (
@@ -254,7 +256,7 @@ export const Experts: React.FC = () => {
                 {/* Crop & Category */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Crop Name</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.crop_name', 'Crop Name')}</label>
                     <input
                       type="text"
                       required
@@ -266,7 +268,7 @@ export const Experts: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Problem Category</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.category', 'Problem Category')}</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
@@ -286,7 +288,7 @@ export const Experts: React.FC = () => {
                 {/* Lang & Consultation Type */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Preferred Language</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.pref_language', 'Preferred Language')}</label>
                     <select
                       value={preferredLanguage}
                       onChange={(e) => setPreferredLanguage(e.target.value)}
@@ -302,7 +304,7 @@ export const Experts: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Consultation Mode</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.consultation_type', 'Consultation Mode')}</label>
                     <select
                       value={consultationType}
                       onChange={(e) => setConsultationType(e.target.value)}
@@ -318,7 +320,7 @@ export const Experts: React.FC = () => {
                 {/* Date & Time slot */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Preferred Date</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.date_slot', 'Preferred Date')}</label>
                     <input
                       type="date"
                       required
@@ -330,7 +332,7 @@ export const Experts: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Preferred Slot</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.date_slot', 'Preferred Slot')}</label>
                     <select
                       value={bookingSlot}
                       onChange={(e) => setBookingSlot(e.target.value)}
@@ -346,7 +348,7 @@ export const Experts: React.FC = () => {
 
                 {/* Symptoms Description */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Problem Description (Required)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{t('experts.description', 'Problem Description (Required)')}</label>
                   <textarea
                     required
                     value={description}
@@ -358,7 +360,7 @@ export const Experts: React.FC = () => {
 
                 {/* MEDIA ATTACHMENTS (Images & Videos) */}
                 <div className="space-y-3 pt-2">
-                  <span className="block text-xs font-bold text-gray-500 uppercase">Upload Crop Images / Videos</span>
+                  <span className="block text-xs font-bold text-gray-500 uppercase">{t('experts.attach_media', 'Upload Crop Images / Videos')}</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Image Upload */}
                     <div className="p-3 border border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-center gap-1.5 bg-gray-50/20">
@@ -415,7 +417,7 @@ export const Experts: React.FC = () => {
                   disabled={booking}
                   className="btn-primary w-full py-3.5 mt-2 flex items-center justify-center gap-1.5"
                 >
-                  <Upload size={14} /> {booking ? `Uploading & Submitting (${uploadProgress}%)` : 'Submit Consultation Request'}
+                  <Upload size={14} /> {booking ? `Uploading & Submitting (${uploadProgress}%)` : t('experts.submit_booking', 'Submit Consultation Request')}
                 </button>
               </form>
             </div>
@@ -426,7 +428,7 @@ export const Experts: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
                   <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-                    <UserCheck className="text-brand-650" size={18} /> Active Consulting Experts
+                    <UserCheck className="text-brand-650" size={18} /> {t('experts.title', 'Active Consulting Experts')}
                   </h3>
                   
                   {/* General request submit trigger */}
@@ -434,7 +436,7 @@ export const Experts: React.FC = () => {
                     onClick={() => { setShowBookingForm(true); setSelectedExpert(null); }}
                     className="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1"
                   >
-                    📝 general request
+                    📝 {t('experts.book_consultation', 'General Request')}
                   </button>
                 </div>
 
@@ -485,7 +487,7 @@ export const Experts: React.FC = () => {
                             onClick={() => { setSelectedExpert(item); setError(''); setInfo(''); }}
                             className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[10px] uppercase font-bold tracking-wider shadow-sm transition-colors duration-150"
                           >
-                            Book now
+                            {t('experts.book_now', 'Book now')}
                           </button>
                         </div>
                       </div>
@@ -495,7 +497,7 @@ export const Experts: React.FC = () => {
                   /* FRIENDLY EMPTY STATE BOOKING TRIGGER */
                   <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/20 dark:from-dark-850 dark:to-dark-900 border border-amber-100/50 p-6 rounded-3xl text-center space-y-3">
                     <span className="text-3xl block">🧑‍🌾</span>
-                    <h4 className="font-extrabold text-sm text-amber-800 dark:text-amber-400">No Experts Online Right Now</h4>
+                    <h4 className="font-extrabold text-sm text-amber-800 dark:text-amber-400">{t('experts.no_experts', 'No Experts Online Right Now')}</h4>
                     <p className="text-xs text-gray-500 leading-normal max-w-sm mx-auto font-medium">
                       All certified pathologists are currently offline. You can still submit an advisory consultation request immediately, and our next available agronomist will diagnosis your crop issues!
                     </p>
@@ -503,7 +505,7 @@ export const Experts: React.FC = () => {
                       onClick={() => { setShowBookingForm(true); setSelectedExpert(null); }}
                       className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all inline-flex items-center gap-1.5"
                     >
-                      <FileText size={14} /> Submit Advisory Request
+                      <FileText size={14} /> {t('experts.book_consultation', 'Submit Advisory Request')}
                     </button>
                   </div>
                 )}
@@ -515,7 +517,7 @@ export const Experts: React.FC = () => {
         {/* Right Side: Appointment lists (5 cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-150 dark:border-dark-800/30 shadow-sm min-h-[350px] text-left">
           <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 mb-4 pb-2 border-b flex items-center gap-2">
-            <Clock className="text-brand-650" size={18} /> Consulting Slot Logs
+            <Clock className="text-brand-650" size={18} /> {t('experts.my_appointments', 'Consulting Slot Logs')}
           </h3>
 
           {info && (
@@ -603,7 +605,7 @@ export const Experts: React.FC = () => {
                           className="btn-primary w-full py-2 text-[10px] uppercase font-bold tracking-wider flex items-center justify-center gap-1.5"
                         >
                           <Video size={13} />
-                          <span>Launch Video Consultation Room</span>
+                          <span>{t('experts.join_call', 'Launch Video Consultation Room')}</span>
                         </a>
                       )}
 
@@ -615,7 +617,7 @@ export const Experts: React.FC = () => {
                               onClick={() => handleUpdateStatus(item._id, 'accepted')}
                               className="btn-primary flex-1 py-1.5 text-[9px] uppercase font-bold"
                             >
-                              Claim Request
+                              {t('common.confirm', 'Claim Request')}
                             </button>
                           )}
                           {['accepted', 'scheduled'].includes(item.status) && (
@@ -623,7 +625,7 @@ export const Experts: React.FC = () => {
                               onClick={() => handleUpdateStatus(item._id, 'completed')}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex-1 py-1.5 text-[9px] uppercase rounded-lg"
                             >
-                              Mark Completed
+                              {t('common.save', 'Mark Completed')}
                             </button>
                           )}
                           {item.status !== 'cancelled' && item.status !== 'completed' && (
@@ -631,7 +633,7 @@ export const Experts: React.FC = () => {
                               onClick={() => handleUpdateStatus(item._id, 'cancelled')}
                               className="bg-red-500 hover:bg-red-650 text-white font-bold flex-1 py-1.5 text-[9px] uppercase rounded-lg"
                             >
-                              Decline
+                              {t('common.delete', 'Decline')}
                             </button>
                           )}
                         </div>
@@ -640,7 +642,7 @@ export const Experts: React.FC = () => {
                   );
                 })
               ) : (
-                <p className="text-center py-10 text-xs text-gray-405">No consultation requests logged yet.</p>
+                <p className="text-center py-10 text-xs text-gray-405">{t('experts.no_appointments', 'No consultation requests logged yet.')}</p>
               )}
             </div>
           )}

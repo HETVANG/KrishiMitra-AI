@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { BarChart3, Activity, AlertTriangle, RefreshCw, MessageSquare, CheckCircle2, ShieldAlert, Layers } from 'lucide-react';
 
@@ -35,6 +36,7 @@ export interface FeedbackQueueItem {
 }
 
 export const AdminAnalytics: React.FC = () => {
+  const { t } = useTranslation();
   const [metrics, setMetrics] = useState<UsageMetric[]>([]);
   const [insights, setInsights] = useState<ProductInsight[]>([]);
   const [feedbackQueue, setFeedbackQueue] = useState<FeedbackQueueItem[]>([]);
@@ -67,13 +69,13 @@ export const AdminAnalytics: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 p-6 rounded-3xl shadow-sm">
         <div>
           <div className="flex items-center gap-2 text-brand-600 font-extrabold text-xs uppercase tracking-wider mb-1">
-            <BarChart3 className="w-4 h-4" /> Measured Telemetry & Feedback
+            <BarChart3 className="w-4 h-4" /> {t('admin.analytics', 'Measured Telemetry & Feedback')}
           </div>
           <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-dark-100">
-            Product Intelligence & Farmer Signals
+            {t('admin.analytics_title', 'Product Intelligence & Farmer Signals')}
           </h1>
           <p className="text-xs text-gray-500 dark:text-dark-400 mt-1">
-            Real feature usage, workflow completion rates, user feedback queues, and data accuracy signals.
+            {t('admin.subtitle', 'Real feature usage, workflow completion rates, user feedback queues, and data accuracy signals.')}
           </p>
         </div>
 

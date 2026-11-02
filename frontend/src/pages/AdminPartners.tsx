@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 import { Building2, ShieldCheck, Plus, RefreshCw, Globe, CheckCircle2, AlertCircle, FileText, User } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export interface PartnerItem {
 }
 
 export const AdminPartners: React.FC = () => {
+  const { t } = useTranslation();
   const [partners, setPartners] = useState<PartnerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -89,7 +91,7 @@ export const AdminPartners: React.FC = () => {
             <Building2 className="w-4 h-4" /> Strategic Relationships
           </div>
           <h1 className="text-xl md:text-2xl font-black text-gray-900 dark:text-dark-100">
-            Agricultural Partner Management
+            {t('admin.partners_title', 'Agricultural Partner Management')}
           </h1>
           <p className="text-xs text-gray-500 dark:text-dark-400 mt-1">
             Official partner organizations, research agreements, government data sources, and agricultural networks.

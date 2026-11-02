@@ -252,14 +252,14 @@ export const OrganizationWorkspace: React.FC = () => {
         {/* Workspace Navigation Tabs */}
         <div className="flex flex-wrap gap-1 bg-gray-100 dark:bg-dark-800 p-1.5 rounded-2xl">
           {[
-            { id: 'dashboard', label: 'Overview', icon: Building2 },
-            { id: 'farms', label: 'Farms', icon: Sprout },
-            { id: 'members', label: 'Members', icon: Users },
+            { id: 'dashboard', label: t('organizations.workspace_title', 'Overview'), icon: Building2 },
+            { id: 'farms', label: t('organizations.active_crops', 'Farms'), icon: Sprout },
+            { id: 'members', label: t('organizations.member_roster', 'Members'), icon: Users },
             { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-            { id: 'reports', label: 'Reports', icon: FileText },
+            { id: 'reports', label: t('organizations.documents', 'Reports'), icon: FileText },
             { id: 'copilot', label: 'Copilot', icon: Bot },
             { id: 'import', label: 'Import', icon: Upload },
-            { id: 'settings', label: 'Settings', icon: Settings }
+            { id: 'settings', label: t('organizations.settings', 'Settings'), icon: Settings }
           ].map(tab => {
             const Icon = tab.icon;
             return (

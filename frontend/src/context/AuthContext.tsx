@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
+import i18n from '../i18n';
 
 interface User {
   id: string;
@@ -90,6 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.data && res.data.success) {
         setUser(res.data.user);
         localStorage.setItem('user', JSON.stringify(res.data.user));
+        if (res.data.user?.settings?.language) {
+          const userLang = res.data.user.settings.language;
+          i18n.changeLanguage(userLang);
+          localStorage.setItem('km-lang', userLang);
+        }
       }
     } catch (err) {
       console.warn('[Auth Context] Failed to fetch profile, clearing token.');
@@ -118,6 +124,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
+      if (userData?.settings?.language) {
+        const userLang = userData.settings.language;
+        i18n.changeLanguage(userLang);
+        localStorage.setItem('km-lang', userLang);
+      }
     }
   };
 
@@ -129,6 +140,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
+      if (userData?.settings?.language) {
+        const userLang = userData.settings.language;
+        i18n.changeLanguage(userLang);
+        localStorage.setItem('km-lang', userLang);
+      }
     }
   };
 

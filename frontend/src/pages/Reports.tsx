@@ -24,11 +24,13 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ReportPreviewModal } from '../components/ReportPreviewModal';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const Reports: React.FC = () => {
   const { user, token } = useAuth();
+  const { t, i18n } = useTranslation();
   const { notify, confirm } = useNotification();
 
   // Active generation loading
@@ -92,7 +94,7 @@ export const Reports: React.FC = () => {
     notify.info(`Generating official The Khedut ${reportType.toUpperCase()} statement...`, 'Processing Report');
 
     try {
-      const activeLang = user?.settings?.language || 'en';
+      const activeLang = i18n.language || user?.settings?.language || 'en';
       const res = await api.post('/reports/generate', {
         type: reportType,
         lang: activeLang

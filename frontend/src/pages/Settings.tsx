@@ -30,6 +30,7 @@ export const Settings: React.FC = () => {
     try {
       setUpdating(true);
       i18n.changeLanguage(lang);
+      localStorage.setItem('km-lang', lang);
       await updateSettings(lang, currentTheme, user?.farmLocation);
     } catch (err) {
       console.error('Failed to update language setting:', err);
@@ -56,21 +57,21 @@ export const Settings: React.FC = () => {
       <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-[10px] font-extrabold bg-brand-600/60 px-3 py-1 rounded-full uppercase tracking-wider">
-            Account & Preferences
+            {t('nav.settings') || 'Account & Preferences'}
           </span>
           <h1 className="text-xl md:text-2xl font-extrabold tracking-tight mt-2 flex items-center gap-2">
             <SettingsIcon className="w-6 h-6 text-brand-300" />
-            Settings & Growth Center
+            {t('settings.title') || 'Settings & Account Profile'}
           </h1>
           <p className="text-brand-100 text-xs mt-1 font-medium">
-            Manage your farm profile, referrals, regional preferences, and application settings.
+            {t('settings.subtitle') || 'Manage your farm profile, referrals, regional preferences, and application settings.'}
           </p>
         </div>
         <button
           onClick={() => setShowRegionalModal(true)}
           className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-2 shadow-sm min-h-[44px] shrink-0"
         >
-          <Globe size={16} /> Regional Config
+          <Globe size={16} /> {t('settings.language_tab') || 'Regional Config'}
         </button>
       </div>
 

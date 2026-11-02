@@ -20,6 +20,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 
 export const MarketDashboard: React.FC = () => {
@@ -330,14 +331,26 @@ export const MarketDashboard: React.FC = () => {
       <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Target Commodity / Crop</label>
-            <input
-              type="text"
-              value={searchCrop}
-              onChange={(e) => setSearchCrop(e.target.value)}
-              placeholder="e.g. Wheat, Tomato"
-              className="custom-input text-sm"
-            />
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">
+              {t('market.search_crop') || 'Target Commodity / Crop'}
+            </label>
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={searchCrop}
+                onChange={(e) => setSearchCrop(e.target.value)}
+                placeholder="e.g. Wheat, Cotton"
+                className="custom-input text-sm pr-12"
+              />
+              <div className="absolute right-1 top-1">
+                <VoiceInputButton
+                  onTranscript={(text) => setSearchCrop(text)}
+                  lang={i18n.language}
+                  size="sm"
+                  showTextFeedback
+                />
+              </div>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>

@@ -71,25 +71,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
   const moreLinks = [
     { to: '/schemes', label: t('nav.schemes') || 'Gov Schemes', icon: Layers },
     { to: '/soil', label: t('nav.soil') || 'Soil Chemistry NPK', icon: Sprout },
-    { to: '/marketplace', label: 'Agri Marketplace', icon: Store },
+    { to: '/marketplace', label: t('nav.marketplace') || 'Agri Marketplace', icon: Store },
     { to: '/forum', label: t('nav.forum') || 'Farmer Community', icon: Users },
     { to: '/expenses', label: t('nav.expense') || 'Expenses Ledger', icon: Coins },
     { to: '/reports', label: t('nav.reports') || 'PDF Statements', icon: FileText },
   ];
 
   if (user?.role === 'admin' || user?.plan === 'enterprise') {
-    moreLinks.push({ to: '/organizations', label: 'Organizations & FPO', icon: Building2 });
-    moreLinks.push({ to: '/partners/discover', label: 'Partner Network', icon: Globe });
+    moreLinks.push({ to: '/organizations', label: t('nav.organizations') || 'Organizations & FPO', icon: Building2 });
+    moreLinks.push({ to: '/partners/discover', label: t('nav.partners') || 'Partner Network', icon: Globe });
   }
 
   // Admin section
   const adminLinks = [
     { to: '/admin', label: t('nav.admin') || 'Admin Panel', icon: ShieldAlert },
-    { to: '/admin/providers', label: 'Provider Ecosystem', icon: Server },
-    { to: '/admin/partners', label: 'Partner Governance', icon: Building2 },
-    { to: '/admin/analytics', label: 'Product Analytics', icon: BarChart3 },
-    { to: '/admin/growth', label: 'Growth & Acquisition', icon: BarChart3 },
-    { to: '/admin/success', label: 'Farmer Success', icon: Activity },
+    { to: '/admin/providers', label: t('nav.admin_providers') || 'Provider Ecosystem', icon: Server },
+    { to: '/admin/partners', label: t('nav.admin_partners') || 'Partner Governance', icon: Building2 },
+    { to: '/admin/analytics', label: t('nav.admin_analytics') || 'Product Analytics', icon: BarChart3 },
+    { to: '/admin/growth', label: t('nav.admin_growth') || 'Growth & Acquisition', icon: BarChart3 },
+    { to: '/admin/success', label: t('nav.admin_success') || 'Farmer Success', icon: Activity },
   ];
 
   const renderNavLink = (link: { to: string; label: string; icon: any }, isSub: boolean = false) => {
@@ -179,7 +179,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
           {/* Section 1: Farmer Core */}
           <div className="space-y-1">
             <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-dark-500">
-              Farming Operations
+              {t('nav.farming_operations') || 'Farming Operations'}
             </p>
             {farmLinks.map(link => renderNavLink(link))}
           </div>
@@ -187,7 +187,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
           {/* Section 2: AI & Advisory */}
           <div className="space-y-1">
             <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-dark-500">
-              Agronomy Intelligence
+              {t('nav.agronomy_intelligence') || 'Agronomy Intelligence'}
             </p>
             {aiLinks.map(link => renderNavLink(link))}
             {activityLinks.map(link => renderNavLink(link))}
@@ -214,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
           {user?.role === 'admin' && (
             <div className="pt-2 border-t border-slate-100 dark:border-dark-800/50 space-y-1">
               <p className="px-3 text-[10px] font-black uppercase tracking-wider text-red-500/80">
-                Administration
+                {t('nav.administration') || 'Administration'}
               </p>
               {adminLinks.map(link => renderNavLink(link))}
             </div>
@@ -233,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
               className="flex items-center gap-3 w-full px-3.5 py-2.5 text-xs font-bold text-slate-600 dark:text-dark-300 hover:bg-slate-100/80 dark:hover:bg-dark-800/60 rounded-xl transition-colors min-h-[42px]"
             >
               <Globe size={18} className="text-slate-400" />
-              <span>Language & Region</span>
+              <span>{t('settings.language_tab') || 'Language & Region'}</span>
             </button>
           )}
 

@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 import { ReportPreviewModal } from '../components/ReportPreviewModal';
 
 export const DiseaseDetection: React.FC = () => {
@@ -481,14 +482,26 @@ export const DiseaseDetection: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">{t('disease.uploader.farmer_notes')}</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Yellow spots appeared 2 days ago after rain"
-                    value={farmerNotes}
-                    onChange={(e) => setFarmerNotes(e.target.value)}
-                    className="w-full text-xs font-medium bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-xl p-2 text-gray-800 dark:text-dark-100"
-                  />
+                  <label className="text-[11px] font-semibold text-gray-600 dark:text-dark-300 block mb-1">
+                    {t('disease.uploader.farmer_notes') || 'Farmer Notes / Observations'}
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      placeholder={t('disease.uploader.farmer_notes_placeholder') || "e.g. Yellow spots appeared 2 days ago after rain"}
+                      value={farmerNotes}
+                      onChange={(e) => setFarmerNotes(e.target.value)}
+                      className="w-full text-xs font-medium bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-xl p-2 pr-12 text-gray-800 dark:text-dark-100"
+                    />
+                    <div className="absolute right-1 top-1">
+                      <VoiceInputButton
+                        onTranscript={(text) => setFarmerNotes(prev => (prev ? `${prev} ${text}` : text))}
+                        lang={i18n.language}
+                        size="sm"
+                        showTextFeedback
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

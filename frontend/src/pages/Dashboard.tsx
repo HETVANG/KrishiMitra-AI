@@ -25,6 +25,7 @@ import { RegionalSettingsModal } from '../components/RegionalSettingsModal';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 export const Dashboard: React.FC = () => {
   console.log('[The Khedut Startup Log] Loading Dashboard');
@@ -428,7 +429,7 @@ export const Dashboard: React.FC = () => {
       {/* SECTION 1: TODAY (Weather, Crop Lifecycle, Smart Irrigation) */}
       <div>
         <h2 className="text-xs font-extrabold uppercase tracking-wider text-gray-400 dark:text-dark-500 mb-3 px-1">
-          Today's Overview
+          {t('weather.today_overview') || "Today's Overview"}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Weather Card */}
@@ -436,13 +437,13 @@ export const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CloudSun className="text-brand-600 dark:text-brand-400" size={20} />
-                <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Weather</h3>
+                <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">{t('dashboard.weather') || 'Weather'}</h3>
               </div>
               <button
                 onClick={() => setShowLocationModal(true)}
                 className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline"
               >
-                Change Location
+                {t('dashboard.select_location') || 'Change Location'}
               </button>
             </div>
 
@@ -459,14 +460,14 @@ export const Dashboard: React.FC = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px] bg-gray-50 dark:bg-dark-850 p-2.5 rounded-xl text-gray-600 dark:text-dark-300 font-medium">
-                  <div>Humidity: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.humidity || 60}%</span></div>
-                  <div>Rain Chance: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.rainProb || 10}%</span></div>
+                  <div>{t('dashboard.humidity') || 'Humidity'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.humidity || 60}%</span></div>
+                  <div>{t('dashboard.rain') || 'Rain Chance'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.rainProb || 10}%</span></div>
                 </div>
               </div>
             )}
 
             <Link to="/weather" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
-              <span>View Full Forecast</span>
+              <span>{t('dashboard.view_full_forecast') || 'View Full Forecast'}</span>
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -475,30 +476,30 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between space-y-4">
             <div className="flex items-center gap-2">
               <Sprout className="text-emerald-600 dark:text-emerald-400" size={20} />
-              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Crop Status</h3>
+              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">{t('dashboard.crop_status') || 'Crop Status'}</h3>
             </div>
 
             {activeCropCycle ? (
               <div className="space-y-2">
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  Active Crop
+                  {t('common.active') || 'Active Crop'}
                 </span>
                 <h4 className="font-extrabold text-base text-gray-800 dark:text-dark-100">
                   {activeCropCycle.cropName} {activeCropCycle.variety ? `(${activeCropCycle.variety})` : ''}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-dark-400">
-                  Stage: <span className="font-bold text-emerald-600 dark:text-emerald-400">{activeCropCycle.currentStage || 'Growing'}</span>
+                  {t('lifecycle.stage') || 'Stage'}: <span className="font-bold text-emerald-600 dark:text-emerald-400">{activeCropCycle.currentStage || 'Growing'}</span>
                 </p>
               </div>
             ) : (
               <div className="space-y-1 py-2">
-                <p className="text-xs font-bold text-gray-700 dark:text-dark-200">No active crop cycle logged</p>
-                <p className="text-[11px] text-gray-400">Add a crop cycle to track stages & advisory.</p>
+                <p className="text-xs font-bold text-gray-700 dark:text-dark-200">{t('dashboard.no_active_crop') || 'No active crop cycle logged'}</p>
+                <p className="text-[11px] text-gray-400">{t('dashboard.no_active_crop_desc') || 'Add a crop cycle to track stages & advisory.'}</p>
               </div>
             )}
 
             <Link to="/crop-cycles" className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
-              <span>{activeCropCycle ? 'Manage Lifecycle' : 'Add Crop Cycle'}</span>
+              <span>{activeCropCycle ? (t('dashboard.manage_lifecycle') || 'Manage Lifecycle') : (t('dashboard.add_crop_cycle') || 'Add Crop Cycle')}</span>
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -507,12 +508,12 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col justify-between space-y-4">
             <div className="flex items-center gap-2">
               <Droplets className="text-blue-600 dark:text-blue-400" size={20} />
-              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">Smart Irrigation</h3>
+              <h3 className="font-extrabold text-sm text-gray-800 dark:text-dark-100">{t('dashboard.smart_irrigation') || 'Smart Irrigation'}</h3>
             </div>
 
             <div className="space-y-2">
               <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-                {irrigationData?.recommendation?.status ? irrigationData.recommendation.status.replace(/_/g, ' ') : 'Normal'}
+                {irrigationData?.recommendation?.status ? irrigationData.recommendation.status.replace(/_/g, ' ') : (t('common.normal') || 'Normal')}
               </span>
               <p className="text-xs text-gray-600 dark:text-dark-300 font-medium leading-relaxed line-clamp-2">
                 {irrigationData?.recommendation?.summary || 'Irrigation levels are normal today based on soil moisture and weather.'}
@@ -520,7 +521,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <Link to="/irrigation" className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center justify-between pt-1 border-t border-gray-100 dark:border-dark-800">
-              <span>View Irrigation Hub</span>
+              <span>{t('dashboard.view_irrigation_hub') || 'View Irrigation Hub'}</span>
               <ChevronRight size={14} />
             </Link>
           </div>
@@ -549,31 +550,31 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
               <ScanEye className="text-red-500" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Crop Health</h3>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.crop_health') || 'Crop Health'}</h3>
             </div>
             <Link to="/disease" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
-              View Scan <ChevronRight size={14} />
+              {t('dashboard.view_scan') || 'View Scan'} <ChevronRight size={14} />
             </Link>
           </div>
           <p className="text-xs text-gray-600 dark:text-dark-300 font-medium">
             {diseaseHistory.length > 0
               ? `Latest scan on ${diseaseHistory[0].crop || 'crop'}: ${diseaseHistory[0].diseaseName} (${diseaseHistory[0].severity || 'moderate'} severity).`
-              : 'No recent crop scan logged. Perform a leaf scan to detect early signs of crop disease.'}
+              : (t('disease.empty.desc') || 'No recent crop scan logged. Perform a leaf scan to detect early signs of crop disease.')}
           </p>
           <Link
             to="/disease"
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors"
           >
-            {diseaseHistory.length > 0 ? 'Scan Another Leaf' : 'Perform Leaf Scan'}
+            {diseaseHistory.length > 0 ? (t('dashboard.scan_another_leaf') || 'Scan Another Leaf') : (t('dashboard.perform_scan') || 'Perform Leaf Scan')}
           </Link>
         </div>
 
         {/* Today's Tasks Card */}
         <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Today's Tasks</h3>
+            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.todays_tasks') || "Today's Tasks"}</h3>
             <Link to="/crop-cycles" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
-              View All Tasks →
+              {t('common.view_all') || 'View All Tasks'} →
             </Link>
           </div>
           <div className="space-y-2 text-xs text-gray-700 dark:text-dark-200 font-medium">
@@ -666,10 +667,10 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
               <MapPin className="text-brand-600 dark:text-brand-400" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Location</h3>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.map') || 'Farm Location'}</h3>
             </div>
             <button onClick={() => setShowLocationModal(true)} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              View / Edit Farm
+              {t('dashboard.select_location') || 'Change Location'}
             </button>
           </div>
           <div className="h-[200px] w-full rounded-2xl overflow-hidden">
@@ -695,26 +696,26 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
               <IndianRupee className="text-brand-600 dark:text-brand-400" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Finances</h3>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.ledger') || 'Farm Finances'}</h3>
             </div>
             <Link to="/expenses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              View finances
+              {t('common.view_all') || 'View finances'}
             </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-              <span className="block text-[10px] font-bold text-gray-400 uppercase">Income</span>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase">{t('expenses.type_income') || 'Income'}</span>
               <span className="block text-base font-extrabold text-emerald-600 mt-1">₹{financials?.totalIncome || 0}</span>
             </div>
             <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-2xl border border-red-100 dark:border-red-900/30">
-              <span className="block text-[10px] font-bold text-gray-400 uppercase">Expenses</span>
+              <span className="block text-[10px] font-bold text-gray-400 uppercase">{t('expenses.type_expense') || 'Expenses'}</span>
               <span className="block text-base font-extrabold text-red-600 mt-1">₹{financials?.totalExpense || 0}</span>
             </div>
           </div>
 
           <Link to="/expenses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline block text-center pt-2 border-t border-gray-100 dark:border-dark-800">
-            {financials?.totalIncome || financials?.totalExpense ? 'Manage Ledger Logbook' : 'No financial records yet — Add record'}
+            {financials?.totalIncome || financials?.totalExpense ? (t('expenses.title') || 'Manage Ledger Logbook') : (t('expenses.add_transaction') || 'Add record')}
           </Link>
         </div>
       </div>
@@ -762,24 +763,41 @@ export const Dashboard: React.FC = () => {
             </button>
 
             <h2 className="text-lg font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-1">
-              Select Location
+              {t('dashboard.select_location') || 'Select Location'}
             </h2>
             <p className="text-[11px] text-gray-400 mb-4 font-semibold">
-              Search by City, District, or State in India to fetch today's weather.
+              {t('dashboard.select_location_desc') || "Search by City, District, or State in India to fetch today's weather."}
             </p>
 
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search location (e.g. Nagpur, Rajkot...)"
-                className="custom-input text-xs pl-8"
+                placeholder={t('dashboard.search_location_placeholder') || "Search location (e.g. Nagpur, Rajkot...)"}
+                className="custom-input text-xs pl-8 pr-16"
                 autoFocus
               />
               <span className="absolute left-2.5 top-2.5 text-gray-400">
                 <Search size={14} />
               </span>
+              <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded text-xs"
+                    title={t('common.clear') || 'Clear'}
+                  >
+                    ✕
+                  </button>
+                )}
+                <VoiceInputButton
+                  onTranscript={(text) => setSearchQuery(text)}
+                  size="sm"
+                  showTextFeedback
+                />
+              </div>
             </div>
 
             {/* Suggestions list */}
@@ -827,10 +845,10 @@ export const Dashboard: React.FC = () => {
                   </button>
                 ))
               ) : searchQuery.trim() ? (
-                <p className="text-center text-xs text-gray-450 py-8">No matching locations found.</p>
+                <p className="text-center text-xs text-gray-450 py-8">{t('dashboard.no_matching_locations') || 'No matching locations found.'}</p>
               ) : (
                 <div className="text-center py-4 text-gray-400 space-y-2">
-                  <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400/80">Popular Indian Farming Centers</p>
+                  <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400/80">{t('dashboard.popular_centers') || 'Popular Indian Farming Centers'}</p>
                   <div className="grid grid-cols-2 gap-1.5 pt-1">
                     {[
                       { city: 'Karnal', state: 'Haryana', lat: 29.6857, lon: 76.9905 },

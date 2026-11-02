@@ -1,10 +1,11 @@
-import React from 'react';
-import { Menu, Sun, Moon, Globe } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Sun, Moon, Globe, Search, Mic } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { BrandLogo } from './BrandLogo';
+import { GlobalSearchModal } from './search/GlobalSearchModal';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -15,7 +16,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegionalSettings }) => {
   const { user, updateSettings } = useAuth();
   const { theme, toggleTheme, setLanguage } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const languagesList = [
     { code: 'en', label: 'English' },
@@ -83,6 +85,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
       </div>
 
       <div className="flex items-center gap-1.5 md:gap-3">
+        {/* Global Search & Voice Trigger */}
+        <button
+          type="button"
+          onClick={() => setIsSearchOpen(true)}
+          className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800/80 dark:hover:bg-dark-700 text-slate-500 dark:text-dark-300 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px] transition-all group"
+          title={`${t('common.search') || 'Search'} (Ctrl+K)`}
+          aria-label="Open Search and Voice Assistant"
+        >
+          <Search size={15} className="group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
+          <span className="hidden sm:inline text-xs font-semibold text-slate-500 dark:text-dark-300">
+            {t('common.search') || 'Search'}...
+          </span>
+          <div className="hidden lg:flex items-center gap-1 pl-1 border-l border-slate-200 dark:border-dark-700 text-[10px] text-slate-400 font-mono">
+            <span>⌘K</span>
+          </div>
+          <span className="p-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400 group-hover:scale-110 transition-transform">
+            <Mic size={12} />
+          </span>
+        </button>
+
         {/* Workspace Switcher */}
         {user && <WorkspaceSwitcher />}
 
@@ -141,6 +163,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           </div>
         </div>
       </div>
+
+      {/* Global Search and Voice Dialog */}
+      <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 };

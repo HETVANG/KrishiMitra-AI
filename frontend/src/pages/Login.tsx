@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const Login: React.FC = () => {
   const { login, token } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -68,8 +70,12 @@ export const Login: React.FC = () => {
             <div className="inline-flex lg:hidden mb-4 justify-center">
               <BrandLogo variant="full" size="md" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Welcome Back</h2>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Please enter your credentials to access your farm</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">
+              {t('auth.login_title') || 'Sign In to The Khedut'}
+            </h2>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">
+              {t('auth.login_subtitle') || 'Please enter your credentials to access your farm'}
+            </p>
           </div>
 
           {/* Alerts */}
@@ -82,7 +88,9 @@ export const Login: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">Email Address</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
+                {t('auth.email') || 'Email Address'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <Mail size={16} />
@@ -99,7 +107,9 @@ export const Login: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">Password</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
+                {t('auth.password') || 'Password'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <Lock size={16} />
@@ -120,15 +130,14 @@ export const Login: React.FC = () => {
               disabled={loading}
               className="btn-primary w-full py-3 mt-2"
             >
-              {loading ? 'Logging in...' : 'Sign In'}
+              {loading ? (t('common.loading') || 'Loading...') : (t('auth.sign_in') || 'Sign In')}
             </button>
           </form>
 
           {/* Bottom Link */}
           <div className="mt-8 text-center text-xs md:text-sm text-gray-500 dark:text-dark-400 border-t border-gray-100 dark:border-dark-800/50 pt-5">
-            Don't have an account?{' '}
             <Link to="/register" className="font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              Create an account
+              {t('auth.dont_have_account') || "Don't have an account? Register now"}
             </Link>
           </div>
         </div>

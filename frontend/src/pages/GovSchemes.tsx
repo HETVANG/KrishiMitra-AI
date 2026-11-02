@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { Search, Layers, FileCheck, Calendar, ArrowUpRight, HelpCircle, ShieldAlert } from 'lucide-react';
+import { Search, Layers, FileCheck, Calendar, ArrowUpRight, HelpCircle, ShieldAlert, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 export const GovSchemes: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [schemes, setSchemes] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -45,35 +48,58 @@ export const GovSchemes: React.FC = () => {
     <div className="space-y-6 pb-12">
       {/* Banner */}
       <div className="bg-gradient-to-r from-teal-600 to-emerald-700 text-white p-6 rounded-3xl shadow-lg">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Government Subsidies & Schemes</h1>
-        <p className="text-teal-100 text-xs md:text-sm mt-1 font-medium">Verify eligibility thresholds, review required document checklists, and apply directly for state agricultural programs.</p>
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('schemes.title') || 'Government Subsidies & Schemes'}</h1>
+        <p className="text-teal-100 text-xs md:text-sm mt-1 font-medium">{t('schemes.subtitle') || 'Verify eligibility thresholds, review required document checklists, and apply directly for state agricultural programs.'}</p>
       </div>
 
       {/* Filters */}
       <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-md">
+        <form onSubmit={handleSearchSubmit} className="relative w-full md:max-w-md flex items-center">
+          <Search size={16} className="absolute left-3.5 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search schemes (e.g. Kisan, insurance)..."
-            className="custom-input pl-10 text-sm"
+            placeholder={t('schemes.search_schemes') || "Search schemes (e.g. Kisan, insurance)..."}
+            className="custom-input pl-10 pr-16 text-sm"
           />
-          <Search size={16} className="absolute left-3.5 top-3.5 text-gray-400" />
+          <div className="absolute right-2 flex items-center gap-1">
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 rounded"
+                title={t('common.clear') || 'Clear'}
+              >
+                <X size={14} />
+              </button>
+            )}
+            <VoiceInputButton
+              onTranscript={(text) => setSearch(text)}
+              lang={i18n.language}
+              size="sm"
+              showTextFeedback
+            />
+          </div>
         </form>
 
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          {['', 'Income Support', 'Insurance', 'Subsidies'].map((cat) => (
+          {[
+            { id: '', label: t('schemes.category_all') || 'All Schemes' },
+            { id: 'Income Support', label: t('schemes.category_credit') || 'Income Support' },
+            { id: 'Insurance', label: t('schemes.category_insurance') || 'Insurance' },
+            { id: 'Subsidies', label: t('schemes.category_subsidy') || 'Subsidies' }
+          ].map((cat) => (
             <button
-              key={cat}
-              onClick={() => setCategory(cat)}
+              key={cat.id}
+              onClick={() => setCategory(cat.id)}
               className={`px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all duration-200 border ${
-                (category === cat) 
+                (category === cat.id) 
                   ? 'bg-brand-600 text-white border-transparent' 
                   : 'bg-white dark:bg-dark-900 text-gray-600 dark:text-dark-300 border-gray-200 dark:border-dark-800'
               }`}
             >
-              {cat || 'All Categories'}
+              {cat.label}
             </button>
           ))}
         </div>

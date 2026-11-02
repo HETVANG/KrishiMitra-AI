@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Sprout, User, Mail, Lock, Phone, UserCheck, Stethoscope, Briefcase, IndianRupee, AlertCircle } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
 export const Register: React.FC = () => {
   const { register, token } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -95,8 +97,12 @@ export const Register: React.FC = () => {
             <div className="inline-flex lg:hidden mb-4 justify-center">
               <BrandLogo variant="full" size="md" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">Create Account</h2>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">Join the digital farming community today</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-dark-100 tracking-tight">
+              {t('auth.register_title') || 'Create Farmer Account'}
+            </h2>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">
+              {t('auth.register_subtitle') || 'Join thousands of farmers making smarter, data-driven agricultural decisions.'}
+            </p>
           </div>
 
           {/* Role selector tab */}
@@ -106,14 +112,14 @@ export const Register: React.FC = () => {
               onClick={() => setRole('farmer')}
               className={`py-2 text-xs md:text-sm font-bold rounded-lg transition-all duration-200 ${role === 'farmer' ? 'bg-white dark:bg-dark-800 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-gray-500 dark:text-dark-400'}`}
             >
-              I am a Farmer
+              {t('common.farmer') || 'I am a Farmer'}
             </button>
             <button
               type="button"
               onClick={() => setRole('expert')}
               className={`py-2 text-xs md:text-sm font-bold rounded-lg transition-all duration-200 ${role === 'expert' ? 'bg-white dark:bg-dark-800 text-brand-600 dark:text-brand-400 shadow-sm' : 'text-gray-500 dark:text-dark-400'}`}
             >
-              I am an Expert
+              {t('common.expert') || 'I am an Expert'}
             </button>
           </div>
 
@@ -271,15 +277,14 @@ export const Register: React.FC = () => {
               disabled={loading}
               className="btn-primary w-full py-3 mt-4"
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? (t('common.loading') || 'Creating Account...') : (t('auth.create_account') || 'Create Account')}
             </button>
           </form>
 
           {/* Bottom redirection */}
           <div className="mt-6 text-center text-xs md:text-sm text-gray-500 dark:text-dark-400 border-t border-gray-100 dark:border-dark-800/50 pt-4">
-            Already have an account?{' '}
             <Link to="/login" className="font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              Sign In
+              {t('auth.have_account') || 'Already have an account? Sign In'}
             </Link>
           </div>
         </div>

@@ -45,7 +45,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Outfit', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['Outfit', 'Inter', 'Noto Sans Gujarati', 'Noto Sans Devanagari', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out forwards',

@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { api } from '../services/api';
-import { Send, Bot, User, Loader2, Sparkles, Volume2, Copy, Share2, VolumeX, Check } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, Volume2, Copy, Share2, VolumeX, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -286,22 +287,44 @@ export const AIChat: React.FC = () => {
         </div>
       )}
 
-      {/* Input Message Form */}
+      {/* Input Message Form with Voice-to-Text */}
       <form
         onSubmit={(e) => { e.preventDefault(); handleSend(input); }}
-        className="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2"
+        className="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2 items-center"
       >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your agriculture question here..."
-          className="custom-input flex-1 min-h-[44px]"
-          disabled={loading}
-        />
+        <div className="relative flex-1 flex items-center">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={t('copilot.ask_placeholder') || "Ask your agriculture question here..."}
+            className="custom-input flex-1 min-h-[44px] pr-20 text-xs md:text-sm"
+            disabled={loading}
+          />
+          <div className="absolute right-2 flex items-center gap-1">
+            {input && (
+              <button
+                type="button"
+                onClick={() => setInput('')}
+                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 rounded"
+                title={t('common.clear') || 'Clear'}
+              >
+                <X size={15} />
+              </button>
+            )}
+            <VoiceInputButton
+              onTranscript={(text) => setInput(prev => (prev ? `${prev} ${text}` : text))}
+              lang={i18n.language}
+              size="sm"
+              disabled={loading}
+              showTextFeedback
+            />
+          </div>
+        </div>
         <button
           type="submit"
           disabled={loading || !input.trim()}
+          title={t('copilot.send') || 'Send Query'}
           className="p-3 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-100 dark:disabled:bg-dark-800 disabled:text-gray-400 text-white rounded-xl transition-all duration-150 shadow-md shadow-brand-600/10 flex items-center justify-center shrink-0 min-w-[44px]"
         >
           <Send size={18} />

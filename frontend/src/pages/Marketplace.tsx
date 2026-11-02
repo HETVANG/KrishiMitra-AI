@@ -14,11 +14,13 @@ import {
   Info,
   CheckCircle2,
   Calendar,
-  PhoneCall
+  PhoneCall,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 export const Marketplace: React.FC = () => {
   const { user } = useAuth();
@@ -164,21 +166,38 @@ export const Marketplace: React.FC = () => {
       {/* Search & Category Filter */}
       <div className="space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <div className="relative flex-1">
-            <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
+          <div className="relative flex-1 flex items-center">
+            <Search size={18} className="absolute left-3.5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search products, drone spraying, soil testing, equipment rental..."
+              placeholder={t('search.placeholder') || "Search products, drone spraying, soil testing, equipment rental..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-700/60 rounded-xl text-sm font-medium focus:outline-none focus:border-brand-500 text-gray-800 dark:text-dark-100"
+              className="w-full pl-10 pr-20 py-2.5 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-700/60 rounded-xl text-sm font-medium focus:outline-none focus:border-brand-500 text-gray-800 dark:text-dark-100"
             />
+            <div className="absolute right-2 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 rounded"
+                  title={t('common.clear') || 'Clear'}
+                >
+                  <X size={15} />
+                </button>
+              )}
+              <VoiceInputButton
+                onTranscript={(text) => setSearchQuery(text)}
+                size="sm"
+                showTextFeedback
+              />
+            </div>
           </div>
           <button
             type="submit"
             className="px-5 py-2.5 bg-brand-600 text-white font-semibold text-sm rounded-xl hover:bg-brand-700 transition-colors shadow-sm"
           >
-            Search
+            {t('common.search') || 'Search'}
           </button>
         </form>
 
@@ -192,7 +211,7 @@ export const Marketplace: React.FC = () => {
                 : 'bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-dark-300 hover:bg-gray-200'
             }`}
           >
-            All Categories
+            {t('common.all') || 'All Categories'}
           </button>
           {categories.map((c) => (
             <button

@@ -23,8 +23,10 @@ import {
   Brain,
   Info,
   Check,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
+import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 
 interface StructuredOutput {
   answer: string;
@@ -254,14 +256,41 @@ export const FarmCopilot: React.FC = () => {
   };
 
   // Dynamic context-aware suggested prompts
-  const suggestedQuestions = [
-    `What should I do today on ${farmContext?.farm?.name || 'my farm'}?`,
-    `Is ${farmContext?.farm?.crops?.[0]?.name || 'my crop'} at risk from current weather?`,
-    `Why are my crop leaves changing color?`,
-    `When is the optimal time to irrigate?`,
-    `How can I improve my soil nutrient balance?`,
-    `What is the market price trend for ${farmContext?.farm?.crops?.[0]?.name || 'my crop'}?`
-  ];
+  const getSuggestedQuestions = () => {
+    const crop = farmContext?.farm?.crops?.[0]?.name;
+    const farmName = farmContext?.farm?.name;
+
+    if (i18n.language === 'gu') {
+      return [
+        `આજે મારા ${farmName ? `${farmName} પર` : 'ખેતરમાં'} મારે શું કરવું જોઈએ?`,
+        `શું હાલના હવામાનથી ${crop ? crop : 'મારા પાકને'} જોખમ છે?`,
+        `મારા પાકના પાંદડા પીળા કેમ પડી રહ્યા છે?`,
+        `સિંચાઈ કરવાનો શ્રેષ્ઠ સમય કયો છે?`,
+        `જમીનમાં પોષક તત્વોનું સંતુલન કેવી રીતે સુધારવું?`,
+        `આજના મંડી ભાવ અને બજાર વલણ જણાવો.`
+      ];
+    }
+    if (i18n.language === 'hi') {
+      return [
+        `आज मुझे अपने ${farmName ? `${farmName} में` : 'खेत में'} क्या करना चाहिए?`,
+        `क्या वर्तमान मौसम से ${crop ? crop : 'मेरी फसल को'} कोई खतरा है?`,
+        `मेरी फसल के पत्ते पीले क्यों पड़ रहे हैं?`,
+        `सिंचाई का सबसे सही समय क्या है?`,
+        `मिट्टी में पोषक तत्वों का संतुलन कैसे सुधारें?`,
+        `आज के मंडी भाव और बाजार का रुझान बताओ.`
+      ];
+    }
+    return [
+      `What should I do today on ${farmName || 'my farm'}?`,
+      `Is ${crop || 'my crop'} at risk from current weather?`,
+      `Why are my crop leaves changing color?`,
+      `When is the optimal time to irrigate?`,
+      `How can I improve my soil nutrient balance?`,
+      `What is the market price trend for ${crop || 'my crop'}?`
+    ];
+  };
+
+  const suggestedQuestions = getSuggestedQuestions();
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-left">
@@ -616,22 +645,46 @@ export const FarmCopilot: React.FC = () => {
             </div>
           )}
 
-          {/* Input Form */}
+          {/* Input Form with Integrated Voice-to-Text */}
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-            className="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2"
+            className="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2 items-center"
           >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Copilot anything about your farm, weather risk, leaf yellowing, or market prices..."
-              className="custom-input flex-1 min-h-[44px]"
-              disabled={loading}
-            />
+            <div className="relative flex-1 flex items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={t('copilot.ask_placeholder') || "Ask Copilot anything about your farm, weather risk, leaf yellowing, or market prices..."}
+                className="custom-input flex-1 min-h-[44px] pr-20 text-xs md:text-sm"
+                disabled={loading}
+              />
+              <div className="absolute right-2 flex items-center gap-1">
+                {input && (
+                  <button
+                    type="button"
+                    onClick={() => setInput('')}
+                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 rounded"
+                    title={t('common.clear') || 'Clear'}
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+                <VoiceInputButton
+                  onTranscript={(text, isFinal) => {
+                    setInput(prev => (prev ? `${prev} ${text}` : text));
+                  }}
+                  lang={i18n.language}
+                  size="sm"
+                  disabled={loading}
+                  showTextFeedback
+                />
+              </div>
+            </div>
             <button
               type="submit"
               disabled={loading || !input.trim()}
+              title={t('copilot.send') || 'Send Query'}
               className="p-3 bg-brand-600 hover:bg-brand-700 disabled:bg-gray-100 dark:disabled:bg-dark-800 disabled:text-gray-400 text-white rounded-xl transition-all shadow-md flex items-center justify-center shrink-0 min-w-[44px]"
             >
               <Send size={18} />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, User, ChevronDown, Plus, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface OrganizationItem {
   id: string;
@@ -10,6 +11,7 @@ interface OrganizationItem {
 }
 
 export const WorkspaceSwitcher: React.FC = () => {
+  const { t } = useTranslation();
   const [organizations, setOrganizations] = useState<OrganizationItem[]>([]);
   const [activeOrg, setActiveOrg] = useState<OrganizationItem | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -63,7 +65,7 @@ export const WorkspaceSwitcher: React.FC = () => {
         ) : (
           <>
             <User className="w-4 h-4 text-emerald-500" />
-            <span>Personal Workspace</span>
+            <span>{t('common.personal_workspace') || 'Personal Workspace'}</span>
           </>
         )}
         <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
@@ -72,7 +74,7 @@ export const WorkspaceSwitcher: React.FC = () => {
       {isOpen && (
         <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-2xl shadow-xl z-50 py-2">
           <div className="px-3 py-1.5 text-[10px] font-bold tracking-wider text-gray-400 dark:text-dark-400 uppercase">
-            Workspaces
+            {t('nav.organizations') || 'Workspaces'}
           </div>
 
           <button

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   CheckCircle2, 
   AlertOctagon, 
@@ -43,6 +44,7 @@ export interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   
   // Confirmation Dialog State
@@ -227,7 +229,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   {confirmDialog.options.title}
                 </h3>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  The Khedut Confirmation
+                  {t('common.confirmation') || 'The Khedut Confirmation'}
                 </span>
               </div>
             </div>
@@ -242,7 +244,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 onClick={() => confirmDialog.resolve(false)}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-dark-700 text-gray-700 dark:text-dark-200 font-bold text-xs hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors focus:outline-none"
               >
-                {confirmDialog.options.cancelText || 'Cancel'}
+                {confirmDialog.options.cancelText || (t('common.cancel') || 'Cancel')}
               </button>
               <button
                 type="button"
@@ -253,7 +255,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     : 'bg-brand-700 hover:bg-brand-800 shadow-brand-700/20'
                 }`}
               >
-                {confirmDialog.options.confirmText || 'Confirm'}
+                {confirmDialog.options.confirmText || (t('common.confirm') || 'Confirm')}
               </button>
             </div>
           </div>

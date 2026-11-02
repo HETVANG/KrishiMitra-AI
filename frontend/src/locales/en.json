@@ -29,7 +29,10 @@
     "admin_success": "Farmer Success",
     "logout": "Logout",
     "login": "Sign In",
-    "register": "Register"
+    "register": "Register",
+    "farming_operations": "Farming Operations",
+    "agronomy_intelligence": "Agronomy Intelligence",
+    "administration": "Administration"
   },
   "common": {
     "loading": "Loading...",
@@ -88,7 +91,12 @@
     "cancel_recording": "Cancel recording",
     "try_again": "Try again",
     "back": "Back",
-    "na": "N/A"
+    "na": "N/A",
+    "my_farm": "My Farm",
+    "days_left": "days left",
+    "view_all_risks": "View all risks",
+    "confirmation": "The Khedut Confirmation",
+    "personal_workspace": "Personal Workspace"
   },
   "search": {
     "placeholder": "Search crops, diseases, mandi prices, or schemes...",
@@ -166,7 +174,16 @@
     "farm_boundaries": "Farm Field Boundaries",
     "total_expense": "Total Season Expenses",
     "total_income": "Total Crop Income",
-    "net_profit": "Net Agricultural Profit"
+    "net_profit": "Net Agricultural Profit",
+    "action_heat_warning": "High afternoon temperature predicted (35°C+). Inspect soil moisture levels and ensure proper field irrigation.",
+    "action_crop_check": "Perform routine morning field check for",
+    "action_mandi_check": "Check nearby mandi market prices before scheduling your harvest sales.",
+    "task_soil_check": "Morning Soil & Canopy Check",
+    "task_weather_review": "Weather & Irrigation Review",
+    "task_mandi_prices": "Check Mandi Selling Price Trends",
+    "market_snapshot": "Today's Market Snapshot",
+    "farm_risks": "Farm Risks",
+    "no_risks_detected": "Your farm looks stable today. No high risks detected."
   },
   "disease": {
     "title": "Advanced Disease Intelligence Engine",
@@ -254,7 +271,10 @@
     "telemetry_stage": "Stage",
     "telemetry_weather": "Weather",
     "telemetry_soil": "Soil Moisture",
-    "telemetry_mandi": "Mandi Trend"
+    "telemetry_mandi": "Mandi Trend",
+    "ask_anything": "Ask your farm anything",
+    "sample_question": "What should I do today?",
+    "ask_button": "Ask Copilot"
   },
   "weather": {
     "title": "Weather Forecast & Spray Advisory",
@@ -267,7 +287,12 @@
     "advisory_title": "Field Spraying Conditions",
     "suitable_for_spray": "Favorable for pesticide/fertilizer spraying",
     "unsuitable_spray": "Unfavorable for spraying (high wind or rain risk)",
-    "hourly_forecast": "Hourly Weather Radar"
+    "hourly_forecast": "Hourly Weather Radar",
+    "clear": "Clear",
+    "sunny": "Sunny",
+    "cloudy": "Cloudy",
+    "rainy": "Rainy",
+    "haze": "Hazy"
   },
   "market": {
     "title": "Mandi Prices Index",
@@ -451,12 +476,23 @@
     "sign_in": "Sign In",
     "create_account": "Create Account",
     "have_account": "Already have an account? Sign In",
-    "dont_have_account": "Don't have an account? Register now"
+    "dont_have_account": "Don't have an account? Register now",
+    "name": "Full Name",
+    "expert_details": "Expert Profile Details",
+    "specialization": "Specialization",
+    "experience_years": "Years of Experience"
   },
   "empty": {
     "no_mandi": "No mandi price is currently available for this commodity.",
     "no_experts": "No experts are currently online. Please check again later.",
     "no_soil": "No soil analysis reports yet.",
     "no_location": "Your farm location has not been selected."
+  },
+  "agents": {
+    "open_center": "Open Agent Center"
+  },
+  "subscription": {
+    "trial_badge": "Trial",
+    "upgrade_now": "Upgrade Now"
   }
 }

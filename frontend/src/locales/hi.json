@@ -29,7 +29,10 @@
     "admin_success": "किसान सफलता",
     "logout": "लॉगआउट",
     "login": "साइन इन करें",
-    "register": "रजिस्टर करें"
+    "register": "रजिस्टर करें",
+    "farming_operations": "खेती संचालन",
+    "agronomy_intelligence": "कृषि बुद्धिमत्ता",
+    "administration": "प्रशासन"
   },
   "common": {
     "loading": "लोड हो रहा है...",
@@ -88,7 +91,12 @@
     "cancel_recording": "रद्द करें",
     "try_again": "फिर कोशिश करें",
     "back": "वापस",
-    "na": "लागू नहीं"
+    "na": "लागू नहीं",
+    "my_farm": "मेरा खेत",
+    "days_left": "दिन शेष",
+    "view_all_risks": "सभी जोखिम देखें",
+    "confirmation": "द खेड़ूत पुष्टि",
+    "personal_workspace": "व्यक्तिगत कार्यक्षेत्र"
   },
   "search": {
     "placeholder": "फसल, रोग, मंडी भाव या सरकारी योजनाएं खोजें...",
@@ -166,7 +174,16 @@
     "farm_boundaries": "खेत की सीमाएं",
     "total_expense": "सीजन का कुल खर्च",
     "total_income": "कुल फसल आय",
-    "net_profit": "शुद्ध कृषि मुनाफा"
+    "net_profit": "शुद्ध कृषि मुनाफा",
+    "action_heat_warning": "दोपहर में उच्च तापमान का अनुमान (35°C+)। मिट्टी में नमी की जांच करें और उचित सिंचाई सुनिश्चित करें।",
+    "action_crop_check": "सुबह खेत की नियमित जांच करें:",
+    "action_mandi_check": "फसल बिक्री तय करने से पहले नजदीकी मंडी के भाव अवश्य जांचें।",
+    "task_soil_check": "सुबह मिट्टी और फसल की जांच",
+    "task_weather_review": "मौसम और सिंचाई की समीक्षा",
+    "task_mandi_prices": "मंडी के विक्रय मूल्य के रुझान देखें",
+    "market_snapshot": "आज का बाजार रुझान",
+    "farm_risks": "कृषि जोखिम",
+    "no_risks_detected": "आज आपका खेत सुरक्षित है। कोई गंभीर जोखिम नहीं मिला।"
   },
   "disease": {
     "title": "उन्नत रोग निदान एवं विश्लेषण इंजन",
@@ -254,7 +271,10 @@
     "telemetry_stage": "चरण",
     "telemetry_weather": "मौसम",
     "telemetry_soil": "मृदा नमी",
-    "telemetry_mandi": "मंडी रुझान"
+    "telemetry_mandi": "मंडी रुझान",
+    "ask_anything": "अपने खेत के बारे में कुछ भी पूछें",
+    "sample_question": "मुझे आज क्या करना चाहिए?",
+    "ask_button": "कोपायलट से पूछें"
   },
   "weather": {
     "title": "मौसम पूर्वानुमान एवं छिड़काव सलाह",
@@ -267,7 +287,12 @@
     "advisory_title": "दवा छिड़काव की स्थिति",
     "suitable_for_spray": "कीटनाशक या उर्वरक छिड़काव के लिए अनुकूल मौसम",
     "unsuitable_spray": "छिड़काव के लिए प्रतिकूल (तेज हवा या बारिश का खतरा)",
-    "hourly_forecast": "घंटेवार मौसम रडार"
+    "hourly_forecast": "घंटेवार मौसम रडार",
+    "clear": "साफ मौसम",
+    "sunny": "धूप",
+    "cloudy": "बादल",
+    "rainy": "बारिश",
+    "haze": "धुंध"
   },
   "market": {
     "title": "मंडी भाव इंडेक्स",
@@ -451,12 +476,23 @@
     "sign_in": "साइन इन करें",
     "create_account": "खाता बनाएं",
     "have_account": "पहले से खाता है? साइन इन करें",
-    "dont_have_account": "खाता नहीं है? अभी रजिस्टर करें"
+    "dont_have_account": "खाता नहीं है? अभी रजिस्टर करें",
+    "name": "पूरा नाम",
+    "expert_details": "विशेषज्ञ प्रोफाइल विवरण",
+    "specialization": "विशेषज्ञता",
+    "experience_years": "अनुभव के वर्ष"
   },
   "empty": {
     "no_mandi": "इस जिंस के लिए वर्तमान में कोई मंडी भाव उपलब्ध नहीं है।",
     "no_experts": "वर्तमान में कोई विशेषज्ञ ऑनलाइन नहीं हैं। कृपया बाद में देखें।",
     "no_soil": "अभी तक कोई मृदा विश्लेषण रिपोर्ट नहीं है।",
     "no_location": "आपके खेत का स्थान नहीं चुना गया है।"
+  },
+  "agents": {
+    "open_center": "एजेंट केंद्र खोलें"
+  },
+  "subscription": {
+    "trial_badge": "ट्रायल",
+    "upgrade_now": "अभी अपग्रेड करें"
   }
 }

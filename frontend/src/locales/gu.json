@@ -29,7 +29,10 @@
     "admin_success": "ખેડૂત સફળતા",
     "logout": "લોગઆઉટ",
     "login": "પ્રવેશ કરો",
-    "register": "નોંધણી કરો"
+    "register": "નોંધણી કરો",
+    "farming_operations": "ખેતી કામગીરી",
+    "agronomy_intelligence": "કૃષિ બુદ્ધિમત્તા",
+    "administration": "વહીવટ"
   },
   "common": {
     "loading": "લોડ થઈ રહ્યું છે...",
@@ -88,7 +91,12 @@
     "cancel_recording": "રદ કરો",
     "try_again": "ફરી પ્રયાસ કરો",
     "back": "પાછા જાઓ",
-    "na": "ઉપલબ્ધ નથી"
+    "na": "ઉપલબ્ધ નથી",
+    "my_farm": "મારું ખેતર",
+    "days_left": "દિવસ બાકી",
+    "view_all_risks": "બધા જોખમો જુઓ",
+    "confirmation": "ધ ખેડૂત પુષ્ટિ",
+    "personal_workspace": "વ્યક્તિગત કાર્યક્ષેત્ર"
   },
   "search": {
     "placeholder": "પાક, રોગ, મંડી ભાવ કે સરકારી યોજનાઓ શોધો...",
@@ -166,7 +174,16 @@
     "farm_boundaries": "ખેતરની સીમાઓ",
     "total_expense": "સિઝનનો કુલ ખર્ચ",
     "total_income": "કુલ પાક આવક",
-    "net_profit": "ચોખ્ખો કૃષિ નફો"
+    "net_profit": "ચોખ્ખો કૃષિ નફો",
+    "action_heat_warning": "બપોરે ઊંચા તાપમાનની આગાહી (35°C+). જમીનમાં ભેજનું પ્રમાણ તપાસો અને યોગ્ય પિયત આપો.",
+    "action_crop_check": "સવારમાં ખેતરની નિયમિત તપાસ કરો:",
+    "action_mandi_check": "પાક વેચાણ નક્કી કરતાં પહેલાં નજીકની APMC મંડીના ભાવો તપાસો.",
+    "task_soil_check": "સવારમાં માટી અને પાકના છોડની તપાસ",
+    "task_weather_review": "હવામાન અને સિંચાઈ આયોજન",
+    "task_mandi_prices": "મંડી વેચાણ ભાવો અને વલણો તપાસો",
+    "market_snapshot": "આજનું બજાર વલણ",
+    "farm_risks": "ખેતીના જોખમો",
+    "no_risks_detected": "આજે તમારું ખેતર સુરક્ષિત છે. કોઈ ગંભીર જોખમ નથી."
   },
   "disease": {
     "title": "અદ્યતન રોગ નિદાન અને વિશ્લેષણ એન્જિન",
@@ -254,7 +271,10 @@
     "telemetry_stage": "તબક્કો",
     "telemetry_weather": "હવામાન",
     "telemetry_soil": "જમીનનો ભેજ",
-    "telemetry_mandi": "મંડી વલણ"
+    "telemetry_mandi": "મંડી વલણ",
+    "ask_anything": "તમારા ખેતર વિશે કંઈપણ પૂછો",
+    "sample_question": "મારે આજે શું કરવું જોઈએ?",
+    "ask_button": "કોપાયલટને પૂછો"
   },
   "weather": {
     "title": "હવામાન આગાહી અને સ્પ્રે સલાહ",
@@ -267,7 +287,12 @@
     "advisory_title": "દવા છંટકાવની સ્થિતિ",
     "suitable_for_spray": "દવા અથવા ખાતર છાંટવા માટે અનુકૂળ વાતાવરણ",
     "unsuitable_spray": "છંટકાવ માટે પ્રતિકૂળ (વધુ પવન અથવા વરસાદનું જોખમ)",
-    "hourly_forecast": "કલાકદીઠ હવામાન રડાર"
+    "hourly_forecast": "કલાકદીઠ હવામાન રડાર",
+    "clear": "ચોખ્ખું આકાશ",
+    "sunny": "તડકો",
+    "cloudy": "વાદળછાયું",
+    "rainy": "વરસાદ",
+    "haze": "ધુમ્મસ"
   },
   "market": {
     "title": "મંડી પાક ભાવ ઇન્ડેક્સ",
@@ -442,7 +467,7 @@
     "password": "પાસવર્ડ",
     "confirm_password": "પાસવર્ડની પુષ્ટિ કરો",
     "full_name": "ખેડૂતનું પૂરું નામ",
-    "phone": "મોબાઇલ નંબર",
+    "phone": "મોબાઈલ નંબર",
     "village": "ગામ / શહેર",
     "district": "જિલ્લો",
     "state": "રાજ્ય",
@@ -451,12 +476,23 @@
     "sign_in": "સાઇન ઇન",
     "create_account": "એકાઉન્ટ બનાવો",
     "have_account": "પહેલેથી એકાઉન્ટ છે? પ્રવેશ કરો",
-    "dont_have_account": "એકાઉન્ટ નથી? અત્યારે નોંધણી કરો"
+    "dont_have_account": "એકાઉન્ટ નથી? અત્યારે નોંધણી કરો",
+    "name": "પૂરું નામ",
+    "expert_details": "નિષ્ણાત પ્રોફાઇલ વિગતો",
+    "specialization": "નિષ્ણાતીનું ક્ષેત્ર",
+    "experience_years": "અનુભવના વર્ષો"
   },
   "empty": {
     "no_mandi": "આ કોમોડિટી માટે હાલમાં કોઈ મંડી કિંમત ઉપલબ્ધ નથી.",
     "no_experts": "હાલમાં કોઈ નિષ્ણાતો ઓનલાઈન નથી. કૃપા કરીને પછીથી ફરી તપાસો.",
     "no_soil": "હજી સુધી કોઈ માટી વિશ્લેષણ અહેવાલ નથી.",
     "no_location": "તમારા ખેતરનું સ્થાન પસંદ કરવામાં આવ્યું નથી."
+  },
+  "agents": {
+    "open_center": "એજન્ટ સેન્ટર ખોલો"
+  },
+  "subscription": {
+    "trial_badge": "ટ્રાયલ",
+    "upgrade_now": "અત્યારે જ અપગ્રેડ કરો"
   }
 }

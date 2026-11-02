@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -125,6 +126,8 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showRegionalModal, setShowRegionalModal] = useState(false);
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const location = useLocation();
 
   React.useEffect(() => {
     if (sidebarOpen) {
@@ -137,34 +140,34 @@ const DashboardLayout = () => {
     };
   }, [sidebarOpen]);
 
-  // Dynamically set navbar header title matching pathname
+  // Dynamically set navbar header title matching pathname with reactive translation
   const getHeaderTitle = () => {
-    const path = window.location.pathname;
-    if (path === '/' || path === '/dashboard') return 'Farmer Intelligence Dashboard';
-    if (path === '/agents') return 'Farm Intelligence & Agents';
-    if (path === '/crop-cycles') return 'Farm Lifecycle Management';
-    if (path === '/predictive-intelligence') return 'Predictive Crop Intelligence Engine';
-    if (path === '/irrigation') return 'Smart Irrigation Intelligence';
-    if (path === '/copilot') return 'AI Farm Copilot Intelligence';
-    if (path === '/chat') return 'AI Assistant Consultation';
-    if (path === '/disease') return 'AI Leaf Pathology Diagnosis';
-    if (path === '/soil') return 'Digital Soil analysis & Fertilizer Planner';
-    if (path === '/market') return 'Mandi Prices Index intelligence';
-    if (path === '/schemes') return 'Government Subsidies Index';
-    if (path === '/forum') return 'Community Farmers Forum';
-    if (path === '/experts') return 'Book Advisory Appointments';
-    if (path === '/expenses') return 'Farm Cost ledger logbook';
-    if (path === '/reports') return 'Export Statement PDF Reports';
-    if (path === '/pricing') return 'Premium Pricing & Checkout';
-    if (path === '/subscription') return 'My Subscription';
-    if (path === '/billing-history') return 'Billing History';
-    if (path === '/settings') return 'Settings & Growth Center';
-    if (path === '/admin') return 'Control Panel Admin dashboard';
+    const path = location.pathname;
+    if (path === '/' || path === '/dashboard') return t('nav.dashboard') || 'Farmer Intelligence Dashboard';
+    if (path === '/agents') return t('nav.agents') || 'Farm Intelligence & Agents';
+    if (path === '/crop-cycles') return t('nav.my_farm') || 'Farm Lifecycle Management';
+    if (path === '/predictive-intelligence') return t('predictive.title') || 'Predictive Crop Intelligence Engine';
+    if (path === '/irrigation') return t('nav.irrigation') || 'Smart Irrigation Intelligence';
+    if (path === '/copilot') return t('nav.copilot') || 'AI Farm Copilot Intelligence';
+    if (path === '/chat') return t('nav.chatbot') || 'AI Assistant Consultation';
+    if (path === '/disease') return t('nav.disease') || 'AI Leaf Pathology Diagnosis';
+    if (path === '/soil') return t('nav.soil') || 'Digital Soil analysis & Fertilizer Planner';
+    if (path === '/market') return t('nav.market') || 'Mandi Prices Index intelligence';
+    if (path === '/schemes') return t('nav.schemes') || 'Government Subsidies Index';
+    if (path === '/forum') return t('nav.forum') || 'Community Farmers Forum';
+    if (path === '/experts') return t('nav.expert') || 'Book Advisory Appointments';
+    if (path === '/expenses') return t('nav.expense') || 'Farm Cost ledger logbook';
+    if (path === '/reports') return t('nav.reports') || 'Export Statement PDF Reports';
+    if (path === '/pricing') return t('subscription.pricing') || 'Premium Pricing & Checkout';
+    if (path === '/subscription') return t('subscription.title') || 'My Subscription';
+    if (path === '/billing-history') return t('subscription.billing_history') || 'Billing History';
+    if (path === '/settings') return t('nav.settings') || 'Settings & Growth Center';
+    if (path === '/admin') return t('nav.admin') || 'Control Panel Admin dashboard';
     return BRAND.name;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-950 flex text-left">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-950 flex text-left max-w-full overflow-x-hidden">
       {/* Sidebar navigation */}
       <Sidebar 
         isOpen={sidebarOpen} 
@@ -173,7 +176,7 @@ const DashboardLayout = () => {
       />
 
       {/* Main viewport */}
-      <div className="flex-1 flex flex-col lg:pl-64 min-h-screen">
+      <div className="flex-1 flex flex-col lg:pl-64 min-h-screen max-w-full overflow-x-hidden">
         {/* Navbar */}
         <Navbar 
           onMenuToggle={() => setSidebarOpen(prev => !prev)} 
@@ -182,7 +185,7 @@ const DashboardLayout = () => {
         />
 
         {/* View content pages with bottom padding on mobile for MobileBottomNav */}
-        <main className="flex-grow p-3.5 sm:p-4 md:p-6 pb-24 lg:pb-6 overflow-y-auto">
+        <main className="flex-grow p-3 sm:p-4 md:p-6 pb-24 lg:pb-6 overflow-y-auto overflow-x-hidden max-w-full">
           <Outlet />
         </main>
       </div>

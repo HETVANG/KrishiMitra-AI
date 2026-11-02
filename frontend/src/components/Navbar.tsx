@@ -61,35 +61,35 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-3 md:px-6 py-2.5 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200/70 dark:border-dark-800/60 shadow-xs">
-      <div className="flex items-center gap-2 md:gap-3 min-w-0">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200/70 dark:border-dark-800/60 shadow-xs max-w-full overflow-hidden">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 shrink">
         {/* Mobile Menu Trigger */}
         <button
           onClick={onMenuToggle}
           type="button"
           aria-label="Toggle Navigation Drawer"
-          className="flex items-center justify-center min-w-[42px] min-h-[42px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl lg:hidden transition-colors"
+          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl lg:hidden transition-colors shrink-0"
         >
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
         
         {/* Mobile Brand Emblem for brand presence */}
-        <div className="lg:hidden shrink-0">
+        <div className="hidden xs:block sm:block lg:hidden shrink-0">
           <BrandLogo variant="symbol" size="sm" />
         </div>
 
         {/* Page Title */}
-        <h2 className="font-extrabold text-sm md:text-lg text-slate-800 dark:text-dark-100 tracking-tight truncate">
+        <h2 className="font-extrabold text-xs sm:text-sm md:text-lg text-slate-800 dark:text-dark-100 tracking-tight truncate">
           {title}
         </h2>
       </div>
 
-      <div className="flex items-center gap-1.5 md:gap-3">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
         {/* Global Search & Voice Trigger */}
         <button
           type="button"
           onClick={() => setIsSearchOpen(true)}
-          className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800/80 dark:hover:bg-dark-700 text-slate-500 dark:text-dark-300 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px] transition-all group"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800/80 dark:hover:bg-dark-700 text-slate-500 dark:text-dark-300 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[36px] sm:min-h-[38px] transition-all group shrink-0"
           title={`${t('common.search') || 'Search'} (Ctrl+K)`}
           aria-label="Open Search and Voice Assistant"
         >
@@ -105,17 +105,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           </span>
         </button>
 
-        {/* Workspace Switcher */}
-        {user && <WorkspaceSwitcher />}
+        {/* Workspace Switcher (visible on desktop) */}
+        {user && (
+          <div className="hidden md:block">
+            <WorkspaceSwitcher />
+          </div>
+        )}
 
         {/* Language Selector */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/80 px-2 py-1.5 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px]">
-          <Globe size={15} className="text-slate-500 dark:text-dark-400 shrink-0" />
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/80 px-1.5 sm:px-2 py-1 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[36px] sm:min-h-[38px] shrink-0">
+          <Globe size={14} className="text-slate-500 dark:text-dark-400 shrink-0" />
           <select
             value={i18n.language}
             onChange={handleLanguageChange}
             aria-label="Select Platform Language"
-            className="text-xs font-bold bg-transparent text-slate-700 dark:text-dark-200 focus:outline-none cursor-pointer max-w-[70px] sm:max-w-none"
+            className="text-[11px] sm:text-xs font-bold bg-transparent text-slate-700 dark:text-dark-200 focus:outline-none cursor-pointer max-w-[48px] sm:max-w-none"
           >
             {languagesList.map((lang) => (
               <option key={lang.code} value={lang.code} className="dark:bg-dark-900 text-xs">
@@ -130,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           <button
             onClick={onOpenRegionalSettings}
             type="button"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/40 rounded-xl hover:bg-brand-100 transition-colors min-h-[38px]"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/40 rounded-xl hover:bg-brand-100 transition-colors min-h-[38px]"
             title="Configure regional settings"
           >
             <Globe size={14} />
@@ -143,9 +147,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           onClick={handleThemeToggle}
           type="button"
           aria-label="Toggle Light and Dark Mode"
-          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors"
+          className="flex items-center justify-center min-w-[36px] min-h-[36px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors shrink-0"
         >
-          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
         {/* User Identity Avatar */}

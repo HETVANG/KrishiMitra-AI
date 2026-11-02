@@ -376,42 +376,42 @@ export const Dashboard: React.FC = () => {
       <OnboardingChecklist onOpenModal={() => setShowOnboardingModal(true)} />
 
       {/* SINGLE WELCOME & FARM SUMMARY TOP BAR */}
-      <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-6 rounded-3xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+      <div className="bg-gradient-to-r from-brand-700 to-brand-900 text-white p-5 sm:p-6 rounded-3xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="min-w-0">
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-[10px] font-extrabold bg-brand-600/60 px-3 py-1 rounded-full uppercase tracking-wider">
-              {user?.name ? `${user.name}'s Field` : 'My Farm'}
+              {user?.name ? `${user.name}'s Field` : (t('common.my_farm') || 'My Farm')}
             </span>
             {activeLocation.address && (
-              <span className="text-[10px] font-bold bg-brand-800/80 text-brand-100 px-3 py-1 rounded-full flex items-center gap-1">
-                <MapPin size={12} /> {activeLocation.address}
+              <span className="text-[10px] font-bold bg-brand-800/80 text-brand-100 px-3 py-1 rounded-full flex items-center gap-1 max-w-[260px] truncate">
+                <MapPin size={12} className="shrink-0" /> <span className="truncate">{activeLocation.address}</span>
               </span>
             )}
             {isTrialActive && (
               <span className="text-[10px] font-bold bg-amber-500/80 text-white px-3 py-1 rounded-full uppercase tracking-wider">
-                Trial: {trialDaysLeft} days left
+                {t('subscription.trial_badge') || 'Trial'}: {trialDaysLeft} {t('common.days_left') || 'days left'}
               </span>
             )}
           </div>
-          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight mt-2">
-            Good morning, {user?.name || 'Farmer'}
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight mt-2 break-words">
+            {t('dashboard.welcome') || 'Welcome'}, {user?.name || (t('common.farmer') || 'Farmer')}
           </h1>
           <p className="text-brand-100 text-xs mt-1 font-medium">
-            Here's what matters for your farm today.
+            {t('dashboard.welcome_subtitle') || "Here's what matters for your farm today."}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <button
             onClick={() => setShowRegionalModal(true)}
             className="px-3.5 py-2.5 bg-brand-800/60 hover:bg-brand-800 border border-brand-500/40 text-white font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
           >
-            <Globe size={16} /> Regional Config
+            <Globe size={16} /> {t('settings.language_tab') || 'Regional Config'}
           </button>
           <Link 
             to="/reports" 
             className="px-4 py-2.5 bg-white text-brand-800 hover:bg-brand-50 font-bold rounded-xl text-xs md:text-sm transition-all duration-150 flex items-center gap-1.5 shadow-sm min-h-[44px]"
           >
-            <Layers size={16} /> PDF Reports
+            <Layers size={16} /> {t('nav.reports') || 'PDF Reports'}
           </Link>
         </div>
       </div>
@@ -419,9 +419,9 @@ export const Dashboard: React.FC = () => {
       {/* Trial Reminders */}
       {shouldShowExpiringAlert && (
         <div className="bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/35 p-4 rounded-2xl text-xs md:text-sm text-amber-800 dark:text-amber-400 font-bold flex flex-col sm:flex-row justify-between items-center gap-3">
-          <span>⚠️ Your Premium Trial will expire in {trialDaysLeft} day{trialDaysLeft > 1 ? 's' : ''}.</span>
+          <span>⚠️ Your Premium Trial will expire in {trialDaysLeft} {t('common.days_left') || 'days left'}.</span>
           <Link to="/pricing" className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-extrabold text-xs shadow-sm transition-colors shrink-0">
-            Upgrade Now
+            {t('subscription.upgrade_now') || 'Upgrade Now'}
           </Link>
         </div>
       )}
@@ -532,27 +532,29 @@ export const Dashboard: React.FC = () => {
       <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/30 p-5 rounded-3xl space-y-2">
         <div className="flex items-center gap-2">
           <AlertTriangle className="text-amber-600 dark:text-amber-400" size={18} />
-          <h3 className="font-extrabold text-sm text-amber-900 dark:text-amber-200">Action Needed Today</h3>
+          <h3 className="font-extrabold text-sm text-amber-900 dark:text-amber-200">
+            {t('dashboard.action_needed') || 'Action Needed Today'}
+          </h3>
         </div>
         <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
           {weather?.current?.temp > 35 
-            ? 'High afternoon temperature predicted (35°C+). Inspect soil moisture levels and ensure proper field irrigation.'
+            ? (t('dashboard.action_heat_warning') || 'High afternoon temperature predicted (35°C+). Inspect soil moisture levels and ensure proper field irrigation.')
             : activeCropCycle 
-              ? `Perform routine morning field check for ${activeCropCycle.cropName} to inspect canopy growth & moisture.`
-              : 'Check nearby mandi market prices before scheduling your harvest sales.'}
+              ? `${t('dashboard.action_crop_check') || 'Perform routine morning field check for'} ${activeCropCycle.cropName}`
+              : (t('dashboard.action_mandi_check') || 'Check nearby mandi market prices before scheduling your harvest sales.')}
         </p>
       </div>
 
       {/* SECTION 3: YOUR FARM (Crop Health & Today's Tasks) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Crop Health Card */}
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3 min-w-0">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
-              <ScanEye className="text-red-500" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.crop_health') || 'Crop Health'}</h3>
+              <ScanEye className="text-red-500 shrink-0" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 truncate">{t('dashboard.crop_health') || 'Crop Health'}</h3>
             </div>
-            <Link to="/disease" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+            <Link to="/disease" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center shrink-0">
               {t('dashboard.view_scan') || 'View Scan'} <ChevronRight size={14} />
             </Link>
           </div>
@@ -570,55 +572,55 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Today's Tasks Card */}
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3 min-w-0">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">{t('dashboard.todays_tasks') || "Today's Tasks"}</h3>
-            <Link to="/crop-cycles" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 truncate">{t('dashboard.todays_tasks') || "Today's Tasks"}</h3>
+            <Link to="/crop-cycles" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center shrink-0">
               {t('common.view_all') || 'View All Tasks'} →
             </Link>
           </div>
           <div className="space-y-2 text-xs text-gray-700 dark:text-dark-200 font-medium">
             <label className="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" defaultChecked />
-              <span>Morning Soil & Canopy Check</span>
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 shrink-0" defaultChecked />
+              <span className="truncate">{t('dashboard.task_soil_check') || 'Morning Soil & Canopy Check'}</span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" />
-              <span>Weather & Irrigation Review</span>
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 shrink-0" />
+              <span className="truncate">{t('dashboard.task_weather_review') || 'Weather & Irrigation Review'}</span>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" />
-              <span>Check Mandi Selling Price Trends</span>
+              <input type="checkbox" className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 shrink-0" />
+              <span className="truncate">{t('dashboard.task_mandi_prices') || 'Check Mandi Selling Price Trends'}</span>
             </label>
           </div>
         </div>
       </div>
 
       {/* SECTION 4: FARM INTELLIGENCE (Market & Risk Outlook) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Mandi Market Snapshot */}
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3 min-w-0">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
-              <TrendingUp className="text-brand-600 dark:text-brand-400" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Today's Market Snapshot</h3>
+              <TrendingUp className="text-brand-600 dark:text-brand-400 shrink-0" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 truncate">{t('dashboard.market_snapshot') || "Today's Market Snapshot"}</h3>
             </div>
-            <Link to="/market" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
-              View Market <ChevronRight size={14} />
+            <Link to="/market" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center shrink-0">
+              {t('common.view_all') || 'View Market'} <ChevronRight size={14} />
             </Link>
           </div>
           {loadingMandi ? (
-            <div className="py-4 text-center text-xs text-gray-400">Loading market prices...</div>
+            <div className="py-4 text-center text-xs text-gray-400">{t('common.loading') || 'Loading market prices...'}</div>
           ) : mandiPrices.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-dark-800">
               {mandiPrices.slice(0, 3).map((item, idx) => (
-                <div key={idx} className="py-2 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-bold text-gray-800 dark:text-dark-100">{item.crop}</span>
-                    <span className="text-[10px] text-gray-400 block">{item.mandiName} ({item.state})</span>
+                <div key={idx} className="py-2 flex items-center justify-between text-xs gap-2">
+                  <div className="min-w-0">
+                    <span className="font-bold text-gray-800 dark:text-dark-100 block truncate">{item.crop}</span>
+                    <span className="text-[10px] text-gray-400 block truncate">{item.mandiName} ({item.state})</span>
                   </div>
-                  <span className="font-extrabold text-gray-800 dark:text-dark-100">
-                    {(!item.avgPrice && item.avgPrice !== 0) || (item.avgPrice === 0 && !item.isTrulyZero) ? 'Price Not Available' : `₹${item.avgPrice} / Quintal`}
+                  <span className="font-extrabold text-gray-800 dark:text-dark-100 shrink-0">
+                    {(!item.avgPrice && item.avgPrice !== 0) || (item.avgPrice === 0 && !item.isTrulyZero) ? 'N/A' : `₹${item.avgPrice} / Qtl`}
                   </span>
                 </div>
               ))}
@@ -629,22 +631,22 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Farm Risks Snapshot */}
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3">
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-3 min-w-0">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-dark-800 pb-3">
             <div className="flex items-center gap-2">
-              <ShieldAlert className="text-brand-600 dark:text-brand-400" size={20} />
-              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100">Farm Risks</h3>
+              <ShieldAlert className="text-brand-600 dark:text-brand-400 shrink-0" size={20} />
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 truncate">{t('dashboard.farm_risks') || 'Farm Risks'}</h3>
             </div>
-            <Link to="/predictive-intelligence" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
-              View all risks →
+            <Link to="/predictive-intelligence" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center shrink-0">
+              {t('common.view_all_risks') || 'View all risks'} →
             </Link>
           </div>
           {predictions && predictions.signals && predictions.signals.length > 0 ? (
             <div className="space-y-2">
               {predictions.signals.slice(0, 3).map((sig: any) => (
-                <div key={sig.id} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-dark-850 rounded-xl">
-                  <span className="font-bold text-gray-800 dark:text-dark-100 capitalize">{sig.category} Risk</span>
-                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                <div key={sig.id} className="flex items-center justify-between text-xs p-2 bg-gray-50 dark:bg-dark-850 rounded-xl gap-2">
+                  <span className="font-bold text-gray-800 dark:text-dark-100 capitalize truncate">{sig.category} Risk</span>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase shrink-0 ${
                     sig.level === 'high' ? 'bg-red-100 text-red-700' : sig.level === 'moderate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
                   }`}>
                     [{sig.level}] {sig.title}
@@ -654,7 +656,7 @@ export const Dashboard: React.FC = () => {
             </div>
           ) : (
             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold py-2">
-              ✓ Your farm looks stable today. No high risks detected.
+              ✓ {t('dashboard.no_risks_detected') || 'Your farm looks stable today. No high risks detected.'}
             </p>
           )}
         </div>
@@ -723,30 +725,30 @@ export const Dashboard: React.FC = () => {
       {/* SECTION 6: COMPACT INTELLIGENCE ENTRY POINTS (Copilot & Agents) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Ask Copilot Entry */}
-        <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Brain className="w-7 h-7 text-brand-200" />
-            <div>
-              <h4 className="font-extrabold text-sm">Ask your farm anything</h4>
-              <p className="text-xs text-brand-100 font-medium">"What should I do today?"</p>
+        <div className="bg-gradient-to-r from-brand-600 to-brand-800 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Brain className="w-7 h-7 text-brand-200 shrink-0" />
+            <div className="min-w-0">
+              <h4 className="font-extrabold text-sm truncate">{t('copilot.ask_anything') || 'Ask your farm anything'}</h4>
+              <p className="text-xs text-brand-100 font-medium truncate">"{t('copilot.sample_question') || 'What should I do today?'}"</p>
             </div>
           </div>
           <Link to="/copilot" className="px-4 py-2 bg-white text-brand-800 rounded-xl font-bold text-xs shadow-sm hover:bg-brand-50 transition-colors shrink-0">
-            Ask Copilot
+            {t('copilot.ask_button') || 'Ask Copilot'}
           </Link>
         </div>
 
         {/* Farm Agents Entry */}
-        <div className="bg-slate-900 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bot className="w-7 h-7 text-brand-400" />
-            <div>
-              <h4 className="font-extrabold text-sm">Farm Intelligence</h4>
-              <p className="text-xs text-slate-400 font-medium">5 specialized agents active</p>
+        <div className="bg-slate-900 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Bot className="w-7 h-7 text-brand-400 shrink-0" />
+            <div className="min-w-0">
+              <h4 className="font-extrabold text-sm truncate">{t('agents.title') || 'Farm Intelligence'}</h4>
+              <p className="text-xs text-slate-400 font-medium truncate">{t('agents.subtitle') || '5 specialized agents active'}</p>
             </div>
           </div>
           <Link to="/agents" className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs shadow-sm transition-colors shrink-0">
-            Open Agent Center
+            {t('agents.open_center') || 'Open Agent Center'}
           </Link>
         </div>
       </div>

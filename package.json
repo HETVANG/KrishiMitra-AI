@@ -1,4 +1,11 @@
 {
+  "name": "the-khedut-platform",
+  "private": true,
+  "scripts": {
+    "android:build": "npm --prefix frontend run cap:build",
+    "android:sync": "npm --prefix frontend run cap:sync",
+    "android:open": "npm --prefix frontend run cap:open"
+  },
   "dependencies": {
     "razorpay": "^2.9.8",
     "react-toastify": "^11.1.0"

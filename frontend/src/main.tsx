@@ -3,6 +3,19 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import './i18n';
+import { Capacitor } from '@capacitor/core';
+import { getFullApiUrl } from './services/api';
+
+// On native Android / Capacitor, route relative `/api/...` calls to the full production backend URL
+if (Capacitor.isNativePlatform()) {
+  const originalFetch = window.fetch;
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    if (typeof input === 'string' && input.startsWith('/api')) {
+      return originalFetch(getFullApiUrl(input), init);
+    }
+    return originalFetch(input, init);
+  };
+}
 
 console.log('[The Khedut Startup Log] main.tsx starting React mount');
 try {

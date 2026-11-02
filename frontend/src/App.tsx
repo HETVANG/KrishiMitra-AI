@@ -15,6 +15,10 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { VoiceAssistant } from './components/VoiceAssistant';
 import { RegionalSettingsModal } from './components/RegionalSettingsModal';
 import { BRAND } from './config/brand';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // Lazy Loaded Pages for performance route splitting
 const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -250,6 +254,29 @@ export const AppContent = () => {
       document.head.appendChild(script3);
     } else {
       console.info('[Analytics] Microsoft Clarity ID is not configured (VITE_CLARITY_PROJECT_ID missing).');
+    }
+
+    // Native Capacitor initialization
+    if (Capacitor.isNativePlatform()) {
+      try {
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: '#15803d' }).catch(() => {});
+        SplashScreen.hide().catch(() => {});
+
+        const backHandler = CapApp.addListener('backButton', ({ canGoBack }) => {
+          if (canGoBack && window.location.pathname !== '/' && window.location.pathname !== '/dashboard') {
+            window.history.back();
+          } else {
+            CapApp.exitApp();
+          }
+        });
+
+        return () => {
+          backHandler.then(h => h.remove()).catch(() => {});
+        };
+      } catch (nativeErr) {
+        console.warn('[Capacitor Native Init Warning]', nativeErr);
+      }
     }
   }, []);
 

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">The Khedut</string>
+    <string name="title_activity_main">The Khedut</string>
+    <string name="package_name">com.thekhedut.app</string>
+    <string name="custom_url_scheme">com.thekhedut.app</string>
+</resources>

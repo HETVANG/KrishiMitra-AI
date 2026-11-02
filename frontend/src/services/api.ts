@@ -6,6 +6,13 @@ export const getApiBaseUrl = (): string => {
   return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
 };
 
+export const getFullApiUrl = (path: string): string => {
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const base = getApiBaseUrl();
+  const cleaned = path.replace(/^\/?api\/?/, '');
+  return `${base}/${cleaned}`;
+};
+
 const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({

@@ -133,7 +133,9 @@ export const Register: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Core Fields */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Full Name</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                {t('auth.name') || 'Full Name'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <User size={16} />
@@ -150,7 +152,9 @@ export const Register: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Email Address</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                {t('auth.email') || 'Email Address'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <Mail size={16} />
@@ -167,7 +171,9 @@ export const Register: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Mobile Number</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                {t('auth.phone') || 'Mobile Number'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <Phone size={16} />
@@ -185,7 +191,9 @@ export const Register: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Create Password</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                {t('auth.password') || 'Create Password'}
+              </label>
               <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                   <Lock size={16} />
@@ -204,10 +212,14 @@ export const Register: React.FC = () => {
             {/* EXPERT SPECIFIC FIELDS */}
             {role === 'expert' && (
               <div className="space-y-4 pt-3 border-t border-gray-100 dark:border-dark-800">
-                <p className="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider">Expert Profile Details</p>
+                <p className="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase tracking-wider">
+                  {t('auth.expert_details') || 'Expert Profile Details'}
+                </p>
                 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Specialization</label>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                    {t('auth.specialization') || 'Specialization'}
+                  </label>
                   <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                       <Stethoscope size={16} />
@@ -225,7 +237,9 @@ export const Register: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Years of Exp</label>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      {t('auth.experience_years') || 'Years of Exp'}
+                    </label>
                     <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                         <Briefcase size={16} />
@@ -242,7 +256,9 @@ export const Register: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Fee (per session)</label>
+                    <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                      {t('experts.fee') || 'Fee (per session)'}
+                    </label>
                     <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
                         <IndianRupee size={16} />
@@ -260,7 +276,9 @@ export const Register: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">Professional Bio</label>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1">
+                    {t('experts.bio') || 'Professional Bio'}
+                  </label>
                   <textarea
                     required
                     value={bio}

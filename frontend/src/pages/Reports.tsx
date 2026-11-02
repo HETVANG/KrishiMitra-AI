@@ -418,8 +418,8 @@ export const Reports: React.FC = () => {
           <div className="space-y-4">
             
             {/* DESKTOP TABLE (Hidden on Mobile) */}
-            <div className="hidden lg:block bg-white dark:bg-dark-900 border border-gray-150 dark:border-dark-800 rounded-3xl overflow-hidden shadow-sm">
-              <table className="w-full text-left text-xs">
+            <div className="hidden lg:block bg-white dark:bg-dark-900 border border-gray-150 dark:border-dark-800 rounded-3xl overflow-hidden shadow-sm overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[640px]">
                 <thead className="bg-[#F7F9F5] dark:bg-dark-850 text-gray-500 dark:text-dark-400 font-extrabold uppercase text-[10px] tracking-wider border-b border-gray-150 dark:border-dark-800">
                   <tr>
                     <th className="py-3.5 px-5">Report ID</th>

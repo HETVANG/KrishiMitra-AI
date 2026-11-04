@@ -27,6 +27,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ReportPreviewModal } from '../components/ReportPreviewModal';
 import { BrandLogo } from '../components/BrandLogo';
+import { downloadOrSharePdf } from '../services/native';
 
 export const Reports: React.FC = () => {
   const { user, token } = useAuth();
@@ -154,17 +155,12 @@ export const Reports: React.FC = () => {
       });
 
       if (res.data) {
-        const blob = new Blob([res.data], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `TheKhedut_${reportIdOrMongoId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        await downloadOrSharePdf(res.data, `TheKhedut_${reportIdOrMongoId}.pdf`, {
+          title: `The Khedut Advisory Report ${reportIdOrMongoId}`,
+          text: `The Khedut Agricultural Advisory Report #${reportIdOrMongoId}`
+        });
 
-        notify.success('Document downloaded successfully!', 'Download Complete');
+        notify.success('Document ready!', 'Download Complete');
         fetchMyReports(currentPage);
       }
     } catch (err: any) {

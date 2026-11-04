@@ -25,3 +25,13 @@ logs/
 # System files
 .DS_Store
 Thumbs.db
+.idea/
+.gradle/
+
+# Android Keystores & Signing Secrets
+*.keystore
+*.jks
+*.p12
+keystore.properties
+signing.properties
+google-services.json

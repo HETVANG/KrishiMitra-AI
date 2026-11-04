@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { downloadOrSharePdf } from '../../services/native';
 import { 
   FileText, 
   Download, 
@@ -158,16 +159,11 @@ export const AdminReportManagement: React.FC = () => {
     try {
       const res = await api.get(`/reports/${repId}/download`, { responseType: 'blob' });
       if (res.data) {
-        const blob = new Blob([res.data], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `TheKhedut_${repId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-        notify.success('Report PDF downloaded successfully!', 'Download Complete');
+        await downloadOrSharePdf(res.data, `TheKhedut_${repId}.pdf`, {
+          title: `The Khedut Advisory Statement ${repId}`,
+          text: `The Khedut Report ${repId}`
+        });
+        notify.success('Report PDF ready!', 'Download Complete');
       }
     } catch (err) {
       notify.error('Failed to download report PDF', 'Download Error');

@@ -143,6 +143,7 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
 
             <button
               onClick={onClose}
+              data-modal-close="true"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-800 transition-colors ml-1"
               aria-label="Close modal"
             >

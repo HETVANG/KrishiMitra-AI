@@ -16,6 +16,7 @@ import {
   Calculator
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { downloadOrSharePdf } from '../services/native';
 
 export const SoilAnalysis: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -173,10 +174,10 @@ export const SoilAnalysis: React.FC = () => {
         responseType: 'blob'
       });
       if (response.data) {
-        const blob = new Blob([response.data], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        await downloadOrSharePdf(response.data, `TheKhedut_Soil_Analysis_${Date.now()}.pdf`, {
+          title: 'The Khedut Soil Chemistry & Fertilizer Plan',
+          text: 'The Khedut Soil Chemistry Advisory Statement',
+        });
       }
     } catch (err: any) {
       console.error('Soil report PDF generation error:', err);

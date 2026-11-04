@@ -26,6 +26,7 @@ import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 import { VoiceInputButton } from '../components/voice/VoiceInputButton';
+import { getDeviceLocation } from '../services/native';
 
 export const Dashboard: React.FC = () => {
   console.log('[The Khedut Startup Log] Loading Dashboard');
@@ -143,54 +144,48 @@ export const Dashboard: React.FC = () => {
 
   // Geolocation effect on mount
   useEffect(() => {
-    const requestGeolocation = () => {
+    const requestGeolocation = async () => {
       if (activeLocation.latitude && activeLocation.longitude) return;
 
-      if (!navigator.geolocation) {
-        setLocationError('Geolocation is not supported by your browser.');
+      setLocating(true);
+      const locResult = await getDeviceLocation({ enableHighAccuracy: true, timeout: 10000 });
+
+      if (!locResult.coords) {
+        console.warn('[Dashboard] Geolocation could not retrieve coordinates:', locResult.error);
+        setLocating(false);
+        setLocationError(locResult.error || 'Permission denied');
         return;
       }
 
-      setLocating(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await api.get(`/weather/reverse-geocode?lat=${latitude}&lon=${longitude}`);
-            if (res.data && res.data.success) {
-              const address = res.data.state ? `${res.data.city}, ${res.data.state}` : res.data.city;
-              const newLoc = { latitude, longitude, address };
-              setActiveLocation(newLoc);
-              localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
-              if (user) {
-                setFarmLocationLocally(newLoc);
-                try {
-                  await api.put('/auth/settings', {
-                    language: i18n.language,
-                    theme: user.settings?.theme || 'light',
-                    farmLocation: newLoc
-                  });
-                } catch (saveErr) {
-                  console.error('Failed to save geolocated settings:', saveErr);
-                }
-              }
+      const { latitude, longitude } = locResult.coords;
+      try {
+        const res = await api.get(`/weather/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+        if (res.data && res.data.success) {
+          const address = res.data.state ? `${res.data.city}, ${res.data.state}` : res.data.city;
+          const newLoc = { latitude, longitude, address };
+          setActiveLocation(newLoc);
+          localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+          if (user) {
+            setFarmLocationLocally(newLoc);
+            try {
+              await api.put('/auth/settings', {
+                language: i18n.language,
+                theme: user.settings?.theme || 'light',
+                farmLocation: newLoc
+              });
+            } catch (saveErr) {
+              console.error('Failed to save geolocated settings:', saveErr);
             }
-          } catch (err) {
-            console.error('Error reverse geocoding location:', err);
-            const fallbackLoc = { latitude, longitude, address: 'Detected Location' };
-            setActiveLocation(fallbackLoc);
-            localStorage.setItem('selectedLocation', JSON.stringify(fallbackLoc));
-          } finally {
-            setLocating(false);
           }
-        },
-        (error) => {
-          console.warn('Geolocation access denied:', error);
-          setLocating(false);
-          setLocationError('Permission denied');
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+        }
+      } catch (err) {
+        console.error('Error reverse geocoding location:', err);
+        const fallbackLoc = { latitude, longitude, address: 'Detected Location' };
+        setActiveLocation(fallbackLoc);
+        localStorage.setItem('selectedLocation', JSON.stringify(fallbackLoc));
+      } finally {
+        setLocating(false);
+      }
     };
 
     requestGeolocation();

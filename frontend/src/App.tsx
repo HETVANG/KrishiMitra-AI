@@ -13,12 +13,13 @@ import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { VoiceAssistant } from './components/VoiceAssistant';
+import { OfflineBanner } from './components/OfflineBanner';
 import { RegionalSettingsModal } from './components/RegionalSettingsModal';
 import { BRAND } from './config/brand';
 import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { initNativeLifecycle } from './services/native';
 
 // Lazy Loaded Pages for performance route splitting
 const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -181,6 +182,9 @@ const DashboardLayout = () => {
 
       {/* Main viewport */}
       <div className="flex-1 flex flex-col lg:pl-64 min-h-screen max-w-full overflow-x-hidden">
+        {/* Offline Connectivity Notification Banner */}
+        <OfflineBanner />
+
         {/* Navbar */}
         <Navbar 
           onMenuToggle={() => setSidebarOpen(prev => !prev)} 
@@ -263,16 +267,10 @@ export const AppContent = () => {
         StatusBar.setBackgroundColor({ color: '#15803d' }).catch(() => {});
         SplashScreen.hide().catch(() => {});
 
-        const backHandler = CapApp.addListener('backButton', ({ canGoBack }) => {
-          if (canGoBack && window.location.pathname !== '/' && window.location.pathname !== '/dashboard') {
-            window.history.back();
-          } else {
-            CapApp.exitApp();
-          }
-        });
+        const cleanupLifecycle = initNativeLifecycle();
 
         return () => {
-          backHandler.then(h => h.remove()).catch(() => {});
+          cleanupLifecycle();
         };
       } catch (nativeErr) {
         console.warn('[Capacitor Native Init Warning]', nativeErr);

@@ -53,6 +53,8 @@
     "success": "Success",
     "error": "Error",
     "retry": "Try Again",
+    "offline_notice": "You are currently offline. Local features remain accessible; live updates will sync once reconnected.",
+    "online_restored": "Connection restored. You are back online.",
     "next": "Next",
     "prev": "Previous",
     "search": "Search",

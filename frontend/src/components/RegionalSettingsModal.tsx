@@ -130,6 +130,7 @@ export const RegionalSettingsModal: React.FC<RegionalSettingsModalProps> = ({
           </div>
           <button
             onClick={onClose}
+            data-modal-close="true"
             className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
           >
             <X className="w-5 h-5" />

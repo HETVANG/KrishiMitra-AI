@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Locate, Trash2, MapPin, Search, Save, Compass, Maximize } from 'lucide-react';
 import { api } from '../services/api';
+import { getDeviceLocation } from '../services/native';
 
 interface LeafletMapProps {
   initialCenter?: [number, number];
@@ -409,94 +410,87 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
     }
   };
 
-  const locateUser = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
-      return;
-    }
-
+  const locateUser = async () => {
     setGpsLocating(true);
     setSearchError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await api.get(`/weather/reverse-geocode?lat=${latitude}&lon=${longitude}`);
-          if (res.data && res.data.success) {
-            const data = res.data;
-            const addressStr = data.state ? `${data.city || data.village}, ${data.state}` : (data.city || data.village || 'Detected Location');
-            
-            const locationDetails = {
-              village: data.village || '',
-              city: data.city || '',
-              district: data.district || '',
-              state: data.state || '',
-              postcode: data.postcode || '',
-              latitude,
-              longitude,
-              address: addressStr
-            };
+    const locResult = await getDeviceLocation({ enableHighAccuracy: true, timeout: 10000 });
+    if (!locResult.coords) {
+      setGpsLocating(false);
+      alert(locResult.error || 'GPS location request denied or timed out. Please select location manually using the search bar.');
+      return;
+    }
 
-            setSelectedLoc(locationDetails);
-            if (onLocationSelect) {
-              onLocationSelect(locationDetails);
-            }
+    const { latitude, longitude } = locResult.coords;
+    try {
+      const res = await api.get(`/weather/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+      if (res.data && res.data.success) {
+        const data = res.data;
+        const addressStr = data.state ? `${data.city || data.village}, ${data.state}` : (data.city || data.village || 'Detected Location');
+        
+        const locationDetails = {
+          village: data.village || '',
+          city: data.city || '',
+          district: data.district || '',
+          state: data.state || '',
+          postcode: data.postcode || '',
+          latitude,
+          longitude,
+          address: addressStr
+        };
 
-            const map = mapRef.current;
-            if (map) {
-              if (searchMarkerRef.current) {
-                try {
-                  if (map.hasLayer(searchMarkerRef.current)) {
-                    map.removeLayer(searchMarkerRef.current);
-                  }
-                } catch (e) {}
-              }
-
-              const tempMarker = L.marker([latitude, longitude], {
-                icon: L.divIcon({
-                  className: 'search-pin-temp',
-                  html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background-color: #3B82F6; border: 2.5px solid white; border-radius: 50%; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.3)">📍</div>`,
-                  iconSize: [34, 34],
-                  iconAnchor: [17, 17],
-                })
-              }).addTo(map);
-
-              tempMarker.bindPopup('<b>Detected GPS Location</b>').openPopup();
-              searchMarkerRef.current = tempMarker;
-
-              map.flyTo([latitude, longitude], 15, { animate: true, duration: 1.5 });
-            }
-          }
-        } catch (err) {
-          console.error(err);
-          const fallbackDetails = {
-            village: '',
-            city: 'Detected Location',
-            district: '',
-            state: '',
-            postcode: '',
-            latitude,
-            longitude,
-            address: `Coords: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-          };
-          setSelectedLoc(fallbackDetails);
-          if (onLocationSelect) onLocationSelect(fallbackDetails);
-
-          const map = mapRef.current;
-          if (map) {
-            map.flyTo([latitude, longitude], 15, { animate: true, duration: 1.5 });
-          }
-        } finally {
-          setGpsLocating(false);
+        setSelectedLoc(locationDetails);
+        if (onLocationSelect) {
+          onLocationSelect(locationDetails);
         }
-      },
-      () => {
-        setGpsLocating(false);
-        alert('GPS location request denied or timed out. Please select location manually using the search bar.');
-      },
-      { timeout: 8000 }
-    );
+
+        const map = mapRef.current;
+        if (map) {
+          if (searchMarkerRef.current) {
+            try {
+              if (map.hasLayer(searchMarkerRef.current)) {
+                map.removeLayer(searchMarkerRef.current);
+              }
+            } catch (e) {}
+          }
+
+          const tempMarker = L.marker([latitude, longitude], {
+            icon: L.divIcon({
+              className: 'search-pin-temp',
+              html: `<div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background-color: #3B82F6; border: 2.5px solid white; border-radius: 50%; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.3)">📍</div>`,
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
+            })
+          }).addTo(map);
+
+          tempMarker.bindPopup('<b>Detected GPS Location</b>').openPopup();
+          searchMarkerRef.current = tempMarker;
+
+          map.flyTo([latitude, longitude], 15, { animate: true, duration: 1.5 });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      const fallbackDetails = {
+        village: '',
+        city: 'Detected Location',
+        district: '',
+        state: '',
+        postcode: '',
+        latitude,
+        longitude,
+        address: `Coords: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+      };
+      setSelectedLoc(fallbackDetails);
+      if (onLocationSelect) onLocationSelect(fallbackDetails);
+
+      const map = mapRef.current;
+      if (map) {
+        map.flyTo([latitude, longitude], 15, { animate: true, duration: 1.5 });
+      }
+    } finally {
+      setGpsLocating(false);
+    }
   };
 
   const clearBoundary = () => {

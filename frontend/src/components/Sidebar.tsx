@@ -120,6 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
       {/* Mobile backdrop overlay */}
       {isOpen && (
         <div 
+          data-sidebar-backdrop="true"
           className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm lg:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"

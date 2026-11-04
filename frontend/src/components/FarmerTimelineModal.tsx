@@ -59,6 +59,7 @@ export const FarmerTimelineModal: React.FC<FarmerTimelineModalProps> = ({ isOpen
 
           <button
             onClick={onClose}
+            data-modal-close="true"
             className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />

@@ -251,6 +251,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           <button
             type="button"
             onClick={onClose}
+            data-modal-close="true"
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-dark-200 rounded-xl transition-colors shrink-0"
             title={t('common.close') || 'Close (Esc)'}
           >

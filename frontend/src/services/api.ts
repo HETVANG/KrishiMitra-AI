@@ -1,8 +1,14 @@
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 export const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (!envUrl) return 'http://localhost:5000/api';
+  if (!envUrl) {
+    if (Capacitor.isNativePlatform()) {
+      return 'https://krishimitra-ai-8ni7.onrender.com/api';
+    }
+    return 'http://localhost:5000/api';
+  }
   return envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
 };
 

@@ -105,6 +105,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         <div className="bg-gradient-to-r from-emerald-600 to-green-700 p-6 text-white relative">
           <button
             onClick={handleSkipAll}
+            data-modal-close="true"
             className="absolute top-4 right-4 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
             title="Skip onboarding"
           >

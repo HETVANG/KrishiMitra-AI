@@ -22,7 +22,9 @@ import {
   History,
   Activity,
   ChevronRight,
-  Info
+  Info,
+  Camera as CameraIcon,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +32,8 @@ import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 import { ReportPreviewModal } from '../components/ReportPreviewModal';
+import { captureOrPickPhoto, downloadOrSharePdf } from '../services/native';
+import { Capacitor } from '@capacitor/core';
 
 export const DiseaseDetection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -132,6 +136,27 @@ export const DiseaseDetection: React.FC = () => {
       setAssessment(null);
       setError('');
       setSpeaking(false);
+    }
+  };
+
+  const handleNativeCapture = async (source: 'camera' | 'photos' | 'prompt') => {
+    try {
+      const res = await captureOrPickPhoto({ source });
+      if (res.cancelled) return;
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      if (res.file) {
+        if (!validateFile(res.file)) return;
+        setSelectedFile(res.file);
+        setPreviewUrl(res.previewUrl || URL.createObjectURL(res.file));
+        setAssessment(null);
+        setError('');
+        setSpeaking(false);
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Failed to capture or select photo.');
     }
   };
 
@@ -327,16 +352,12 @@ export const DiseaseDetection: React.FC = () => {
         responseType: 'blob'
       });
       if (res.data) {
-        const blob = new Blob([res.data], { type: 'application/pdf' });
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `TheKhedut_Disease_${assessment?.crop || 'Leaf'}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-        notify.success('Pathology PDF downloaded successfully!', 'Download Complete');
+        const filename = `TheKhedut_Disease_${assessment?.crop || 'Leaf'}.pdf`;
+        await downloadOrSharePdf(res.data, filename, {
+          title: `The Khedut Disease Diagnosis - ${assessment?.diseaseName || 'Crop Report'}`,
+          text: `The Khedut Pathology Diagnosis: ${assessment?.diseaseName || ''}`
+        });
+        notify.success('Pathology PDF ready!', 'Download Complete');
       }
     } catch (err) {
       notify.error('Download failed. Please try again.', 'Download Error');
@@ -521,12 +542,43 @@ export const DiseaseDetection: React.FC = () => {
             )}
 
             {!previewUrl ? (
-              <label className="border-2 border-dashed border-gray-200 dark:border-dark-850 hover:border-brand-500 rounded-3xl flex flex-col items-center justify-center p-8 cursor-pointer transition-all duration-200 group h-56 bg-gray-50/50 dark:bg-dark-950/25">
-                <Upload className="w-10 h-10 text-gray-400 group-hover:text-brand-500 transition-colors duration-150 mb-3" />
-                <span className="font-bold text-sm text-gray-700 dark:text-dark-200">{t('disease.uploader.drag_drop')}</span>
-                <span className="text-[10px] text-gray-400 dark:text-dark-500 mt-1 font-semibold uppercase">{t('disease.uploader.file_limits')}</span>
-                <input type="file" onChange={handleFileChange} className="hidden" accept="image/*" />
-              </label>
+              <div className="space-y-3">
+                <div 
+                  onClick={() => {
+                    if (Capacitor.isNativePlatform()) {
+                      handleNativeCapture('prompt');
+                    }
+                  }}
+                  className="border-2 border-dashed border-gray-200 dark:border-dark-850 hover:border-brand-500 rounded-3xl flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-200 group bg-gray-50/50 dark:bg-dark-950/25 text-center relative"
+                >
+                  <Upload className="w-10 h-10 text-gray-400 group-hover:text-brand-500 transition-colors duration-150 mb-2" />
+                  <span className="font-bold text-sm text-gray-700 dark:text-dark-200">{t('disease.uploader.drag_drop')}</span>
+                  <span className="text-[10px] text-gray-400 dark:text-dark-500 mt-1 font-semibold uppercase">{t('disease.uploader.file_limits')}</span>
+                  
+                  {!Capacitor.isNativePlatform() && (
+                    <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" accept="image/*" />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleNativeCapture('camera')}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    <CameraIcon size={16} className="text-emerald-600 dark:text-emerald-400" />
+                    <span>Take Photo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleNativeCapture('photos')}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded-2xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    <ImageIcon size={16} className="text-blue-600 dark:text-blue-400" />
+                    <span>Open Gallery</span>
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-3">
                 <div className="relative rounded-2xl overflow-hidden shadow-inner border border-gray-100 dark:border-dark-800/50 aspect-video bg-gray-50 dark:bg-dark-950">

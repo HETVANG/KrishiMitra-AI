@@ -21,7 +21,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   // Full original logo heights
   const fullHeights = {
     sm: 'h-9 md:h-10',
-    md: 'h-13 md:h-15',
+    md: 'h-14 md:h-16',
     lg: 'h-20 md:h-24',
     xl: 'h-28 md:h-32',
   };
@@ -51,7 +51,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   // Full master original artwork (Login, Register, PDF statements, Footer)
   if (variant === 'full' || (variant === 'horizontal' && (size === 'lg' || size === 'xl'))) {
     return (
-      <div className={`inline-flex flex-col items-start select-none ${className}`}>
+      <div className={`inline-flex flex-col items-center justify-center text-center select-none ${className}`}>
         <img
           src={isWhiteText ? '/brand/the-khedut-full-dark-theme.png' : '/brand/the-khedut-full-transparent.png'}
           alt="The Khedut"

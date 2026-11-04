@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import i18n from '../i18n';
 
@@ -65,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [farmLocation, setFarmLocation] = useState<any>(null);
+  const skipProfileFetchRef = useRef<boolean>(false);
 
   // Sync farmLocation whenever user profile loads/updates or from guest storage fallback
   useEffect(() => {
@@ -110,6 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (token) {
+      if (skipProfileFetchRef.current) {
+        skipProfileFetchRef.current = false;
+        setIsLoading(false);
+        return;
+      }
       fetchProfile();
     } else {
       setIsLoading(false);
@@ -120,10 +126,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.post('/auth/login', { email, password });
     if (res.data && res.data.success) {
       const { token: userToken, user: userData } = res.data;
+      skipProfileFetchRef.current = true;
       localStorage.setItem('token', userToken);
       localStorage.setItem('user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
+      setIsLoading(false);
       if (userData?.settings?.language) {
         const userLang = userData.settings.language;
         i18n.changeLanguage(userLang);
@@ -136,10 +144,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const res = await api.post('/auth/register', payload);
     if (res.data && res.data.success) {
       const { token: userToken, user: userData } = res.data;
+      skipProfileFetchRef.current = true;
       localStorage.setItem('token', userToken);
       localStorage.setItem('user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
+      setIsLoading(false);
       if (userData?.settings?.language) {
         const userLang = userData.settings.language;
         i18n.changeLanguage(userLang);

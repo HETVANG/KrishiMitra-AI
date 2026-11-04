@@ -129,20 +129,24 @@ export class AuthController {
         return res.status(403).json({ success: false, message: 'Account is blocked. Please contact support.' });
       }
 
-      user.lastLogin = new Date();
-      await user.save();
+      const loginTimestamp = new Date();
+
+      // Parallelize lastLogin update and audit history without blocking on full Mongoose validation cycle
+      const updatePromise = User.updateOne({ _id: user._id }, { $set: { lastLogin: loginTimestamp } });
 
       const userAgent = req.headers['user-agent'] || '';
       const { browser, device } = parseUserAgent(userAgent);
       const ipAddress = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
 
-      await LoginHistory.create({
+      const historyPromise = LoginHistory.create({
         userId: user._id,
-        loginTime: user.lastLogin,
+        loginTime: loginTimestamp,
         browser,
         device,
         ipAddress
-      });
+      }).catch(err => console.error('[LoginHistory Warning] Non-critical audit log error:', err));
+
+      await Promise.all([updatePromise, historyPromise]);
 
       const token = generateToken(user._id.toString());
 

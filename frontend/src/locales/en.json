@@ -557,7 +557,12 @@
     "name": "Full Name",
     "expert_details": "Expert Profile Details",
     "specialization": "Specialization",
-    "experience_years": "Years of Experience"
+    "experience_years": "Years of Experience",
+    "signing_in": "Signing in...",
+    "connecting_server": "Connecting to secure agricultural server, please wait...",
+    "network_error": "Network error. Please verify your internet connection.",
+    "timeout_error": "Server connection timed out. Please check your network and try again.",
+    "invalid_credentials": "Invalid email or password."
   },
   "empty": {
     "no_mandi": "No mandi price is currently available for this commodity.",

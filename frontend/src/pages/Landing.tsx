@@ -15,7 +15,9 @@ import {
   CheckCircle2,
   Sparkles,
   Droplets,
-  Brain
+  Brain,
+  Menu,
+  X
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
@@ -28,6 +30,7 @@ export const Landing: React.FC = () => {
   const { theme, toggleTheme, setLanguage } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const languagesList = [
     { code: 'en', label: 'English' },
@@ -52,111 +55,227 @@ export const Landing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-dark-950 text-slate-900 dark:text-dark-50 transition-colors duration-200 overflow-x-hidden">
       
       {/* 1. Header Navigation */}
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-dark-850 px-4 md:px-8 py-3.5 flex items-center justify-between">
-        <NavLink to="/">
-          <BrandLogo variant="horizontal" size="md" />
-        </NavLink>
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-dark-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-dark-850 px-3.5 sm:px-6 md:px-8 py-2.5 sm:py-3.5 safe-area-pt w-full max-w-full">
+        <div className="flex items-center justify-between gap-2 max-w-7xl mx-auto w-full">
+          {/* Left Brand Identity */}
+          <NavLink to="/" className="flex items-center min-w-0 shrink">
+            <BrandLogo variant="horizontal" size="md" taglineClassName="hidden sm:block" />
+          </NavLink>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Public Language Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-dark-800 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-dark-750">
-            <Globe size={14} className="text-slate-500 dark:text-dark-400 shrink-0" />
-            <select
-              value={i18n.language}
-              onChange={handleLanguageChange}
-              aria-label="Select Language"
-              className="text-xs font-bold bg-transparent text-slate-700 dark:text-dark-300 focus:outline-none cursor-pointer max-w-[70px] sm:max-w-none"
+          {/* Right Navigation Controls */}
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 shrink-0">
+            {/* Language Selector (Pill on sm+, inside mobile menu on mobile) */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 dark:bg-dark-800 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-dark-750">
+              <Globe size={14} className="text-slate-500 dark:text-dark-400 shrink-0" />
+              <select
+                value={i18n.language}
+                onChange={handleLanguageChange}
+                aria-label="Select Language"
+                className="text-xs font-bold bg-transparent text-slate-700 dark:text-dark-300 focus:outline-none cursor-pointer"
+              >
+                {languagesList.map((lang) => (
+                  <option key={lang.code} value={lang.code} className="dark:bg-dark-900 text-xs">
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              type="button"
+              aria-label="Toggle Theme"
+              className="p-1.5 sm:p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors shrink-0"
+              title="Toggle Light/Dark Theme"
             >
-              {languagesList.map((lang) => (
-                <option key={lang.code} value={lang.code} className="dark:bg-dark-900 text-xs">
-                  {lang.label}
-                </option>
-              ))}
-            </select>
+              {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+
+            {/* Auth State Button */}
+            {isAuthenticated && user ? (
+              <NavLink
+                to={user.role === 'admin' ? '/admin' : '/dashboard'}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-extrabold text-white bg-brand-700 hover:bg-brand-800 rounded-xl transition-all shadow-sm shadow-brand-700/20 min-h-[36px] sm:min-h-[38px] flex items-center justify-center shrink-0"
+              >
+                {user.role === 'admin' ? 'Admin' : 'Dashboard'}
+              </NavLink>
+            ) : (
+              <NavLink
+                to="/login"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-extrabold text-white bg-brand-700 hover:bg-brand-800 rounded-xl transition-all shadow-sm shadow-brand-700/20 min-h-[36px] sm:min-h-[38px] flex items-center justify-center shrink-0"
+              >
+                Log In
+              </NavLink>
+            )}
+
+            {/* Mobile Menu Trigger (Hamburger) */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              type="button"
+              aria-label="Toggle Navigation Menu"
+              className="p-1.5 sm:p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl md:hidden transition-colors shrink-0"
+            >
+              {isMobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
+            </button>
           </div>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            type="button"
-            aria-label="Toggle Theme"
-            className="p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors"
-            title="Toggle Light/Dark Theme"
-          >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          {/* Auth State Button */}
-          {isAuthenticated && user ? (
-            <NavLink
-              to={user.role === 'admin' ? '/admin' : '/dashboard'}
-              className="px-4 py-2 text-xs font-extrabold text-white bg-brand-700 hover:bg-brand-800 rounded-xl transition-all shadow-sm shadow-brand-700/20 min-h-[38px] flex items-center justify-center"
-            >
-              Go to Dashboard
-            </NavLink>
-          ) : (
-            <NavLink
-              to="/login"
-              className="px-4 py-2 text-xs font-extrabold text-white bg-brand-700 hover:bg-brand-800 rounded-xl transition-all shadow-sm shadow-brand-700/20 min-h-[38px] flex items-center justify-center"
-            >
-              Log In
-            </NavLink>
-          )}
         </div>
+
+        {/* Mobile Slide-Down Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-slate-200/80 dark:border-dark-800 bg-white/95 dark:bg-dark-900/95 backdrop-blur-md px-4 py-4 space-y-4 shadow-lg mt-2.5 rounded-2xl">
+            {/* Language Selection Grid */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-dark-400 flex items-center gap-1.5">
+                <Globe size={13} className="text-brand-600 dark:text-brand-400" />
+                <span>Select Language</span>
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                {languagesList.map((lang) => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => {
+                      i18n.changeLanguage(lang.code);
+                      setLanguage(lang.code as any);
+                      localStorage.setItem('km-lang', lang.code);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`py-1.5 px-2 text-[11px] font-bold rounded-lg border transition-all text-center truncate ${
+                      i18n.language === lang.code
+                        ? 'bg-brand-700 text-white border-brand-700 shadow-xs'
+                        : 'bg-slate-50 dark:bg-dark-800 text-slate-700 dark:text-dark-200 border-slate-200/70 dark:border-dark-750 hover:bg-slate-100'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Navigation Links */}
+            <div className="pt-2 border-t border-slate-100 dark:border-dark-800 grid grid-cols-2 gap-2 text-xs font-bold text-slate-700 dark:text-dark-200">
+              <NavLink
+                to="/disease"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-dark-800/60 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+              >
+                <ScanEye size={16} className="text-brand-600 shrink-0" />
+                <span>Crop Scanner</span>
+              </NavLink>
+              <NavLink
+                to="/market"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-dark-800/60 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+              >
+                <TrendingUp size={16} className="text-amber-600 shrink-0" />
+                <span>Mandi Prices</span>
+              </NavLink>
+              <NavLink
+                to="/support"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-dark-800/60 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+              >
+                <BookOpen size={16} className="text-blue-600 shrink-0" />
+                <span>Support FAQ</span>
+              </NavLink>
+              <NavLink
+                to="/privacy"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-dark-800/60 hover:bg-slate-100 dark:hover:bg-dark-800 flex items-center gap-2"
+              >
+                <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
+                <span>Privacy Policy</span>
+              </NavLink>
+            </div>
+
+            {/* Account Actions */}
+            <div className="pt-2 border-t border-slate-100 dark:border-dark-800">
+              {isAuthenticated && user ? (
+                <NavLink
+                  to={user.role === 'admin' ? '/admin' : '/dashboard'}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <span>Go to {user.role === 'admin' ? 'Admin Panel' : 'Farmer Dashboard'}</span>
+                  <ArrowRight size={14} />
+                </NavLink>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <NavLink
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center shadow-xs"
+                  >
+                    Log In
+                  </NavLink>
+                  <NavLink
+                    to="/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="py-2.5 bg-slate-100 dark:bg-dark-800 hover:bg-slate-200 dark:hover:bg-dark-750 text-slate-800 dark:text-dark-100 font-extrabold text-xs rounded-xl flex items-center justify-center border border-slate-200 dark:border-dark-750"
+                  >
+                    Register
+                  </NavLink>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 2. Hero Section */}
-      <section className="flex-grow flex flex-col items-center justify-center text-center px-4 py-16 md:py-24 max-w-4xl mx-auto space-y-7">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 font-extrabold text-xs rounded-full uppercase tracking-wider border border-brand-200/50 dark:border-brand-800/40">
-          <Sparkles size={14} className="text-brand-600" /> Professional Agronomic Intelligence
+      <section className="flex-grow flex flex-col items-center justify-center text-center px-4 py-8 sm:py-14 md:py-20 max-w-4xl mx-auto space-y-4 sm:space-y-6 w-full">
+        <span className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 font-extrabold text-[11px] sm:text-xs rounded-full uppercase tracking-wider border border-brand-200/50 dark:border-brand-800/40 shrink-0">
+          <Sparkles size={13} className="text-brand-600 shrink-0" />
+          <span className="truncate">Professional Agronomic Intelligence</span>
         </span>
 
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+        <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.2] max-w-3xl">
           {BRAND.name}<br/>
-          <span className="text-brand-700 dark:text-brand-400">
+          <span className="text-brand-700 dark:text-brand-400 block mt-1 text-lg xs:text-xl sm:text-3xl md:text-5xl">
             {BRAND.tagline}
           </span>
         </h1>
 
-        <p className="text-sm md:text-lg text-slate-600 dark:text-dark-300 leading-relaxed font-medium max-w-2xl mx-auto">
+        <p className="text-xs sm:text-sm md:text-lg text-slate-600 dark:text-dark-300 leading-relaxed font-medium max-w-2xl mx-auto px-2">
           Built specifically for Indian farmers. Diagnose crop pathology instantly, check live mandi prices across APMCs, plan optimal irrigation, and make scientific farming decisions in your native language.
         </p>
 
         {/* Action CTAs */}
-        <div className="flex flex-col sm:flex-row gap-3.5 justify-center w-full max-w-md pt-2">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center w-full max-w-md pt-1 px-2">
           <button
             onClick={() => navigate('/disease')}
             type="button"
-            className="flex-1 px-6 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-extrabold text-sm rounded-xl shadow-md shadow-brand-700/20 transition-all flex items-center justify-center gap-2 group min-h-[46px]"
+            className="flex-1 px-5 py-3 sm:py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-brand-700/20 transition-all flex items-center justify-center gap-2 group min-h-[44px]"
           >
-            <ScanEye size={18} />
+            <ScanEye size={18} className="shrink-0" />
             <span>Check Crop Health</span>
-            <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
+            <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform shrink-0" />
           </button>
           
           <button
             onClick={() => navigate('/market')}
             type="button"
-            className="flex-1 px-6 py-3.5 bg-white dark:bg-dark-900 hover:bg-slate-50 dark:hover:bg-dark-850 text-slate-700 dark:text-dark-200 border border-slate-200 dark:border-dark-800 font-extrabold text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 min-h-[46px]"
+            className="flex-1 px-5 py-3 sm:py-3.5 bg-white dark:bg-dark-900 hover:bg-slate-50 dark:hover:bg-dark-850 text-slate-700 dark:text-dark-200 border border-slate-200 dark:border-dark-800 font-extrabold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 min-h-[44px]"
           >
-            <TrendingUp size={18} className="text-brand-600" />
+            <TrendingUp size={18} className="text-brand-600 shrink-0" />
             <span>View Mandi Prices</span>
           </button>
         </div>
 
         {/* Trust Badges */}
-        <div className="pt-6 flex flex-wrap items-center justify-center gap-5 text-xs text-slate-500 dark:text-dark-400 font-semibold">
+        <div className="pt-2 sm:pt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-5 text-[11px] sm:text-xs text-slate-500 dark:text-dark-400 font-semibold">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={16} className="text-brand-600" /> 12 Native Indian Languages
+            <CheckCircle2 size={15} className="text-brand-600 shrink-0" /> 12 Native Indian Languages
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={16} className="text-brand-600" /> 100% Mobile Field-Ready
+            <CheckCircle2 size={15} className="text-brand-600 shrink-0" /> 100% Mobile Field-Ready
           </span>
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={16} className="text-brand-600" /> ICAR Aligned Practices
+            <CheckCircle2 size={15} className="text-brand-600 shrink-0" /> ICAR Aligned Practices
           </span>
         </div>
       </section>

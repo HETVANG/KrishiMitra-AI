@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { Sprout, User, Mail, Lock, Phone, UserCheck, Stethoscope, Briefcase, IndianRupee, AlertCircle } from 'lucide-react';
+import { Sprout, User, Mail, Lock, Phone, UserCheck, Stethoscope, Briefcase, IndianRupee, AlertCircle, Loader2 } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -42,11 +42,20 @@ export const Register: React.FC = () => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
     setError('');
     setLoading(true);
+    setSlowNotice(false);
+
+    // Warm-up notice if server takes > 2.5s (e.g. Render cold start)
+    const slowTimer = setTimeout(() => {
+      setSlowNotice(true);
+    }, 2500);
 
     const payload: any = {
       name,
@@ -70,14 +79,22 @@ export const Register: React.FC = () => {
       await register(payload);
       navigate(getSafeRedirectPath(redirectParam), { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please check details.');
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError(t('auth.timeout_error') || 'Server connection timed out. The server may be waking up from sleep. Please wait a moment and try again.');
+      } else if (!err.response) {
+        setError(t('auth.network_error') || 'Unable to connect to server. Please verify your internet connection or try again in a few moments.');
+      } else {
+        setError(err.response?.data?.message || 'Registration failed. Please check details.');
+      }
     } finally {
+      clearTimeout(slowTimer);
       setLoading(false);
+      setSlowNotice(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-dark-950 safe-area-pt safe-area-pb">
       {/* visual banner */}
       <div className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=1470')` }}>
         <div className="absolute inset-0 bg-brand-950/60 backdrop-blur-[2px]" />
@@ -293,10 +310,24 @@ export const Register: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3 mt-4"
+              className="btn-primary w-full py-3 mt-4 flex items-center justify-center gap-2"
             >
-              {loading ? (t('common.loading') || 'Creating Account...') : (t('auth.create_account') || 'Create Account')}
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin shrink-0" />
+                  <span>{t('common.loading') || 'Creating Account...'}</span>
+                </>
+              ) : (
+                <span>{t('auth.create_account') || 'Create Account'}</span>
+              )}
             </button>
+
+            {/* Connecting status notice during cold start / slow connection */}
+            {loading && slowNotice && (
+              <p className="text-xs text-center text-slate-500 dark:text-dark-400 animate-pulse pt-1">
+                {t('auth.connecting_server') || 'Connecting to secure agricultural server, please wait...'}
+              </p>
+            )}
           </form>
 
           {/* Bottom redirection */}

@@ -52,9 +52,9 @@ export const Login: React.FC = () => {
       navigate(getSafeRedirectPath(redirectParam), { replace: true });
     } catch (err: any) {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError(t('auth.timeout_error') || 'Server connection timed out. Please check your network and try again.');
+        setError(t('auth.timeout_error') || 'Server connection timed out. The server may be waking up from sleep. Please wait a moment and try again.');
       } else if (!err.response) {
-        setError(t('auth.network_error') || 'Network error. Please verify your internet connection.');
+        setError(t('auth.network_error') || 'Unable to connect to server. Please verify your internet connection or try again in a few moments.');
       } else {
         setError(err.response?.data?.message || t('auth.invalid_credentials') || 'Invalid email or password.');
       }

@@ -81,6 +81,10 @@ app.use(cors({
       'http://localhost:3000',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:3000',
+      'https://localhost',
+      'http://localhost',
+      'capacitor://localhost',
+      'ionic://localhost',
       'https://krishi-mitra-ai-henna.vercel.app',
       'https://krishimitra-ai.vercel.app',
       'https://krishimitra.vercel.app'
@@ -93,8 +97,16 @@ app.use(cors({
     }
 
     const normalizedOrigin = origin.replace(/\/$/, '');
+    const isCapacitorOrigin =
+      normalizedOrigin === 'https://localhost' ||
+      normalizedOrigin === 'http://localhost' ||
+      normalizedOrigin === 'capacitor://localhost' ||
+      normalizedOrigin.startsWith('capacitor://') ||
+      normalizedOrigin.startsWith('ionic://');
+
     const isAllowed =
       allowedOrigins.includes(normalizedOrigin) ||
+      isCapacitorOrigin ||
       (process.env.NODE_ENV !== 'production') ||
       allowedOrigins.includes('*') ||
       normalizedOrigin.endsWith('.vercel.app');
@@ -107,7 +119,17 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-Request-Id'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'X-Request-Id',
+    'Accept-Language',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: ['Retry-After', 'X-Request-Id'],
   credentials: true
 }));
 

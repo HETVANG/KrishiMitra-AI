@@ -7,6 +7,7 @@ interface BrandLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
+  taglineClassName?: string;
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
@@ -15,6 +16,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = '',
   size = 'md',
   showTagline = true,
+  taglineClassName = '',
 }) => {
   const isWhiteText = className.includes('text-white') || theme === 'dark';
 
@@ -59,7 +61,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           loading="eager"
         />
         {showTagline && size !== 'sm' && (
-          <span className={`mt-1 font-bold tracking-wider uppercase ${isWhiteText ? 'text-brand-200' : 'text-brand-700 dark:text-brand-400'} ${subtitleSizes[size]}`}>
+          <span className={`mt-1 font-bold tracking-wider uppercase ${isWhiteText ? 'text-brand-200' : 'text-brand-700 dark:text-brand-400'} ${subtitleSizes[size]} ${taglineClassName}`}>
             {BRAND.tagline}
           </span>
         )}
@@ -95,15 +97,15 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       </div>
 
       {/* Typography Text block */}
-      <div className="flex flex-col text-left leading-tight">
+      <div className="flex flex-col text-left leading-tight min-w-0">
         <span 
-          className={`tracking-tight ${titleSizes[size]} ${isWhiteText ? 'text-white' : 'text-slate-900 dark:text-dark-50'}`}
+          className={`tracking-tight truncate ${titleSizes[size]} ${isWhiteText ? 'text-white' : 'text-slate-900 dark:text-dark-50'}`}
         >
           {BRAND.name}
         </span>
         {showTagline && (
           <span 
-            className={`font-bold tracking-wider uppercase ${isWhiteText ? 'text-brand-200' : 'text-brand-700 dark:text-brand-400'} ${subtitleSizes[size]}`}
+            className={`font-bold tracking-wider uppercase ${isWhiteText ? 'text-brand-200' : 'text-brand-700 dark:text-brand-400'} ${subtitleSizes[size]} ${taglineClassName}`}
           >
             {BRAND.tagline}
           </span>

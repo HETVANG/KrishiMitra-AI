@@ -23,7 +23,7 @@ const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 25000,
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -55,8 +55,9 @@ api.interceptors.response.use(
       console.warn('[Session Expiry] Token is invalid or expired. Logging out user...');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // If we are not on the login page already, redirect
-      if (!window.location.pathname.includes('/login')) {
+      // If we are not on the login or register page already, redirect
+      const path = window.location.pathname;
+      if (!path.includes('/login') && !path.includes('/register')) {
         window.location.href = '/login';
       }
     }

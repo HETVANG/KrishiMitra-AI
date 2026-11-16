@@ -13,11 +13,15 @@ try {
 import app from './app';
 import { connectDB } from './config/db';
 import { marketSyncService } from './services/MarketSyncService';
+import { EnvValidator } from './config/envValidator';
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
+    // Validate required environment configurations before connecting to database
+    EnvValidator.auditStartup();
+
     await connectDB();
 
     try {

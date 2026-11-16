@@ -43,8 +43,7 @@ export class EnvValidator {
   private static maskSecret(value: string | undefined, isSecret: boolean): string {
     if (!value) return '[NOT_CONFIGURED]';
     if (!isSecret) return value;
-    if (value.length <= 8) return '[CONFIGURED]';
-    return `[CONFIGURED - ${value.slice(0, 3)}...${value.slice(-3)} (${value.length} chars)]`;
+    return '[CONFIGURED]';
   }
 
   public static validateEnvironment(): EnvValidationReport {

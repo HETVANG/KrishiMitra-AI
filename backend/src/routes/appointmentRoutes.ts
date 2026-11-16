@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AppointmentController } from '../controllers/AppointmentController';
 import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validator';
-import { upload } from '../middleware/upload';
+import { upload, validateImageSignature } from '../middleware/upload';
 
 const router = Router();
 
@@ -16,6 +16,7 @@ router.post(
     { name: 'images', maxCount: 5 },
     { name: 'videos', maxCount: 2 }
   ]),
+  validateImageSignature,
   validateBody(['date', 'timeSlot']),
   AppointmentController.bookAppointment
 );

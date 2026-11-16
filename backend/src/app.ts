@@ -49,6 +49,8 @@ import { ObservabilityService } from './services/observabilityService';
 import { AgentOrchestrator } from './services/agents/agentOrchestrator';
 import { authenticate } from './middleware/auth';
 import { PaymentController } from './controllers/PaymentController';
+import { noSqlSanitizer } from './middleware/sanitize';
+import { generalLimiter, paymentLimiter } from './middleware/rateLimiters';
 
 // Initialize Agent Orchestrator event listeners
 AgentOrchestrator.init();
@@ -109,19 +111,15 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate Limiter to guard against DOS
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again after 15 minutes'
-});
-app.use('/api', limiter);
+// Rate Limiter to guard against DOS (Tier 1: General API)
+app.use('/api', generalLimiter);
 
 // Request Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// NoSQL Injection Sanitizer (Strips recursive $ and . operator keys)
+app.use(noSqlSanitizer);
 
 // Binding Routes
 app.use('/api/auth', authRoutes);
@@ -162,8 +160,8 @@ app.use('/api/automation', automationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.post('/api/create-order', authenticate, PaymentController.createOrder);
-app.post('/api/verify-payment', authenticate, PaymentController.verify);
+app.post('/api/create-order', authenticate, paymentLimiter, PaymentController.createOrder);
+app.post('/api/verify-payment', authenticate, paymentLimiter, PaymentController.verify);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video-consultation', videoConsultationRoutes);
 

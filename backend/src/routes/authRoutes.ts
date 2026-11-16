@@ -3,11 +3,12 @@ import { AuthController } from '../controllers/AuthController';
 import { AdminController } from '../controllers/AdminController';
 import { authenticate, authorize } from '../middleware/auth';
 import { validateBody } from '../middleware/validator';
+import { authLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
-router.post('/register', validateBody(['name', 'email', 'password']), AuthController.register);
-router.post('/login', validateBody(['email', 'password']), AuthController.login);
+router.post('/register', authLimiter, validateBody(['name', 'email', 'password']), AuthController.register);
+router.post('/login', authLimiter, validateBody(['email', 'password']), AuthController.login);
 
 // Protected routes
 router.get('/me', authenticate, AuthController.getCurrentUser);

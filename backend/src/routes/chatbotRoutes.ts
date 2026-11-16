@@ -5,11 +5,13 @@ import { validateBody } from '../middleware/validator';
 import { limitScansAndChats } from '../middleware/subscription';
 import { User } from '../models/User';
 import { audioUpload } from '../middleware/upload';
+import { aiLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
 router.post(
   '/message',
+  aiLimiter,
   authenticate,
   limitScansAndChats,
   validateBody(['message']),
@@ -44,6 +46,7 @@ router.post(
 
 router.post(
   '/audio',
+  aiLimiter,
   authenticate,
   limitScansAndChats,
   audioUpload.single('audio'),

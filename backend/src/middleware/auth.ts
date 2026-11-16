@@ -20,8 +20,15 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({ message: 'Authorization token required or malformed' });
     }
 
+    // Mandatory JWT Secret validation
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('[Auth Error] JWT_SECRET is not configured in environment.');
+      return res.status(500).json({ message: 'Authentication service configuration error.' });
+    }
+
     const token = authHeader.split(' ')[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_krishimitra_token_12345');
+    const decoded: any = jwt.verify(token, jwtSecret);
 
     // Fetch user directly from MongoDB Atlas
     const user = await User.findById(decoded.id).select('-password');
@@ -69,8 +76,14 @@ export const optionalAuthenticate = async (req: AuthRequest, res: Response, next
       return next();
     }
 
+    // Optional JWT Secret validation
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return next();
+    }
+
     const token = authHeader.split(' ')[1];
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_krishimitra_token_12345');
+    const decoded: any = jwt.verify(token, jwtSecret);
 
     const user = await User.findById(decoded.id).select('-password');
 

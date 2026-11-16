@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ReportController } from '../controllers/ReportController';
 import { authenticate, authorize } from '../middleware/auth';
+import { reportLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
@@ -8,10 +9,10 @@ const router = Router();
 router.get('/verify/:reportId', ReportController.verifyReportPublic);
 
 // Existing download route kept for full backward compatibility
-router.get('/download', authenticate, ReportController.downloadReport);
+router.get('/download', reportLimiter, authenticate, ReportController.downloadReport);
 
 // Dynamic Report Generation & Storage
-router.post('/generate', authenticate, ReportController.generateReport);
+router.post('/generate', reportLimiter, authenticate, ReportController.generateReport);
 
 // Farmer's own report history
 router.get('/my-reports', authenticate, ReportController.getMyReports);
@@ -25,7 +26,7 @@ router.get('/storage/:filename', authenticate, ReportController.serveLocalStorag
 
 // Individual Report actions
 router.get('/:id', authenticate, ReportController.getReportById);
-router.get('/:id/download', authenticate, ReportController.downloadReportById);
+router.get('/:id/download', reportLimiter, authenticate, ReportController.downloadReportById);
 router.get('/:id/preview', authenticate, ReportController.previewReportById);
 router.delete('/:id', authenticate, ReportController.deleteReport);
 

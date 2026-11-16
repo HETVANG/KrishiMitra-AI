@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+// Enable Mongoose global filter sanitization to prevent query selector injection
+mongoose.set('sanitizeFilter', true);
+
 export const connectDB = async (): Promise<void> => {
   const mongoUri = process.env.MONGODB_URI;
   if (!mongoUri) {

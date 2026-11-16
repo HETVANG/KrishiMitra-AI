@@ -25,9 +25,13 @@ const parseUserAgent = (userAgentStr: string = '') => {
 };
 
 const generateToken = (userId: string): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('FATAL SECURITY ERROR: JWT_SECRET environment variable is missing.');
+  }
   return jwt.sign(
     { id: userId },
-    process.env.JWT_SECRET || 'super_secret_krishimitra_token_12345',
+    secret,
     { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
   );
 };

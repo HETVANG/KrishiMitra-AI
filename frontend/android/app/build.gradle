@@ -22,10 +22,17 @@ android {
             if (keystorePropsFile.canRead()) {
                 def props = new Properties()
                 props.load(new FileInputStream(keystorePropsFile))
-                storeFile = file(props['storeFile'])
-                storePassword = props['storePassword']
-                keyAlias = props['keyAlias']
-                keyPassword = props['keyPassword']
+                def configuredPath = props['storeFile']
+                if (configuredPath) {
+                    File ks = file(configuredPath)
+                    if (!ks.isAbsolute()) {
+                        ks = rootProject.file(configuredPath)
+                    }
+                    storeFile = ks
+                    storePassword = props['storePassword']
+                    keyAlias = props['keyAlias']
+                    keyPassword = props['keyPassword']
+                }
             } else if (System.getenv("RELEASE_KEYSTORE_PATH")) {
                 storeFile = file(System.getenv("RELEASE_KEYSTORE_PATH"))
                 storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
@@ -36,9 +43,23 @@ android {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(':app:signReleaseBundle')) {
+        if (android.signingConfigs.release.storeFile == null || !android.signingConfigs.release.storeFile.exists()) {
+            throw new GradleException(
+                "\n[RELEASE SIGNING ERROR] Production release keystore was not found!\n" +
+                "Configured location: " + (android.signingConfigs.release.storeFile ?: "Not configured in frontend/android/keystore.properties") + "\n" +
+                "Please ensure the keystore exists at 'C:/AndroidSigning/thekhedut-release-key.jks' and credentials are provided in 'frontend/android/keystore.properties'.\n"
+            )
         }
     }
 }

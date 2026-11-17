@@ -621,7 +621,7 @@ export const Dashboard: React.FC = () => {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-gray-400">No market prices found for nearby mandis.</p>
+            <p className="text-xs text-gray-400">{t('market.no_rates_found') || 'No market prices found for nearby mandis.'}</p>
           )}
         </div>
 

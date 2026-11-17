@@ -1,5 +1,6 @@
 import { MarketPrice } from '../../models/MarketPrice';
 import { MarketDataNormalizer, NormalizedMarketRecord } from './marketDataNormalizer';
+import { escapeRegex } from '../../utils/marketUtils';
 
 export interface MarketComparisonItem {
   market: string;
@@ -39,11 +40,14 @@ export class MarketComparisonService {
     } = {}
   ): Promise<RegionalMarketComparison> {
     const limit = options.limit || 6;
+    const safeCrop = escapeRegex((crop || 'Wheat').trim());
     const filter: any = {
-      crop: new RegExp(`^${crop}$`, 'i')
+      crop: new RegExp(`^${safeCrop}$`, 'i')
     };
 
-    if (options.state) filter.state = new RegExp(`^${options.state}$`, 'i');
+    if (options.state && options.state.trim()) {
+      filter.state = new RegExp(`^${escapeRegex(options.state.trim())}$`, 'i');
+    }
 
     try {
       const records = await MarketPrice.find(filter)

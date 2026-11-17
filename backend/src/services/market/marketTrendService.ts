@@ -1,4 +1,5 @@
 import { MarketPriceHistory } from '../../models/MarketPriceHistory';
+import { escapeRegex } from '../../utils/marketUtils';
 
 export interface TrendAnalysisResult {
   period: '7d' | '30d' | '90d';
@@ -32,14 +33,21 @@ export class MarketTrendService {
     const periodKey: '7d' | '30d' | '90d' = periodDays >= 90 ? '90d' : periodDays >= 30 ? '30d' : '7d';
 
     const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+    const safeCrop = escapeRegex((crop || 'Wheat').trim());
     const filter: any = {
-      crop: new RegExp(`^${crop}$`, 'i'),
+      crop: new RegExp(`^${safeCrop}$`, 'i'),
       date: { $gte: startDate }
     };
 
-    if (options.state) filter.state = new RegExp(`^${options.state}$`, 'i');
-    if (options.district) filter.district = new RegExp(`^${options.district}$`, 'i');
-    if (options.market) filter.market = new RegExp(`^${options.market}$`, 'i');
+    if (options.state && options.state.trim()) {
+      filter.state = new RegExp(`^${escapeRegex(options.state.trim())}$`, 'i');
+    }
+    if (options.district && options.district.trim()) {
+      filter.district = new RegExp(`^${escapeRegex(options.district.trim())}$`, 'i');
+    }
+    if (options.market && options.market.trim()) {
+      filter.market = new RegExp(`^${escapeRegex(options.market.trim())}$`, 'i');
+    }
 
     try {
       const records = await MarketPriceHistory.find(filter)

@@ -163,17 +163,17 @@ export const SmartIrrigation: React.FC = () => {
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'EXCESS_MOISTURE_RISK':
-        return { label: 'EXCESS MOISTURE RISK', bg: 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-200' };
+        return { label: t('irrigation.status_excess') || 'EXCESS MOISTURE RISK', bg: 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-200' };
       case 'NEEDS_ATTENTION':
-        return { label: 'NEEDS ATTENTION', bg: 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-200' };
+        return { label: t('irrigation.status_needed') || 'NEEDS ATTENTION', bg: 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-200' };
       case 'LIKELY_NEEDED':
-        return { label: 'IRRIGATION LIKELY NEEDED', bg: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-200' };
+        return { label: t('irrigation.status_needed') || 'IRRIGATION LIKELY NEEDED', bg: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-200' };
       case 'MONITOR':
-        return { label: 'MONITOR MOISTURE', bg: 'bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-200' };
+        return { label: t('irrigation.status_optimal') || 'MONITOR MOISTURE', bg: 'bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-200' };
       case 'LIKELY_NOT_NEEDED':
-        return { label: 'IRRIGATION UNNECESSARY', bg: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-200' };
+        return { label: t('irrigation.status_optimal') || 'IRRIGATION UNNECESSARY', bg: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-200' };
       default:
-        return { label: 'INSUFFICIENT TELEMETRY DATA', bg: 'bg-gray-100 text-gray-700 dark:bg-dark-800 dark:text-dark-300 border-gray-200' };
+        return { label: t('common.na') || 'INSUFFICIENT TELEMETRY DATA', bg: 'bg-gray-100 text-gray-700 dark:bg-dark-800 dark:text-dark-300 border-gray-200' };
     }
   };
 
@@ -187,9 +187,9 @@ export const SmartIrrigation: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold text-blue-200 uppercase tracking-wider">
             <Droplets size={14} className="text-blue-400" /> Hydro-Telemetry Intelligence
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Smart Irrigation Intelligence</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('irrigation.title') || 'Smart Irrigation Intelligence'}</h1>
           <p className="text-xs md:text-sm text-blue-100 leading-relaxed">
-            Multi-factor water demand assessment combining rainfall forecasts, ambient heat, transpiration rates, and logged irrigation events.
+            {t('irrigation.subtitle') || 'Multi-factor water demand assessment combining rainfall forecasts, ambient heat, transpiration rates, and logged irrigation events.'}
           </p>
         </div>
 

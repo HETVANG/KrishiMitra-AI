@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Users, TrendingUp, Link as LinkIcon, Copy, Plus, ShieldCheck, Check } from 'lucide-react';
+import { getProductionAppUrl } from '../services/api';
 
 export const PartnerPortal: React.FC = () => {
   const [partner, setPartner] = useState<any>(null);
@@ -45,7 +46,7 @@ export const PartnerPortal: React.FC = () => {
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/register?ref=${partner?.referralCode || 'PARTNER'}`;
+    const link = getProductionAppUrl(`/register?ref=${partner?.referralCode || 'PARTNER'}`);
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

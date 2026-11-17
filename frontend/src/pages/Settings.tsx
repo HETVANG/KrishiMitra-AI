@@ -111,7 +111,7 @@ export const Settings: React.FC = () => {
           }`}
         >
           <Users size={16} />
-          Invite & Earn (Referrals)
+          {t('referral.tab_title') || 'Invite & Earn (Referrals)'}
         </button>
         <button
           onClick={() => setActiveTab('preferences')}
@@ -122,7 +122,7 @@ export const Settings: React.FC = () => {
           }`}
         >
           <Globe size={16} />
-          Language & App Preferences
+          {t('settings.preferences_tab') || 'Language & App Preferences'}
         </button>
       </div>
 
@@ -135,23 +135,23 @@ export const Settings: React.FC = () => {
           {/* Referral Benefits Card */}
           <div className="bg-white dark:bg-dark-900 p-6 rounded-3xl border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
             <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <Sparkles size={18} className="text-amber-500" /> Referral Rewards & Credits
+              <Sparkles size={18} className="text-amber-500" /> {t('referral.rewards_title') || 'Referral Rewards & Credits'}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
               <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">Step 1</span>
-                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">Share Your Code</h4>
-                <p className="text-xs text-gray-500 dark:text-dark-400">Send your referral link to fellow farmers via WhatsApp or message.</p>
+                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">{t('referral.step1_badge') || 'Step 1'}</span>
+                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">{t('referral.step1_title') || 'Share Your Code'}</h4>
+                <p className="text-xs text-gray-500 dark:text-dark-400">{t('referral.step1_desc') || 'Send your referral link to fellow farmers via WhatsApp or message.'}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">Step 2</span>
-                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">Farmer Registration</h4>
-                <p className="text-xs text-gray-500 dark:text-dark-400">When your link is used, their account gets linked to your referral network.</p>
+                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">{t('referral.step2_badge') || 'Step 2'}</span>
+                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">{t('referral.step2_title') || 'Farmer Registration'}</h4>
+                <p className="text-xs text-gray-500 dark:text-dark-400">{t('referral.step2_desc') || 'When your link is used, their account gets linked to your referral network.'}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">Step 3</span>
-                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">Earn Free Credits</h4>
-                <p className="text-xs text-gray-500 dark:text-dark-400">Receive free NPK soil test credits & premium trial extensions.</p>
+                <span className="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">{t('referral.step3_badge') || 'Step 3'}</span>
+                <h4 className="font-bold text-xs text-gray-800 dark:text-dark-100">{t('referral.step3_title') || 'Earn Free Credits'}</h4>
+                <p className="text-xs text-gray-500 dark:text-dark-400">{t('referral.step3_desc') || 'Receive free NPK soil test credits & premium trial extensions.'}</p>
               </div>
             </div>
           </div>

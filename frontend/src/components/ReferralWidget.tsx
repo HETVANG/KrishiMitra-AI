@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, getProductionAppUrl } from '../services/api';
+import { useTranslation } from 'react-i18next';
 import {
-  Share2,
   Copy,
   Check,
   Users,
-  Award,
-  Sparkles,
-  ArrowRight,
-  MessageSquare,
-  QrCode
+  MessageSquare
 } from 'lucide-react';
 
 export const ReferralWidget: React.FC = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,8 +41,8 @@ export const ReferralWidget: React.FC = () => {
     );
   }
 
-  const referralCode = stats?.referralCode || 'KM-AGRIC';
-  const referralLink = `${window.location.origin}/register?ref=${referralCode}`;
+  const referralCode = stats?.referralCode || 'TK-AGRIC';
+  const referralLink = getProductionAppUrl(`/register?ref=${referralCode}`);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -54,9 +51,9 @@ export const ReferralWidget: React.FC = () => {
   };
 
   const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(
-      `Join me on THE KHEDUT to get smart crop advisory, disease scanning & mandi prices for your farm! Register using my code ${referralCode}: ${referralLink}`
-    );
+    const rawTemplate = t('referral.share_message') || 'Join me on THE KHEDUT to get smart crop advisory, disease scanning & mandi prices for your farm! Register using my code {{code}}: {{link}}';
+    const message = rawTemplate.replace('{{code}}', referralCode).replace('{{link}}', referralLink);
+    const text = encodeURIComponent(message);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
@@ -68,9 +65,11 @@ export const ReferralWidget: React.FC = () => {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">Invite Farmers & Earn Credits</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
+              {t('referral.title') || 'Invite Farmers & Earn Credits'}
+            </h3>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Share THE KHEDUT with fellow farmers in your region
+              {t('referral.subtitle') || 'Share THE KHEDUT with fellow farmers in your region'}
             </p>
           </div>
         </div>
@@ -78,11 +77,15 @@ export const ReferralWidget: React.FC = () => {
         {/* Counters */}
         <div className="flex items-center gap-3 self-start sm:self-auto">
           <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
-            <div className="text-[10px] text-gray-500 font-medium">Invited</div>
+            <div className="text-[10px] text-gray-500 font-medium">
+              {t('referral.invited') || 'Invited'}
+            </div>
             <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats?.totalReferrals || 0}</div>
           </div>
           <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
-            <div className="text-[10px] text-gray-500 font-medium">Activated</div>
+            <div className="text-[10px] text-gray-500 font-medium">
+              {t('referral.activated') || 'Activated'}
+            </div>
             <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{stats?.activated || 0}</div>
           </div>
         </div>
@@ -100,16 +103,16 @@ export const ReferralWidget: React.FC = () => {
             className="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied!' : 'Copy Code'}
+            {copied ? (t('referral.copied') || 'Copied!') : (t('referral.copy_code') || 'Copy Code')}
           </button>
 
           <button
             onClick={handleWhatsAppShare}
             className="flex-1 sm:flex-none px-3.5 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5"
-            title="Share on WhatsApp"
+            title={t('referral.whatsapp') || 'WhatsApp'}
           >
             <MessageSquare className="w-4 h-4" />
-            WhatsApp
+            {t('referral.whatsapp') || 'WhatsApp'}
           </button>
         </div>
       </div>

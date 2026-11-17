@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { marketPriceService } from '../MarketPriceService';
 import { MarketDataNormalizer, NormalizedMarketRecord } from './marketDataNormalizer';
 import { MarketTrendService, TrendAnalysisResult } from './marketTrendService';
@@ -5,6 +6,7 @@ import { MarketComparisonService, RegionalMarketComparison } from './marketCompa
 import { MarketAnalysisService } from './marketAnalysisService';
 import { MarketWatchlist } from '../../models/MarketWatchlist';
 import { CopilotContextService } from '../CopilotContextService';
+import { escapeRegex } from '../../utils/marketUtils';
 
 export interface MarketIntelligencePayload {
   commodity: string;
@@ -109,11 +111,12 @@ export class MarketIntelligenceService {
 
     // 5. Watchlist status check
     let isWatchlisted = false;
-    if (options.userId) {
+    if (options.userId && mongoose.Types.ObjectId.isValid(options.userId)) {
       try {
+        const safeCommodity = escapeRegex((commodity || '').trim());
         const item = await MarketWatchlist.findOne({
-          user: options.userId,
-          crop: new RegExp(`^${commodity}$`, 'i')
+          user: new mongoose.Types.ObjectId(options.userId),
+          crop: new RegExp(`^${safeCommodity}$`, 'i')
         }).lean();
         if (item) isWatchlisted = true;
       } catch (wErr) {
@@ -149,18 +152,22 @@ export class MarketIntelligenceService {
     userId: string,
     payload: { crop: string; commodity?: string; state?: string; district?: string; market?: string }
   ) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user identifier format for watchlist.');
+    }
+    const safeCrop = (payload.crop || '').trim();
     const doc = await MarketWatchlist.findOneAndUpdate(
       {
-        user: userId,
-        crop: payload.crop
+        user: new mongoose.Types.ObjectId(userId),
+        crop: safeCrop
       },
       {
-        user: userId,
-        crop: payload.crop,
-        commodity: payload.commodity || payload.crop,
-        state: payload.state,
-        district: payload.district,
-        market: payload.market
+        user: new mongoose.Types.ObjectId(userId),
+        crop: safeCrop,
+        commodity: (payload.commodity || safeCrop).trim(),
+        state: payload.state ? payload.state.trim() : undefined,
+        district: payload.district ? payload.district.trim() : undefined,
+        market: payload.market ? payload.market.trim() : undefined
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -171,9 +178,13 @@ export class MarketIntelligenceService {
    * Watchlist Operations: Remove from watchlist
    */
   static async removeFromWatchlist(userId: string, crop: string) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Invalid user identifier format for watchlist.');
+    }
+    const safeCrop = escapeRegex((crop || '').trim());
     return MarketWatchlist.findOneAndDelete({
-      user: userId,
-      crop: new RegExp(`^${crop}$`, 'i')
+      user: new mongoose.Types.ObjectId(userId),
+      crop: new RegExp(`^${safeCrop}$`, 'i')
     });
   }
 
@@ -181,7 +192,10 @@ export class MarketIntelligenceService {
    * Fetch User Watchlist with current live price intelligence
    */
   static async getUserWatchlist(userId: string) {
-    const list = await MarketWatchlist.find({ user: userId }).sort({ createdAt: -1 }).lean();
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return [];
+    }
+    const list = await MarketWatchlist.find({ user: new mongoose.Types.ObjectId(userId) }).sort({ createdAt: -1 }).lean();
     
     const enrichedList = await Promise.all(
       list.map(async (item: any) => {

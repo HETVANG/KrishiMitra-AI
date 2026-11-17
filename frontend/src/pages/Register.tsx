@@ -34,6 +34,18 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   
+  const refParam = searchParams.get('ref');
+  const [referralCode, setReferralCode] = useState(() => {
+    return refParam || localStorage.getItem('pendingReferralCode') || '';
+  });
+
+  useEffect(() => {
+    if (refParam) {
+      setReferralCode(refParam);
+      localStorage.setItem('pendingReferralCode', refParam);
+    }
+  }, [refParam]);
+
   // Expert fields
   const [specialization, setSpecialization] = useState('');
   const [experienceYears, setExperienceYears] = useState('');
@@ -63,6 +75,7 @@ export const Register: React.FC = () => {
       password,
       phone,
       role,
+      referralCode: referralCode ? referralCode.trim() : undefined,
     };
 
     if (role === 'expert') {
@@ -77,6 +90,7 @@ export const Register: React.FC = () => {
 
     try {
       await register(payload);
+      localStorage.removeItem('pendingReferralCode');
       navigate(getSafeRedirectPath(redirectParam), { replace: true });
     } catch (err: any) {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
@@ -306,6 +320,40 @@ export const Register: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Optional Referral Code Field */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider">
+                  {t('auth.referral_code') || 'Referral Code (Optional)'}
+                </label>
+                {referralCode && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {t('auth.referral_applied') || 'Code Applied'}
+                  </span>
+                )}
+              </div>
+              <div className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white/50 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-transparent focus-within:ring-2 focus-within:ring-brand-500">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400">
+                  <UserCheck size={16} />
+                </div>
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => {
+                    const code = e.target.value.toUpperCase();
+                    setReferralCode(code);
+                    if (code) {
+                      localStorage.setItem('pendingReferralCode', code);
+                    } else {
+                      localStorage.removeItem('pendingReferralCode');
+                    }
+                  }}
+                  placeholder={t('auth.referral_code_placeholder') || 'e.g. TK-6BF912'}
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm font-mono leading-6 text-gray-700 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600 uppercase"
+                />
+              </div>
+            </div>
 
             <button
               type="submit"

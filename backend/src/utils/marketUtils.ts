@@ -13,7 +13,7 @@ const toNumberOrNull = (value: unknown): number | null => {
   return null;
 };
 
-const escapeRegex = (str: string): string => {
+export const escapeRegex = (str: string): string => {
   return str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 

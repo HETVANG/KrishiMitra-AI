@@ -19,6 +19,29 @@ export const getFullApiUrl = (path: string): string => {
   return `${base}/${cleaned}`;
 };
 
+/**
+ * Returns the public web URL for external sharing (referrals, WhatsApp invites, deep links).
+ * Always avoids mobile WebView internal origins (localhost, capacitor://, ionic://, file://)
+ * and defaults to the production web deployment domain.
+ */
+export const getProductionAppUrl = (path: string = ''): string => {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const isMobileOrLocal =
+    Capacitor.isNativePlatform() ||
+    typeof window === 'undefined' ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'ionic:' ||
+    window.location.protocol === 'file:';
+
+  const baseUrl = isMobileOrLocal
+    ? 'https://krishi-mitra-ai-henna.vercel.app'
+    : window.location.origin;
+
+  return `${baseUrl}${cleanPath}`;
+};
+
 const API_BASE_URL = getApiBaseUrl();
 
 export const api = axios.create({

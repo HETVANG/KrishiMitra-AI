@@ -138,11 +138,16 @@ export const MarketDashboard: React.FC = () => {
         setPagination(res.data.pagination || null);
         setFallbackSource(res.data.fallbackSource || 'exact-match');
       } else {
-        setError('Unable to load mandi prices right now.');
+        setError(t('market.price_load_error') || 'Unable to load mandi prices right now.');
       }
     } catch (err: any) {
       console.error('Failed to load mandi prices:', err);
-      setError(err.response?.data?.message || 'Failed to load mandi prices.');
+      if (err.response?.status === 400 && err.response?.data?.code === 'INVALID_RESOURCE_IDENTIFIER') {
+        setError(t('market.price_load_error') || 'Unable to load mandi rates for this search. Please try adjusting your filters.');
+      } else {
+        const userMsg = err.response?.data?.userMessage || err.response?.data?.message;
+        setError(userMsg || t('market.price_load_error') || 'Failed to load mandi prices.');
+      }
     } finally {
       setLoading(false);
     }
@@ -212,7 +217,7 @@ export const MarketDashboard: React.FC = () => {
       runMasterFetch(searchCrop, periodDays, page);
     } catch (err) {
       console.error('Failed to refresh mandi prices:', err);
-      setError('Refresh failed. The app will continue using the latest cached prices.');
+      setError(t('market.refresh_error') || 'Refresh failed. The app will continue using the latest cached prices.');
     } finally {
       setRefreshing(false);
     }
@@ -278,10 +283,10 @@ export const MarketDashboard: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <LineChart size={24} className="text-amber-200" />
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Market Intelligence Engine (eNAM)</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('market.mandi_rates_title') || 'Market Intelligence Engine (eNAM)'}</h1>
           </div>
           <p className="text-amber-100 text-xs md:text-sm mt-1 font-medium max-w-2xl">
-            Live Mandi rates, 7D/30D price trends, regional market comparisons, volatility scores, and watchlist intelligence.
+            {t('market.mandi_rates_sub') || 'Live Mandi rates, 7D/30D price trends, regional market comparisons, volatility scores, and watchlist intelligence.'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -292,7 +297,7 @@ export const MarketDashboard: React.FC = () => {
             className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 font-bold rounded-xl text-xs md:text-sm shadow-sm transition-colors flex items-center gap-2 min-h-[44px]"
           >
             <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? 'Syncing Mandis...' : 'Refresh Data'}
+            {refreshing ? (t('market.refreshing') || 'Syncing Mandis...') : (t('market.refresh_feed') || 'Refresh Data')}
           </button>
         </div>
       </div>
@@ -301,7 +306,7 @@ export const MarketDashboard: React.FC = () => {
       {token && watchlist.length > 0 && (
         <div className="bg-white dark:bg-dark-900 rounded-3xl p-4 border border-gray-100 dark:border-dark-800/30 shadow-sm flex items-center gap-3 overflow-x-auto">
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 pl-2">
-            <Heart size={14} className="text-red-500 fill-red-500" /> Watchlist:
+            <Heart size={14} className="text-red-500 fill-red-500" /> {t('market.watchlist') || 'Watchlist'}:
           </span>
           <div className="flex items-center gap-2 shrink-0">
             {watchlist.map((w) => (
@@ -332,7 +337,7 @@ export const MarketDashboard: React.FC = () => {
         <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
           <div>
             <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">
-              {t('market.search_crop') || 'Target Commodity / Crop'}
+              {t('market.target_commodity') || t('market.search_crop') || 'Target Commodity / Crop'}
             </label>
             <div className="relative flex items-center">
               <input
@@ -353,9 +358,9 @@ export const MarketDashboard: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">State</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.state_label') || 'State'}</label>
             <select value={searchState} onChange={(e) => setSearchState(e.target.value)} className="custom-input text-sm">
-              <option value="">All States</option>
+              <option value="">{t('market.all_states') || 'All States'}</option>
               <option value="Haryana">Haryana</option>
               <option value="Punjab">Punjab</option>
               <option value="Uttar Pradesh">Uttar Pradesh</option>
@@ -367,16 +372,16 @@ export const MarketDashboard: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">District / Mandi</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.district_label') || 'District / Mandi'}</label>
             <input type="text" value={searchDistrict} onChange={(e) => setSearchDistrict(e.target.value)} placeholder="e.g. Karnal" className="custom-input text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">Date Filter</label>
+            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.date_label') || 'Date Filter'}</label>
             <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} className="custom-input text-sm" />
           </div>
           <button type="submit" className="btn-primary py-3 flex items-center justify-center gap-1.5 min-h-[44px]">
             <Search size={16} />
-            <span>Search Mandi Rates</span>
+            <span>{t('market.search_rates_btn') || 'Search Mandi Rates'}</span>
           </button>
         </form>
       </div>
@@ -412,9 +417,9 @@ export const MarketDashboard: React.FC = () => {
 
             <div className="flex items-center gap-4 shrink-0">
               <div className="text-right">
-                <span className="block text-[10px] text-gray-400 font-bold uppercase">Current Modal Rate</span>
+                <span className="block text-[10px] text-gray-400 font-bold uppercase">{t('market.modal_price_title') || 'Current Modal Rate'}</span>
                 <span className="block font-extrabold text-2xl md:text-3xl text-amber-600 dark:text-amber-400">
-                  {intelligence.currentPrice?.modalPrice === null ? 'Price Unavailable' : `₹${intelligence.currentPrice.modalPrice}`}
+                  {intelligence.currentPrice?.modalPrice === null ? (t('common.na') || 'Price Unavailable') : `₹${intelligence.currentPrice.modalPrice}`}
                 </span>
                 {intelligence.currentPrice?.modalPrice !== null && (
                   <span className="text-[10px] text-gray-400 font-bold">per {intelligence.currentPrice.unit}</span>
@@ -430,7 +435,7 @@ export const MarketDashboard: React.FC = () => {
                       ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-950/30'
                       : 'bg-gray-50 border-gray-200 text-gray-400 hover:text-red-500 dark:bg-dark-850 dark:border-dark-800'
                   }`}
-                  title={intelligence.isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  title={intelligence.isWatchlisted ? (t('market.remove_from_watchlist') || 'Remove from Watchlist') : (t('market.add_to_watchlist') || 'Add to Watchlist')}
                 >
                   <Heart size={20} className={intelligence.isWatchlisted ? 'fill-red-500' : ''} />
                 </button>
@@ -441,7 +446,7 @@ export const MarketDashboard: React.FC = () => {
           {/* 7-Day & 30-Day Statistics Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left pt-1">
             <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Price Change</span>
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.trend_7d') || '7D Price Change'}</span>
               <span className={`text-base font-extrabold mt-1 block ${
                 (intelligence.trend7d?.percentageChange || 0) >= 0 ? 'text-emerald-600' : 'text-red-500'
               }`}>
@@ -453,21 +458,21 @@ export const MarketDashboard: React.FC = () => {
             </div>
 
             <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Range (Min - Max)</span>
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.recorded_range') || '7D Range (Min - Max)'}</span>
               <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
                 {intelligence.trend7d?.lowestPrice ? `₹${intelligence.trend7d.lowestPrice} - ₹${intelligence.trend7d.highestPrice}` : 'N/A'}
               </span>
             </div>
 
             <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">7D Regional Average</span>
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.regional_average') || '7D Regional Average'}</span>
               <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
                 {intelligence.trend7d?.averagePrice ? `₹${intelligence.trend7d.averagePrice}` : 'N/A'}
               </span>
             </div>
 
             <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">30D Price Trend</span>
+              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.volatility_30d') || '30D Price Trend'}</span>
               <span className="text-base font-extrabold text-brand-600 dark:text-brand-400 mt-1 block">
                 {intelligence.trend30d?.percentageChange !== null
                   ? `${intelligence.trend30d.percentageChange >= 0 ? '+' : ''}${intelligence.trend30d.percentageChange}%`
@@ -481,7 +486,7 @@ export const MarketDashboard: React.FC = () => {
           {intelligence.advisory && (
             <div className="p-4 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-100 dark:border-amber-900/20 rounded-2xl space-y-2">
               <h4 className="font-bold text-xs md:text-sm text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
-                <Sparkles size={16} /> Market Intelligence Summary & Advisory
+                <Sparkles size={16} /> {t('market.advisory_title') || 'Market Intelligence Summary & Advisory'}
               </h4>
               <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed">
                 {intelligence.advisory.summary}
@@ -505,7 +510,7 @@ export const MarketDashboard: React.FC = () => {
         <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-850 pb-3">
             <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <LineChart className="text-amber-600" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} Price History Chart
+              <LineChart className="text-amber-600" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} {t('market.history_chart_title') || 'Price History Chart'}
             </h3>
 
             {/* Timeline Period Selector */}
@@ -551,9 +556,10 @@ export const MarketDashboard: React.FC = () => {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                <HelpCircle size={36} className="text-gray-300 mb-1" />
-                <p className="font-bold text-xs">No historical trend data recorded for this period.</p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 p-4">
+                <HelpCircle size={36} className="text-gray-300 mb-2" />
+                <p className="font-bold text-xs text-center">{t('market.no_history_data') || 'No historical trend data recorded for this period.'}</p>
+                <p className="text-[11px] text-gray-400 mt-1 max-w-xs text-center">{t('market.no_history_subtext') || 'Historical APMC data for this commodity is currently unavailable. Live rates are still updated regularly.'}</p>
               </div>
             )}
           </div>
@@ -562,14 +568,14 @@ export const MarketDashboard: React.FC = () => {
         {/* Regional Nearby Mandi Comparison (5 cols) */}
         <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
           <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
-            <span className="flex items-center gap-2"><Building2 className="text-amber-600" size={18} /> Nearby Mandi Comparisons</span>
-            <span className="text-[10px] text-gray-400 font-bold uppercase">Regional Mandis</span>
+            <span className="flex items-center gap-2"><Building2 className="text-amber-600" size={18} /> {t('market.nearby_comparisons') || 'Nearby Mandi Comparisons'}</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase">{t('market.regional_mandis') || 'Regional Mandis'}</span>
           </h3>
 
           {comparison && comparison.comparisons?.length > 0 ? (
             <div className="space-y-3">
               <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl border border-amber-100/50 dark:border-amber-900/10 text-xs flex justify-between items-center">
-                <span>Regional Average Modal Price:</span>
+                <span>{t('market.regional_average') || 'Regional Average Modal Price'}:</span>
                 <strong className="font-extrabold text-amber-700 dark:text-amber-400">₹{comparison.regionalAverage}/Qtl</strong>
               </div>
 
@@ -596,7 +602,7 @@ export const MarketDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="py-12 text-center text-gray-400 text-xs font-semibold">
-              No nearby regional mandi comparisons available.
+              {t('market.no_rates_found') || 'No nearby regional mandi comparisons available.'}
             </div>
           )}
         </div>
@@ -605,10 +611,10 @@ export const MarketDashboard: React.FC = () => {
       {/* Mandi Listings Table */}
       <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
         <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
-          <span>Live Mandi Price Directory</span>
+          <span>{t('market.mandi_rates_title') || 'Live Mandi Price Directory'}</span>
           {fallbackSource && fallbackSource !== 'exact-match' && (
             <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-md">
-              Showing fallback level: {fallbackSource}
+              {t(`market.source_${fallbackSource.replace('-', '_')}`) || `Showing fallback level: ${fallbackSource}`}
             </span>
           )}
         </h3>
@@ -617,13 +623,13 @@ export const MarketDashboard: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-gray-100 dark:border-dark-800 text-gray-400 uppercase font-bold text-[10px]">
-                <th className="py-3 px-2">Market / Mandi</th>
-                <th className="py-3 px-2">District / State</th>
-                <th className="py-3 px-2">Commodity</th>
-                <th className="py-3 px-2 text-right">Min Rate</th>
-                <th className="py-3 px-2 text-right">Modal Rate</th>
-                <th className="py-3 px-2 text-right">Max Rate</th>
-                <th className="py-3 px-2 text-right">Arrival Date</th>
+                <th className="py-3 px-2">{t('market.mandi_col') || 'Market / Mandi'}</th>
+                <th className="py-3 px-2">{t('market.district_state_col') || 'District / State'}</th>
+                <th className="py-3 px-2">{t('market.target_commodity') || 'Commodity'}</th>
+                <th className="py-3 px-2 text-right">{t('market.min_price') || 'Min Rate'}</th>
+                <th className="py-3 px-2 text-right">{t('market.modal_price') || 'Modal Rate'}</th>
+                <th className="py-3 px-2 text-right">{t('market.max_price') || 'Max Rate'}</th>
+                <th className="py-3 px-2 text-right">{t('market.date_col') || 'Arrival Date'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-dark-850">
@@ -656,7 +662,8 @@ export const MarketDashboard: React.FC = () => {
               ) : (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-400">
-                    No mandi rates matched your active filters.
+                    <p className="font-bold text-xs">{t('market.no_rates_found') || 'No mandi rates matched your active filters.'}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{t('market.no_rates_subtext') || 'Try selecting a different district, state or checking spelling.'}</p>
                   </td>
                 </tr>
               )}
@@ -673,14 +680,14 @@ export const MarketDashboard: React.FC = () => {
                 onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchPrices(next); }} 
                 className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
               >
-                <ArrowLeft size={14} /> Prev
+                <ArrowLeft size={14} /> {t('common.prev') || 'Prev'}
               </button>
               <button 
                 type="button" 
                 onClick={() => { const next = Math.min(pagination.totalPages, page + 1); setPage(next); void fetchPrices(next); }} 
                 className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
               >
-                Next <ArrowRight size={14} />
+                {t('common.next') || 'Next'} <ArrowRight size={14} />
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { LoginHistory } from '../models/LoginHistory';
 import { AuthRequest } from '../middleware/auth';
+import { ReferralService } from '../services/growth/referralService';
 
 const parseUserAgent = (userAgentStr: string = '') => {
   const ua = userAgentStr.toLowerCase();
@@ -60,7 +61,7 @@ const mapUserPayload = (user: any) => {
 export class AuthController {
   static async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, email, password, phone, settings, farmLocation, expertProfile } = req.body;
+      const { name, email, password, phone, settings, farmLocation, expertProfile, referralCode } = req.body;
       const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
       const safeRole = (req.body.role === 'farmer' || req.body.role === 'expert') ? req.body.role : 'user';
 
@@ -86,6 +87,25 @@ export class AuthController {
         trialEndDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
         subscriptionExpiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
       });
+
+      // Generate unique referral code for the new user immediately
+      try {
+        await ReferralService.getOrCreateReferralCode(user._id.toString());
+      } catch (refErr) {
+        console.warn('[AuthController] Failed to generate referral code for new user:', refErr);
+      }
+
+      // Attribute referral signup if referralCode provided
+      if (referralCode && typeof referralCode === 'string') {
+        try {
+          await ReferralService.attributeSignup({
+            newUserId: user._id.toString(),
+            referralCode: referralCode.trim()
+          });
+        } catch (attrErr) {
+          console.warn('[AuthController] Failed to attribute referral signup:', attrErr);
+        }
+      }
 
       user.lastLogin = new Date();
       await user.save();

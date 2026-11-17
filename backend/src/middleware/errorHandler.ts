@@ -38,8 +38,16 @@ export const errorHandler = (
   if (err.name === 'CastError') {
     statusCode = 400;
     code = 'INVALID_RESOURCE_IDENTIFIER';
-    message = 'Invalid resource identifier format.';
-    userMessage = 'The requested item identifier is invalid.';
+    if (err.kind === 'date' || err.path === 'date') {
+      message = 'Invalid date format provided in query.';
+      userMessage = 'Please provide a valid date format.';
+    } else if (err.kind === 'number' || err.path === 'number') {
+      message = 'Invalid numeric parameter format.';
+      userMessage = 'Please provide a valid numeric value.';
+    } else {
+      message = 'Invalid resource identifier format.';
+      userMessage = 'The requested item identifier is invalid.';
+    }
   }
 
   // 2. Mongoose schema validation failure

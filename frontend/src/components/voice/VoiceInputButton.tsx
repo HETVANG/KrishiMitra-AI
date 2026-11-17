@@ -12,6 +12,7 @@ export interface VoiceInputButtonProps {
   disabled?: boolean;
   title?: string;
   showTextFeedback?: boolean;
+  autoStart?: boolean;
 }
 
 export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
@@ -23,6 +24,7 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
   disabled = false,
   title,
   showTextFeedback = false,
+  autoStart = false,
 }) => {
   const { t, i18n } = useTranslation();
 
@@ -45,6 +47,15 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
       onError?.(err);
     },
   });
+
+  React.useEffect(() => {
+    if (autoStart && isSupported && !isListening && !disabled) {
+      const timer = setTimeout(() => {
+        startListening();
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [autoStart, isSupported, disabled]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -112,9 +112,10 @@ const SEARCH_DATABASE: SearchItem[] = [
 interface GlobalSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialVoice?: boolean;
 }
 
-export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose }) => {
+export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose, initialVoice = false }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
@@ -246,6 +247,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             lang={currentLang}
             size="md"
             showTextFeedback
+            autoStart={initialVoice}
           />
 
           <button

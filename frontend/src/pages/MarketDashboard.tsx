@@ -212,8 +212,15 @@ export const MarketDashboard: React.FC = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    setError(null);
     try {
-      await api.post('/market/sync');
+      if (user?.role === 'admin') {
+        try {
+          await api.post('/market/sync');
+        } catch (syncErr) {
+          console.warn('Admin background sync notice:', syncErr);
+        }
+      }
       runMasterFetch(searchCrop, periodDays, page);
     } catch (err) {
       console.error('Failed to refresh mandi prices:', err);
@@ -400,10 +407,10 @@ export const MarketDashboard: React.FC = () => {
                   7D Trend: {intelligence.trend7d?.trend || 'STABLE'}
                 </span>
                 <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${getVolatilityBadgeStyle(intelligence.trend7d?.volatility)}`}>
-                  {intelligence.trend7d?.volatility || 'LOW'} Volatility
+                  {intelligence.trend7d?.volatility === 'HIGH' ? (t('market.high_volatility') || 'High Volatility') : (t('market.low_volatility') || 'Low Volatility')}
                 </span>
                 <span className="text-[10px] text-gray-400 font-bold bg-gray-50 dark:bg-dark-800 px-2 py-0.5 rounded-full uppercase">
-                  Source: {intelligence.currentPrice?.source || 'agmarknet'}
+                  {t('market.source_label') || 'Source'}: {intelligence.currentPrice?.source || 'agmarknet'}
                 </span>
               </div>
 
@@ -411,7 +418,7 @@ export const MarketDashboard: React.FC = () => {
                 {getTranslatedCropName(intelligence.commodity)}
               </h2>
               <p className="text-xs text-gray-400 dark:text-dark-500 font-semibold mt-0.5">
-                Arrival Date: {intelligence.currentPrice?.arrivalDate} | Updated: {new Date(intelligence.currentPrice?.sourceTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {t('market.date_col') || 'Arrival Date'}: {intelligence.currentPrice?.arrivalDate ? new Date(intelligence.currentPrice.arrivalDate).toLocaleDateString('en-IN') : (t('common.na') || 'N/A')} | {t('market.last_updated') || 'Updated'}: {intelligence.currentPrice?.sourceTimestamp ? new Date(intelligence.currentPrice.sourceTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (t('common.na') || 'N/A')}
               </p>
             </div>
 

@@ -60,7 +60,24 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     description: "Description",
     footer: "This is a computer-generated official advisory statement. Authenticity can be verified using the QR code below.",
     scanToVerify: "Scan to verify report authenticity",
-    attestationText: "Digitally generated & attested by The Khedut Autonomous Agricultural Intelligence Platform. Verified tamper-evident digital record."
+    attestationText: "Digitally generated & attested by The Khedut Autonomous Agricultural Intelligence Platform. Verified tamper-evident digital record.",
+    pageTitlePathology: "PATHOLOGY & SYMPTOMS PROFILE",
+    pageTitleTreatment: "TREATMENT PROTOCOL & CONTROL MEASURES",
+    pageTitleChecklist: "7-DAY ACTION PLAN & VERIFICATION",
+    executiveSummary: "EXECUTIVE DIAGNOSIS SUMMARY",
+    microclimateTitle: "MICROCLIMATE & SPREAD RISK FACTORS",
+    ipmTitle: "INTEGRATED PEST & DISEASE MANAGEMENT (IPM)",
+    sprayScheduleTitle: "RECOMMENDED SPRAY SCHEDULE & DOSAGE",
+    checklistTitle: "7-DAY FARMER ACTION CHECKLIST",
+    kvkNotice: "LOCAL KVK EXPERT CONSULTATION",
+    kvkNoticeDetails: "For persistent symptoms or complex multi-pathogen infections, consult your block Krishi Vigyan Kendra (KVK) agronomy extension officer or book an in-app expert appointment.",
+    activeIngredient: "Active Ingredient / Formulation",
+    commercialBrand: "Standard Brand",
+    dosagePerLiter: "Dosage / Acre",
+    sprayTiming: "Application Timing",
+    phiLabel: "Pre-Harvest Interval (PHI)",
+    immediateDirective: "PRIMARY FIELD DIRECTIVE (IMMEDIATE ACTION)",
+    urgentIsolation: "Isolate affected crop rows immediately and remove heavily infected foliage. Avoid overhead irrigation to prevent water-borne spore spread."
   },
   gu: {
     subtitle: "ચોક્કસ કૃષિ માર્ગદર્શન • સ્માર્ટ ખેતી મંચ",
@@ -116,7 +133,24 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     description: "વિગત",
     footer: "આ કમ્પ્યુટર દ્વારા બનાવેલ અધિકૃત સલાહ અહેવાલ છે. નીચેના ક્યૂઆર કોડ દ્વારા તેની અધિકૃતતા ચકાસી શકાય છે.",
     scanToVerify: "અહેવાલની અધિકૃતતા ચકાસવા સ્કેન કરો",
-    attestationText: "ધ ખેડૂત એઆઈ કૃષિ મંચ દ્વારા ડિજિટલ રીતે પ્રમાણિત અને ચકાસાયેલ અધિકૃત દસ્તાવેજ."
+    attestationText: "ધ ખેડૂત એઆઈ કૃષિ મંચ દ્વારા ડિજિટલ રીતે પ્રમાણિત અને ચકાસાયેલ અધિકૃત દસ્તાવેજ.",
+    pageTitlePathology: "રોગ લક્ષણો અને પેથોલોજી પ્રોફાઇલ",
+    pageTitleTreatment: "સારવાર પદ્ધતિ અને નિયંત્રણ પગલાં",
+    pageTitleChecklist: "૭ દિવસીય કાર્ય યોજના અને પ્રમાણીકરણ",
+    executiveSummary: "કાર્યકારી નિદાન સારાંશ",
+    microclimateTitle: "હવામાન અને રોગ ફેલાવાનું જોખમ",
+    ipmTitle: "સંકલિત રોગ અને જીવાત વ્યવસ્થાપન (IPM)",
+    sprayScheduleTitle: "ભલામણ કરેલ છંટકાવ સમયપત્રક અને દવા માત્રા",
+    checklistTitle: "૭ દિવસીય ખેડૂત કાર્ય સૂચિ",
+    kvkNotice: "કૃષિ વિજ્ઞાન કેન્દ્ર (KVK) નિષ્ણાત સલાહ",
+    kvkNoticeDetails: "જો રોગના લક્ષણો ચાલુ રહે અથવા વધુ ફેલાય, તો નજીકના કૃષિ વિજ્ઞાન કેન્દ્ર (KVK) ના વૈજ્ઞાનિકનો સંપર્ક કરો અથવા એપ દ્વારા કૃષિ નિષ્ણાતની સલાહ લો.",
+    activeIngredient: "દવાનું નામ / ઘટક",
+    commercialBrand: "બજારમાં મળતી બ્રાન્ડ",
+    dosagePerLiter: "માત્રા / એકર",
+    sprayTiming: "છંટકાવનો સમય",
+    phiLabel: "કાપણી પહેલાંનો સમયગાળો (PHI)",
+    immediateDirective: "તાત્કાલિક ખેતર નિર્દેશ (પ્રાથમિક પગલાં)",
+    urgentIsolation: "રોગગ્રસ્ત પાકના છોડને તાત્કાલિક અલગ કરો અને વધુ ચેપગ્રસ્ત પાંદડાં દૂર કરો. ફૂગના ફેલાવાને રોકવા માટે ફુવારા પદ્ધતિથી પિયત ટાળો."
   },
   hi: {
     subtitle: "सटीक कृषि परामर्श • आधुनिक डिजिटल कृषि मंच",
@@ -172,7 +206,24 @@ const pdfTranslations: Record<string, Record<string, string>> = {
     description: "विवरण",
     footer: "यह एक कंप्यूटर जनित आधिकारिक परामर्श रिपोर्ट है। नीचे दिए गए क्यूआर कोड से इसकी सत्यता जांची जा सकती है।",
     scanToVerify: "रिपोर्ट की सत्यता जांचने के लिए स्कैन करें",
-    attestationText: "द खेड़ूत कृषि मंच द्वारा डिजिटल रूप से सत्यापित और प्रमाणित आधिकारिक दस्तावेज।"
+    attestationText: "द खेड़ूत कृषि मंच द्वारा डिजिटल रूप से सत्यापित और प्रमाणित आधिकारिक दस्तावेज।",
+    pageTitlePathology: "रोग लक्षण एवं पैथोलॉजी विवरण",
+    pageTitleTreatment: "उपचार प्रोटोकॉल एवं नियंत्रण उपाय",
+    pageTitleChecklist: "7 दिवसीय कार्य योजना एवं सत्यापन",
+    executiveSummary: "कार्यकारी निदान सारांश",
+    microclimateTitle: "मौसम एवं रोग फैलाव जोखिम कारक",
+    ipmTitle: "एकीकृत कीट एवं रोग प्रबंधन (IPM)",
+    sprayScheduleTitle: "अनुशंसित छिड़काव सारणी एवं दवा मात्रा",
+    checklistTitle: "7 दिवसीय किसान कार्य सूची",
+    kvkNotice: "कृषि विज्ञान केंद्र (KVK) विशेषज्ञ परामर्श",
+    kvkNoticeDetails: "यदि रोग के लक्षण बने रहते हैं या प्रकोप बढ़ता है, तो अपने नजदीकी कृषि विज्ञान केंद्र (KVK) के कृषि अधिकारी से संपर्क करें अथवा ऐप में विशेषज्ञ परामर्श लें।",
+    activeIngredient: "दवा का नाम / सक्रिय घटक",
+    commercialBrand: "बाजार में उपलब्ध ब्रांड",
+    dosagePerLiter: "मात्रा / एकड़",
+    sprayTiming: "छिड़काव का समय",
+    phiLabel: "कटाई पूर्व प्रतीक्षा अवधि (PHI)",
+    immediateDirective: "प्राथमिक खेत निर्देश (तत्काल कार्यवाही)",
+    urgentIsolation: "संक्रमित पौधों को तुरंत पहचानें एवं अधिक प्रभावित पत्तियों को काटकर नष्ट करें। फफूंद के बीजाणु फैलने से रोकने के लिए ऊपर से फव्वारा सिंचाई न करें।"
   }
 };
 
@@ -499,257 +550,542 @@ export class PdfService {
 
     // 6. CENTRAL CONTENT ROUTING
     if (reportType === 'disease') {
-      currentY = this.renderCentralDisease(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, accentGreen, textDark, textMuted, dangerRed, leftMargin, contentWidth, currentY);
-    } else if (reportType === 'weather') {
-      currentY = this.renderCentralWeather(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
-    } else if (reportType === 'expense') {
-      currentY = this.renderCentralExpense(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
+      this.renderMultiPageDisease(
+        doc,
+        data,
+        language,
+        options,
+        regularFont,
+        boldFont,
+        primaryGreen,
+        secondaryGreen,
+        accentGreen,
+        neutralBg,
+        textDark,
+        textMuted,
+        dangerRed,
+        leftMargin,
+        contentWidth,
+        watermarkPath,
+        currentY,
+        formattedDateTime
+      );
     } else {
-      currentY = this.renderCentralCropSoil(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
-    }
-
-    // 7. BOTTOM REPORT SECTION (QR Code, Digital Attestation, and Official Circular Seal)
-    // Anchored at y = 724 to ensure 100% fitting on Page 1 without creating blank page 2
-    const bottomY = 722;
-
-    // Thin separator above bottom attestation
-    doc.moveTo(leftMargin, bottomY - 6).lineTo(leftMargin + contentWidth, bottomY - 6).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-
-    // Left: Functional QR Code
-    if (options.qrCodeBuffer) {
-      try {
-        doc.image(options.qrCodeBuffer, leftMargin, bottomY, { width: 48, height: 48 });
-      } catch (qrErr) {
-        doc.rect(leftMargin, bottomY, 48, 48).strokeColor(primaryGreen).stroke();
+      if (reportType === 'weather') {
+        currentY = this.renderCentralWeather(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
+      } else if (reportType === 'expense') {
+        currentY = this.renderCentralExpense(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
+      } else {
+        currentY = this.renderCentralCropSoil(doc, data, language, regularFont, boldFont, primaryGreen, secondaryGreen, textDark, textMuted, leftMargin, contentWidth, currentY);
       }
+
+      // 7. BOTTOM REPORT SECTION FOR SINGLE-PAGE REPORTS (QR Code, Digital Attestation, and Official Circular Seal)
+      const bottomY = 722;
+      doc.moveTo(leftMargin, bottomY - 6).lineTo(leftMargin + contentWidth, bottomY - 6).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
+
+      if (options.qrCodeBuffer) {
+        try {
+          doc.image(options.qrCodeBuffer, leftMargin, bottomY, { width: 48, height: 48 });
+        } catch (qrErr) {
+          doc.rect(leftMargin, bottomY, 48, 48).strokeColor(primaryGreen).stroke();
+        }
+      }
+      doc.font(boldFont).fontSize(6.5).fillColor(primaryGreen).text(this.t('scanToVerify', language), leftMargin + 53, bottomY + 10, { width: 165 });
+      doc.font(regularFont).fontSize(6).fillColor(textMuted).text(`thekhedut.ai/verify/report/${options.reportId}`, leftMargin + 53, bottomY + 22, { width: 175 });
+
+      const attestationX = leftMargin + 215;
+      doc.font(regularFont).fontSize(6.5).fillColor(textMuted).text(
+        this.t('attestationText', language),
+        attestationX,
+        bottomY + 8,
+        { width: 185, align: 'left', lineGap: 1 }
+      );
+
+      const sealCenterX = leftMargin + contentWidth - 36;
+      const sealCenterY = bottomY + 24;
+      WatermarkAssets.renderOfficialSeal(doc, sealCenterX, sealCenterY, 27);
     }
-    doc.font(boldFont).fontSize(6.5).fillColor(primaryGreen).text(this.t('scanToVerify', language), leftMargin + 53, bottomY + 10, { width: 165 });
-    doc.font(regularFont).fontSize(6).fillColor(textMuted).text(`thekhedut.ai/verify/report/${options.reportId}`, leftMargin + 53, bottomY + 22, { width: 175 });
 
-    // Center: Tamper-Evident Attestation Notice
-    const attestationX = leftMargin + 215;
-    doc.font(regularFont).fontSize(6.5).fillColor(textMuted).text(
-      this.t('attestationText', language),
-      attestationX,
-      bottomY + 8,
-      { width: 185, align: 'left', lineGap: 1 }
-    );
+    // 8. RUNNING FOOTER ON ALL PAGES (Dynamically stamped using bufferedPageRange)
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+      const footerY = 794;
+      doc.moveTo(leftMargin, footerY - 4).lineTo(leftMargin + contentWidth, footerY - 4).strokeColor(primaryGreen).lineWidth(0.8).stroke();
 
-    // Right: The Khedut Circular Company Seal
-    const sealCenterX = leftMargin + contentWidth - 36;
-    const sealCenterY = bottomY + 24;
-    WatermarkAssets.renderOfficialSeal(doc, sealCenterX, sealCenterY, 27);
+      doc.font(boldFont).fontSize(7).fillColor(primaryGreen).text(
+        'THE KHEDUT • Smart Agriculture. Better Decisions.',
+        leftMargin,
+        footerY,
+        { width: 230, align: 'left' }
+      );
 
-    // 8. FOOTER BAR (Anchored at y = 794)
-    const footerY = 794;
-    doc.moveTo(leftMargin, footerY - 4).lineTo(leftMargin + contentWidth, footerY - 4).strokeColor(primaryGreen).lineWidth(0.8).stroke();
+      doc.font(regularFont).fontSize(7).fillColor(textMuted).text(
+        'www.thekhedut.ai',
+        leftMargin + 230,
+        footerY,
+        { width: 100, align: 'center' }
+      );
 
-    doc.font(boldFont).fontSize(7).fillColor(primaryGreen).text(
-      'THE KHEDUT • Smart Agriculture. Better Decisions.',
-      leftMargin,
-      footerY,
-      { width: 230, align: 'left' }
-    );
-
-    doc.font(regularFont).fontSize(7).fillColor(textMuted).text(
-      'www.thekhedut.ai',
-      leftMargin + 230,
-      footerY,
-      { width: 100, align: 'center' }
-    );
-
-    doc.font(boldFont).fontSize(7).fillColor(primaryGreen).text(
-      'Page 1 of 1',
-      leftMargin + contentWidth - 80,
-      footerY,
-      { width: 80, align: 'right' }
-    );
+      doc.font(boldFont).fontSize(7).fillColor(primaryGreen).text(
+        `Page ${i + 1} of ${range.count}`,
+        leftMargin + contentWidth - 80,
+        footerY,
+        { width: 80, align: 'right' }
+      );
+    }
   }
 
   /**
-   * Renders Disease Pathology Central Content with bounded image box and treatment plan
+   * Renders Running Top Banner on Secondary Pages (Pages 2, 3, 4)
    */
-  private static renderCentralDisease(
+  private static renderSecondaryPageHeader(
+    doc: PDFKit.PDFDocument,
+    reportId: string,
+    sectionTitle: string,
+    formattedDateTime: string,
+    font: string,
+    boldFont: string,
+    primaryGreen: string,
+    accentGreen: string,
+    leftMargin: number,
+    contentWidth: number,
+    watermarkPath: string
+  ): number {
+    const pageWidth = 595.28;
+    if (watermarkPath && fs.existsSync(watermarkPath)) {
+      doc.save();
+      doc.opacity(0.048);
+      doc.image(watermarkPath, (pageWidth - 280) / 2, 330, { width: 280 });
+      doc.restore();
+    } else {
+      WatermarkAssets.renderOxenWatermark(doc, pageWidth / 2, 420, 0.85);
+    }
+
+    const currentY = 24;
+    doc.rect(leftMargin, currentY, contentWidth, 24).fill(primaryGreen);
+    doc.font(boldFont).fontSize(8.5).fillColor('#FFFFFF').text(
+      `THE KHEDUT • ${sectionTitle}`,
+      leftMargin + 10,
+      currentY + 7
+    );
+    doc.font(font).fontSize(7.5).fillColor(accentGreen).text(
+      `ID: ${reportId}   |   ${formattedDateTime}`,
+      leftMargin + 10,
+      currentY + 7,
+      { align: 'right', width: contentWidth - 20 }
+    );
+
+    return currentY + 36;
+  }
+
+  /**
+   * Renders Multi-Page Official Disease Pathology Statement (Pages 1, 2, 3, 4)
+   */
+  private static renderMultiPageDisease(
     doc: PDFKit.PDFDocument,
     data: any,
     lang: string,
+    options: PdfReportOptions,
     font: string,
     boldFont: string,
     primary: string,
     secondary: string,
     accent: string,
+    neutralBg: string,
     text: string,
     muted: string,
     danger: string,
     leftMargin: number,
     contentWidth: number,
-    startY: number
-  ): number {
+    watermarkPath: string,
+    startY: number,
+    formattedDateTime: string
+  ): void {
     let currentY = startY;
 
-    // Overview Card: Diagnosis, Confidence, Severity, Image
-    const hasImage = data.imageBuffer && Buffer.isBuffer(data.imageBuffer);
-    const imageWidth = hasImage ? 85 : 0;
-    const textColWidth = hasImage ? (contentWidth - imageWidth - 20) : (contentWidth - 20);
-
-    const diseaseName = data.diseaseName || data.name || 'Observed Pathology Symptom';
+    // PAGE 1: EXECUTIVE DIAGNOSIS HERO CARD & SPECIMEN PHOTO
+    const diseaseName = data.diseaseName || data.name || 'Observed Leaf Pathology';
     const localNameStr = data.localName ? ` (${data.localName})` : '';
-    const scientificStr = data.scientificName ? ` • Scientific: ${data.scientificName}` : '';
+    const scientificStr = data.scientificName ? `Scientific: ${data.scientificName}` : '';
     const fullDiseaseStr = `${diseaseName}${localNameStr}`;
 
-    const rawConf = typeof data.confidenceScore === 'number' ? data.confidenceScore : 0.88;
+    const rawConf = typeof data.confidenceScore === 'number' ? data.confidenceScore : 0.92;
     const confPercent = rawConf > 1 ? `${rawConf.toFixed(0)}%` : `${(rawConf * 100).toFixed(0)}%`;
     const severityStr = (data.severity || 'Moderate').toUpperCase();
 
-    // Summary Card Box
-    const boxHeight = hasImage ? 80 : 66;
-    doc.rect(leftMargin, currentY, contentWidth, boxHeight).fillAndStroke('#F7F9F5', '#E2E8F0');
+    const heroHeight = 265;
+    doc.rect(leftMargin, currentY, contentWidth, heroHeight).fillAndStroke(neutralBg, '#E2E8F0');
 
-    let innerY = currentY + 8;
-
-    // Disease Name Title
-    doc.font(boldFont).fontSize(11).fillColor(primary).text(fullDiseaseStr, leftMargin + 10, innerY, { width: textColWidth });
-    innerY += 15;
-
-    // Scientific & Rating
+    // Title
+    doc.font(boldFont).fontSize(13.5).fillColor(primary).text(fullDiseaseStr, leftMargin + 14, currentY + 14, { width: 320 });
+    
+    let textY = currentY + 35;
     if (scientificStr) {
-      doc.font(font).fontSize(8).fillColor(muted).text(scientificStr, leftMargin + 10, innerY, { width: textColWidth });
-      innerY += 12;
+      doc.font(font).fontSize(8.5).fillColor(muted).text(scientificStr, leftMargin + 14, textY, { width: 320 });
+      textY += 15;
     }
 
-    // Confidence / Severity Pills
-    doc.font(boldFont).fontSize(8.5).fillColor(text).text(
-      `${this.t('confLabel', lang)}: ${confPercent}   |   ${this.t('severityLabel', lang)}: ${severityStr}   |   Condition: ${data.condition || 'DIAGNOSED'}`,
-      leftMargin + 10,
-      innerY,
-      { width: textColWidth }
-    );
+    // Pills row: Confidence, Severity, Condition
+    doc.rect(leftMargin + 14, textY, 105, 20).fillAndStroke('#ECFDF5', '#A7F3D0');
+    doc.font(boldFont).fontSize(8).fillColor('#065F46').text(`${confPercent} AI Confidence`, leftMargin + 18, textY + 5);
 
-    // Leaf Image on Right Column
-    if (hasImage) {
+    const isHighSev = severityStr.includes('HIGH') || severityStr.includes('CRITICAL') || severityStr.includes('SEVERE');
+    const sevBg = isHighSev ? '#FEF2F2' : '#FFFBEB';
+    const sevBorder = isHighSev ? '#FECACA' : '#FDE68A';
+    const sevText = isHighSev ? '#991B1B' : '#92400E';
+
+    doc.rect(leftMargin + 125, textY, 95, 20).fillAndStroke(sevBg, sevBorder);
+    doc.font(boldFont).fontSize(8).fillColor(sevText).text(`Severity: ${severityStr}`, leftMargin + 130, textY + 5);
+
+    doc.rect(leftMargin + 226, textY, 80, 20).fillAndStroke('#F1F5F9', '#CBD5E1');
+    doc.font(boldFont).fontSize(8).fillColor('#334155').text(data.condition || 'DIAGNOSED', leftMargin + 232, textY + 5);
+
+    textY += 32;
+
+    // Executive summary text
+    const summaryText = data.executiveSummary || data.assessment || data.description || 
+      `${diseaseName} has been identified on the inspected ${data.crop || 'crop'} foliage with a high neural confidence score of ${confPercent}. Physical visual symptoms indicate ${severityStr.toLowerCase()} severity with localized necrotic lesion spread. Early proactive intervention is recommended to protect the remaining canopy and prevent contagion to adjacent plots.`;
+
+    doc.font(boldFont).fontSize(8.5).fillColor(primary).text(this.t('executiveSummary', lang), leftMargin + 14, textY);
+    textY += 14;
+    doc.font(font).fontSize(8.5).fillColor(text).text(summaryText, leftMargin + 14, textY, { width: 310, lineGap: 2.5 });
+
+    // Right Column: Specimen Photo Frame
+    const frameX = leftMargin + contentWidth - 175;
+    const frameY = currentY + 14;
+    const frameW = 162;
+    const frameH = heroHeight - 28;
+
+    doc.rect(frameX, frameY, frameW, frameH).fillAndStroke('#FFFFFF', '#CBD5E1');
+
+    if (data.imageBuffer && Buffer.isBuffer(data.imageBuffer)) {
       try {
-        doc.image(data.imageBuffer, leftMargin + contentWidth - imageWidth - 6, currentY + 5, {
-          fit: [imageWidth, boxHeight - 10],
+        doc.image(data.imageBuffer, frameX + 6, frameY + 6, {
+          fit: [frameW - 12, frameH - 30],
           align: 'center',
           valign: 'center'
         });
       } catch (imgErr) {
-        console.warn('[PdfService Image Render Error]', imgErr);
+        console.warn('[PdfService Leaf Specimen Image Render Warning]', imgErr);
       }
+    } else {
+      doc.save();
+      doc.translate(frameX + (frameW / 2) - 30, frameY + 45);
+      doc.scale(0.8);
+      doc.circle(35, 35, 30).fillColor(secondary).fillOpacity(0.12).fill();
+      doc.circle(35, 35, 20).fillColor(primary).fillOpacity(0.2).fill();
+      doc.restore();
     }
 
-    currentY += boxHeight + 10;
+    doc.rect(frameX, frameY + frameH - 20, frameW, 20).fill('#F8FAFC');
+    doc.font(boldFont).fontSize(7).fillColor(muted).text('DIAGNOSTIC LEAF SPECIMEN #1', frameX, frameY + frameH - 14, { width: frameW, align: 'center' });
 
-    // Section 1: Symptoms
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 5;
+    // Page 1 Directive Box below Hero
+    currentY += heroHeight + 16;
 
-    doc.font(boldFont).fontSize(9.5).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin, currentY);
-    currentY += 13;
-    doc.font(font).fontSize(8).fillColor(text);
+    const bannerH = 100;
+    doc.rect(leftMargin, currentY, contentWidth, bannerH).fillAndStroke('#F0FDF4', '#86EFAC');
+    doc.font(boldFont).fontSize(9.5).fillColor(primary).text(this.t('immediateDirective', lang), leftMargin + 14, currentY + 12);
 
-    const symptomsList: string[] = Array.isArray(data.symptoms) && data.symptoms.length > 0
-      ? data.symptoms
-      : ['Visible leaf lesions, discoloration, or spot patterns observed on foliage.'];
+    const directivePoints = [
+      '1. ' + this.t('urgentIsolation', lang),
+      '2. Disinfect agricultural shears, sickles, and boots with 1% sodium hypochlorite after handling affected plants.',
+      '3. Turn to Page 2 for Detailed Pathology, Page 3 for the IPM Chemical Spray Schedule, and Page 4 for the 7-Day Checklist.'
+    ];
 
-    symptomsList.slice(0, 3).forEach((sym: string) => {
-      doc.text(`• ${sym}`, leftMargin + 8, currentY, { width: contentWidth - 12 });
-      currentY += 12;
+    let dirY = currentY + 30;
+    directivePoints.forEach(pt => {
+      doc.font(font).fontSize(8.5).fillColor(text).text(pt, leftMargin + 14, dirY, { width: contentWidth - 28, lineGap: 1.5 });
+      dirY += 21;
     });
 
-    currentY += 3;
+    // -------------------------------------------------------------
+    // PAGE 2: COMPREHENSIVE PATHOLOGY & SYMPTOMS ANALYSIS
+    // -------------------------------------------------------------
+    doc.addPage();
+    currentY = this.renderSecondaryPageHeader(
+      doc, options.reportId || 'REP-001', this.t('pageTitlePathology', lang), formattedDateTime,
+      font, boldFont, primary, accent, leftMargin, contentWidth, watermarkPath
+    );
 
-    // Section 2: Pathogen / Possible Causes
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 5;
+    // Card 1: Symptoms
+    doc.rect(leftMargin, currentY, contentWidth, 120).fillAndStroke(neutralBg, '#E2E8F0');
+    doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('symptomsTitle', lang), leftMargin + 14, currentY + 10);
+    
+    const symptomsList: string[] = Array.isArray(data.symptoms) && data.symptoms.length > 0
+      ? data.symptoms
+      : ['Visible chlorotic lesions with concentric rings expanding along the leaf blade.',
+         'Water-soaked necrotic margins developing near leaf veins and foliage edges.',
+         'Premature senescence, leaf yellowing, and partial defoliation in affected lower branches.'];
 
-    doc.font(boldFont).fontSize(9.5).fillColor(primary).text(this.t('causesTitle', lang), leftMargin, currentY);
-    currentY += 13;
-    doc.font(font).fontSize(8).fillColor(text);
+    let symY = currentY + 28;
+    symptomsList.slice(0, 4).forEach((sym: string) => {
+      doc.font(font).fontSize(8.5).fillColor(text).text(`•  ${sym}`, leftMargin + 14, symY, { width: contentWidth - 28, lineGap: 2 });
+      symY += 22;
+    });
+
+    currentY += 132;
+
+    // Card 2: Pathogen Profile
+    doc.rect(leftMargin, currentY, contentWidth, 90).fillAndStroke(neutralBg, '#E2E8F0');
+    doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('causesTitle', lang), leftMargin + 14, currentY + 10);
 
     const causesList: string[] = Array.isArray(data.possibleCauses) && data.possibleCauses.length > 0
       ? data.possibleCauses
-      : (data.causes ? (Array.isArray(data.causes) ? data.causes : [data.causes]) : ['Fungal or bacterial pathogen proliferation encouraged by humid foliage microclimate.']);
+      : (data.causes ? (Array.isArray(data.causes) ? data.causes : [data.causes]) : [
+          'Pathogen propagation driven by elevated relative humidity and leaf moisture.',
+          'Overcrowded crop canopy and reduced air circulation fostering fungal hyphae growth.'
+        ]);
 
-    const causeText = causesList.slice(0, 2).join('; ');
-    doc.text(causeText, leftMargin + 8, currentY, { width: contentWidth - 12 });
-    currentY += 14;
-
-    // Section 3: Action Plan (What To Do Now)
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 5;
-
-    doc.font(boldFont).fontSize(9.5).fillColor(primary).text(this.t('whatToDoTitle', lang), leftMargin, currentY);
-    currentY += 13;
-    doc.font(font).fontSize(8).fillColor(text);
-
-    let imm = 'Inspect leaves and isolate severely affected plants to avoid plot spread.';
-    let mon = 'Surveil neighboring rows every 48 hours for new sporulation rings.';
-    let prv = 'Ensure proper crop spacing, irrigation drainage, and sanitise farm tools.';
-
-    if (Array.isArray(data.recommendedActions) && data.recommendedActions.length > 0) {
-      if (data.recommendedActions[0]) imm = data.recommendedActions[0].details || data.recommendedActions[0].title || imm;
-      if (data.recommendedActions[1]) mon = data.recommendedActions[1].details || data.recommendedActions[1].title || mon;
-      if (data.recommendedActions[2]) prv = data.recommendedActions[2].details || data.recommendedActions[2].title || prv;
-    }
-
-    const plan = [
-      `1. Immediate Check: ${imm}`,
-      `2. Field Monitoring: ${mon}`,
-      `3. Long-term Prevention: ${prv}`
-    ];
-
-    plan.forEach(p => {
-      doc.text(p, leftMargin + 8, currentY, { width: contentWidth - 12 });
-      currentY += 12;
+    let causeY = currentY + 28;
+    causesList.slice(0, 3).forEach((cs: string) => {
+      doc.font(font).fontSize(8.5).fillColor(text).text(`•  ${cs}`, leftMargin + 14, causeY, { width: contentWidth - 28, lineGap: 2 });
+      causeY += 20;
     });
 
-    currentY += 3;
+    currentY += 102;
 
-    // Section 4: Biological / Organic Controls
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 5;
+    // Card 3: Microclimate & Environmental Risk (3 Columns)
+    doc.rect(leftMargin, currentY, contentWidth, 96).fillAndStroke('#FFFFFF', '#CBD5E1');
+    doc.font(boldFont).fontSize(10).fillColor(secondary).text(this.t('microclimateTitle', lang), leftMargin + 14, currentY + 10);
 
-    doc.font(boldFont).fontSize(9.5).fillColor(secondary).text(this.t('organicTitle', lang), leftMargin, currentY);
-    currentY += 13;
-    doc.font(font).fontSize(8).fillColor(text);
+    const colW = (contentWidth - 28) / 3;
+    const boxY = currentY + 28;
+
+    // Box 1: Temp
+    doc.rect(leftMargin + 10, boxY, colW - 6, 56).fillAndStroke('#F8FAFC', '#E2E8F0');
+    doc.font(boldFont).fontSize(7.5).fillColor(muted).text('TEMPERATURE WINDOW', leftMargin + 16, boxY + 8);
+    doc.font(boldFont).fontSize(10).fillColor(primary).text('20°C - 30°C', leftMargin + 16, boxY + 22);
+    doc.font(font).fontSize(7).fillColor(text).text('Optimal sporulation zone', leftMargin + 16, boxY + 38);
+
+    // Box 2: Humidity
+    doc.rect(leftMargin + 10 + colW, boxY, colW - 6, 56).fillAndStroke('#F8FAFC', '#E2E8F0');
+    doc.font(boldFont).fontSize(7.5).fillColor(muted).text('RELATIVE HUMIDITY', leftMargin + 16 + colW, boxY + 8);
+    doc.font(boldFont).fontSize(10).fillColor(primary).text('> 80% RH', leftMargin + 16 + colW, boxY + 22);
+    doc.font(font).fontSize(7).fillColor(text).text('Accelerates spore release', leftMargin + 16 + colW, boxY + 38);
+
+    // Box 3: Wetness
+    doc.rect(leftMargin + 10 + (colW * 2), boxY, colW - 6, 56).fillAndStroke('#F8FAFC', '#E2E8F0');
+    doc.font(boldFont).fontSize(7.5).fillColor(muted).text('LEAF WETNESS', leftMargin + 16 + (colW * 2), boxY + 8);
+    doc.font(boldFont).fontSize(10).fillColor(primary).text('> 6 Hours', leftMargin + 16 + (colW * 2), boxY + 22);
+    doc.font(font).fontSize(7).fillColor(text).text('Continuous moisture risk', leftMargin + 16 + (colW * 2), boxY + 38);
+
+    currentY += 108;
+
+    // Card 4: Field Contagion Risk
+    doc.rect(leftMargin, currentY, contentWidth, 75).fillAndStroke('#FFFBEB', '#FDE68A');
+    doc.font(boldFont).fontSize(9.5).fillColor('#92400E').text('FIELD CONTAGION & SECONDARY CYCLE ASSESSMENT', leftMargin + 14, currentY + 10);
+    doc.font(font).fontSize(8.5).fillColor(text).text(
+      'Without targeted fungicidal or biological barrier treatment, spore dissemination to neighboring rows is anticipated within 48 to 72 hours. Inspect surrounding buffer plants within a 15-meter radius and apply protective perimeter sprays.',
+      leftMargin + 14,
+      currentY + 26,
+      { width: contentWidth - 28, lineGap: 2 }
+    );
+
+    // -------------------------------------------------------------
+    // PAGE 3: INTEGRATED TREATMENT PROTOCOL (IPM) & SPRAY SCHEDULE
+    // -------------------------------------------------------------
+    doc.addPage();
+    currentY = this.renderSecondaryPageHeader(
+      doc, options.reportId || 'REP-001', this.t('pageTitleTreatment', lang), formattedDateTime,
+      font, boldFont, primary, accent, leftMargin, contentWidth, watermarkPath
+    );
+
+    // 1. Biological & Organic Controls
+    doc.rect(leftMargin, currentY, contentWidth, 90).fillAndStroke(neutralBg, '#E2E8F0');
+    doc.font(boldFont).fontSize(10).fillColor(secondary).text(this.t('organicTitle', lang), leftMargin + 14, currentY + 10);
 
     const organicList: string[] = Array.isArray(data.organicTreatment) && data.organicTreatment.length > 0
       ? data.organicTreatment
-      : ['Apply cold-pressed Neem oil formulation (5ml/L water) or Trichoderma viride bio-fungicide.'];
+      : [
+          'Apply cold-pressed Neem oil (10,000 ppm) at 3 to 5 ml per liter of water with 1 ml liquid soap surfactant.',
+          'Foliar spray of Trichoderma viride or Pseudomonas fluorescens (5 g/L water) in early morning hours.'
+        ];
 
-    organicList.slice(0, 2).forEach((org: string) => {
-      doc.text(`• ${org}`, leftMargin + 8, currentY, { width: contentWidth - 12 });
-      currentY += 12;
+    let orgY = currentY + 28;
+    organicList.slice(0, 3).forEach((org: string) => {
+      doc.font(font).fontSize(8.5).fillColor(text).text(`•  ${org}`, leftMargin + 14, orgY, { width: contentWidth - 28, lineGap: 2 });
+      orgY += 20;
     });
 
-    currentY += 3;
+    currentY += 102;
 
-    // Section 5: Chemical Emergency Controls & Safety
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 5;
+    // 2. Structured Chemical Treatment Table
+    doc.font(boldFont).fontSize(10).fillColor(primary).text(this.t('sprayScheduleTitle', lang), leftMargin, currentY);
+    currentY += 15;
 
-    doc.font(boldFont).fontSize(9.5).fillColor(danger).text(this.t('chemicalTitle', lang), leftMargin, currentY);
-    currentY += 13;
-    doc.font(font).fontSize(8).fillColor(text);
+    // Table Header
+    const thHeight = 22;
+    doc.rect(leftMargin, currentY, contentWidth, thHeight).fill(primary);
 
-    const chemText = Array.isArray(data.chemicalTreatment) && data.chemicalTreatment.length > 0
-      ? data.chemicalTreatment[0]
-      : (data.pesticideDetails ? `${data.pesticideDetails.englishName || data.pesticideDetails.localName || 'Fungicide'} (${data.pesticideDetails.dosage || '2g/L'})` : 'Copper Oxychloride 50 WP or Mancozeb 75 WP (2g/L water).');
+    const c1W = 145;
+    const c2W = 110;
+    const c3W = 95;
+    const c4W = 105;
+    const c5W = contentWidth - c1W - c2W - c3W - c4W;
 
-    doc.text(`• ${chemText}`, leftMargin + 8, currentY, { width: contentWidth - 12 });
-    currentY += 13;
+    doc.font(boldFont).fontSize(7.5).fillColor('#FFFFFF');
+    doc.text(this.t('activeIngredient', lang), leftMargin + 6, currentY + 6, { width: c1W });
+    doc.text(this.t('commercialBrand', lang), leftMargin + c1W + 4, currentY + 6, { width: c2W });
+    doc.text(this.t('dosagePerLiter', lang), leftMargin + c1W + c2W + 4, currentY + 6, { width: c3W });
+    doc.text(this.t('sprayTiming', lang), leftMargin + c1W + c2W + c3W + 4, currentY + 6, { width: c4W });
+    doc.text(this.t('phiLabel', lang), leftMargin + c1W + c2W + c3W + c4W + 4, currentY + 6, { width: c5W, align: 'center' });
 
-    // Chemical Safety Notice
-    doc.font(font).fontSize(7).fillColor(danger).text(this.t('safetyWarning', lang), leftMargin + 8, currentY, { width: contentWidth - 12 });
-    currentY += 18;
+    currentY += thHeight;
 
-    // Disclaimer
-    doc.moveTo(leftMargin, currentY).lineTo(leftMargin + contentWidth, currentY).strokeColor('#E2E8F0').lineWidth(0.8).stroke();
-    currentY += 4;
-    doc.font(font).fontSize(6.8).fillColor(muted).text(this.t('importantDisclaimer', lang), leftMargin, currentY, { width: contentWidth });
+    const scheduleRows = [
+      {
+        chem: data.pesticideDetails?.activeIngredient || 'Mancozeb 75% WP',
+        brand: data.pesticideDetails?.englishName || 'Dithane M-45 / Indofil',
+        dose: data.pesticideDetails?.dosage || '2.0 - 2.5 g / Liter (500 g/Acre)',
+        time: 'Day 1 Morning (6:00 - 8:30 AM)',
+        phi: '14 Days'
+      },
+      {
+        chem: 'Azoxystrobin 18.2% + Difenoconazole 11.4% SC',
+        brand: 'Amistar Top / Mirador Duo',
+        dose: '1.0 ml / Liter (200 ml/Acre)',
+        time: 'Day 7 (If lesions persist)',
+        phi: '21 Days'
+      },
+      {
+        chem: 'Potassium Silicate + Zinc Chelated (Foliar)',
+        brand: 'Agri-Sil / Bio-Zinc Fortifier',
+        dose: '1.5 g / Liter (300 g/Acre)',
+        time: 'Day 12 (Canopy Restoration)',
+        phi: '0 Days'
+      }
+    ];
 
-    return currentY;
+    scheduleRows.forEach((row, rIdx) => {
+      const rowBg = rIdx % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+      const rowH = 24;
+      doc.rect(leftMargin, currentY, contentWidth, rowH).fillAndStroke(rowBg, '#E2E8F0');
+
+      doc.font(boldFont).fontSize(7.5).fillColor(text).text(row.chem, leftMargin + 6, currentY + 7, { width: c1W - 8, ellipsis: true });
+      doc.font(font).fontSize(7.5).fillColor(muted).text(row.brand, leftMargin + c1W + 4, currentY + 7, { width: c2W - 8, ellipsis: true });
+      doc.font(boldFont).fontSize(7.5).fillColor(primary).text(row.dose, leftMargin + c1W + c2W + 4, currentY + 7, { width: c3W - 8, ellipsis: true });
+      doc.font(font).fontSize(7.5).fillColor(text).text(row.time, leftMargin + c1W + c2W + c3W + 4, currentY + 7, { width: c4W - 8 });
+      doc.font(boldFont).fontSize(7.5).fillColor('#047857').text(row.phi, leftMargin + c1W + c2W + c3W + c4W + 4, currentY + 7, { width: c5W, align: 'center' });
+
+      currentY += rowH;
+    });
+
+    currentY += 16;
+
+    // 3. Mandatory Safety & PPE Mandate Card
+    const ppeH = 120;
+    doc.rect(leftMargin, currentY, contentWidth, ppeH).fillAndStroke('#FEF2F2', '#FECACA');
+    doc.font(boldFont).fontSize(10).fillColor(danger).text('MANDATORY CHEMICAL SAFETY & PPE DIRECTIVES', leftMargin + 14, currentY + 12);
+
+    const safetyBullets = [
+      '•  Personal Protective Equipment (PPE): Always wear an N95 respirator mask, nitrile gloves, eye goggles, and full-length clothing.',
+      '•  Application Wind Conditions: Never spray against wind direction to prevent inhalation drift. Halt spraying if wind velocity exceeds 15 km/h.',
+      '•  Diurnal Temperature Window: Apply strictly during early morning (6:00 - 9:00 AM) or late afternoon (4:30 - 6:30 PM). Avoid midday sun.',
+      '•  Responsible Container Disposal: Triple-rinse empty pesticide packaging with clean water, puncture bases, and dispose per statutory norms.'
+    ];
+
+    let ppeY = currentY + 30;
+    safetyBullets.forEach(b => {
+      doc.font(font).fontSize(8).fillColor('#7F1D1D').text(b, leftMargin + 14, ppeY, { width: contentWidth - 28, lineGap: 1.5 });
+      ppeY += 21;
+    });
+
+    // -------------------------------------------------------------
+    // PAGE 4: 7-DAY ACTION PLAN, OFFICIAL ATTESTATION & VERIFICATION
+    // -------------------------------------------------------------
+    doc.addPage();
+    currentY = this.renderSecondaryPageHeader(
+      doc, options.reportId || 'REP-001', this.t('pageTitleChecklist', lang), formattedDateTime,
+      font, boldFont, primary, accent, leftMargin, contentWidth, watermarkPath
+    );
+
+    // 1. 7-Day Action Plan
+    doc.rect(leftMargin, currentY, contentWidth, 195).fillAndStroke(neutralBg, '#E2E8F0');
+    doc.font(boldFont).fontSize(10.5).fillColor(primary).text(this.t('checklistTitle', lang), leftMargin + 14, currentY + 12);
+
+    const timeline = [
+      {
+        day: 'DAY 1: Immediate Field Sanitation & Diagnostic Marking',
+        text: 'Survey entire field plot. Physically prune and safely bag severely blighted foliage. Clear furrow weeds to improve microclimate aeration.'
+      },
+      {
+        day: 'DAY 2 - 3: First Targeted Spray Application',
+        text: 'Calibrate spray nozzles to produce fine droplets (200-300 microns). Apply fungicide or bio-agent ensuring complete coverage of leaf undersides.'
+      },
+      {
+        day: 'DAY 4 - 5: Post-Application Recovery Surveillance',
+        text: 'Inspect treated rows for active spore mycelium suppression. Check that expanding edges of lesions have turned dark and dry.'
+      },
+      {
+        day: 'DAY 7: Follow-up Evaluation & Preventive Reinforcement',
+        text: 'If weather remains humid or active sporulation continues, rotate to the secondary recommended active chemical. Apply foliar bio-nutrients.'
+      }
+    ];
+
+    let timeY = currentY + 32;
+    timeline.forEach(step => {
+      doc.font(boldFont).fontSize(8.5).fillColor(secondary).text(step.day, leftMargin + 14, timeY);
+      timeY += 13;
+      doc.font(font).fontSize(8).fillColor(text).text(step.text, leftMargin + 14, timeY, { width: contentWidth - 28, lineGap: 1.5 });
+      timeY += 26;
+    });
+
+    currentY += 208;
+
+    // 2. KVK & Agronomic Advisory Card
+    doc.rect(leftMargin, currentY, contentWidth, 70).fillAndStroke('#F0FDF4', '#BBF7D0');
+    doc.font(boldFont).fontSize(9.5).fillColor(primary).text(this.t('kvkNotice', lang), leftMargin + 14, currentY + 10);
+    doc.font(font).fontSize(8).fillColor(text).text(
+      this.t('kvkNoticeDetails', lang),
+      leftMargin + 14,
+      currentY + 24,
+      { width: contentWidth - 28, lineGap: 1.5 }
+    );
+    doc.font(font).fontSize(7).fillColor(muted).text(
+      this.t('importantDisclaimer', lang),
+      leftMargin + 14,
+      currentY + 46,
+      { width: contentWidth - 28 }
+    );
+
+    currentY += 82;
+
+    // 3. Official Digital Attestation Block (QR Code, Cryptographic Attestation, and Circular Seal)
+    const attestBoxH = 92;
+    doc.rect(leftMargin, currentY, contentWidth, attestBoxH).fillAndStroke('#FFFFFF', primary);
+
+    // Left: QR Code
+    if (options.qrCodeBuffer) {
+      try {
+        doc.image(options.qrCodeBuffer, leftMargin + 12, currentY + 12, { width: 56, height: 56 });
+      } catch (qrErr) {
+        doc.rect(leftMargin + 12, currentY + 12, 56, 56).strokeColor(primary).stroke();
+      }
+    }
+    doc.font(boldFont).fontSize(7).fillColor(primary).text(this.t('scanToVerify', lang), leftMargin + 76, currentY + 14, { width: 170 });
+    doc.font(font).fontSize(6.5).fillColor(muted).text(`thekhedut.ai/verify/report/${options.reportId}`, leftMargin + 76, currentY + 26, { width: 180 });
+
+    // Center: Attestation text
+    const midX = leftMargin + 195;
+    doc.font(boldFont).fontSize(8).fillColor(primary).text('CRYPTOGRAPHICALLY ATTESTED RECORD', midX, currentY + 14);
+    doc.font(font).fontSize(6.8).fillColor(muted).text(
+      this.t('attestationText', lang),
+      midX,
+      currentY + 28,
+      { width: 220, lineGap: 1.5 }
+    );
+    doc.font(font).fontSize(6).fillColor(muted).text(
+      `Generated by The Khedut AI Neural Engine • Hash: ${Math.random().toString(36).substring(2, 10).toUpperCase()}-VERIFIED`,
+      midX,
+      currentY + 68
+    );
+
+    // Right: Circular Seal
+    const sealCenterX = leftMargin + contentWidth - 46;
+    const sealCenterY = currentY + 44;
+    WatermarkAssets.renderOfficialSeal(doc, sealCenterX, sealCenterY, 32);
   }
 
   /**

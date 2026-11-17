@@ -111,11 +111,14 @@ export const buildMarketFilter = (query: MarketQueryOptions) => {
   }
   
   if (query.date) {
-    const dateValue = new Date(query.date);
-    if (!Number.isNaN(dateValue.getTime())) {
-      const start = getStartOfDay(dateValue);
-      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
-      filter.date = { $gte: start, $lt: end };
+    const rawDate = String(query.date).trim();
+    if (rawDate && rawDate !== 'null' && rawDate !== 'undefined') {
+      const dateValue = new Date(rawDate);
+      if (!Number.isNaN(dateValue.getTime())) {
+        const start = getStartOfDay(dateValue);
+        const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+        filter.date = { $gte: start, $lt: end };
+      }
     }
   }
 

@@ -35,3 +35,8 @@ Thumbs.db
 keystore.properties
 signing.properties
 google-services.json
+
+# Binaries & Generated Artifacts
+*.apk
+*.aab
+*.pdf

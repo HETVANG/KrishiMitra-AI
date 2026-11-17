@@ -50,9 +50,24 @@ export class MarketTrendService {
     }
 
     try {
-      const records = await MarketPriceHistory.find(filter)
+      let records = await MarketPriceHistory.find(filter)
         .sort({ date: 1 }) // Chronological order
         .lean();
+
+      // Graceful Fallback: If less than 2 records in strict date range, check latest records for this crop
+      if (records.length < 2) {
+        const fallbackFilter: any = { crop: new RegExp(`^${safeCrop}$`, 'i') };
+        if (options.state && options.state.trim()) {
+          fallbackFilter.state = new RegExp(`^${escapeRegex(options.state.trim())}$`, 'i');
+        }
+        const recent = await MarketPriceHistory.find(fallbackFilter)
+          .sort({ date: -1 })
+          .limit(10)
+          .lean();
+        if (recent.length >= 2) {
+          records = recent.reverse();
+        }
+      }
 
       if (records.length < 2) {
         return {
@@ -67,7 +82,7 @@ export class MarketTrendService {
           lowestPrice: records[0]?.minPrice || records[0]?.modalPrice || null,
           averagePrice: records[0]?.avgPrice || records[0]?.modalPrice || null,
           dataPointsCount: records.length,
-          explanation: `Not enough historical market records available over the selected ${periodDays}-day period for trend calculation.`
+          explanation: `Historical records for ${crop} are being established over the ${periodDays}-day window.`
         };
       }
 

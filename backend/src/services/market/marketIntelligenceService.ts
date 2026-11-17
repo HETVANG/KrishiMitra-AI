@@ -106,7 +106,8 @@ export class MarketIntelligenceService {
       commodity,
       trend7d,
       regionalComparison,
-      lang
+      lang,
+      primaryRecord.modalPrice
     );
 
     // 5. Watchlist status check

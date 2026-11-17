@@ -35,6 +35,7 @@ import { ReportPreviewModal } from '../components/ReportPreviewModal';
 import { captureOrPickPhoto, downloadOrSharePdf } from '../services/native';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
+import { Clipboard } from '@capacitor/clipboard';
 
 export const DiseaseDetection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -254,36 +255,48 @@ export const DiseaseDetection: React.FC = () => {
 
     window.speechSynthesis.cancel();
 
+    const cropName = selectedCrop || assessment.crop || 'Crop';
     const localizedDisease = assessment.diseaseName || '';
-    const localizedCondition = assessment.condition || '';
     const localizedSeverity = assessment.severity || '';
-    const localizedSymptoms = assessment.symptoms?.length ? assessment.symptoms.join(', ') : '';
-    const envNote = assessment.environmentalContext?.favorabilityNote || '';
+    const localizedSymptoms = assessment.symptoms?.length ? assessment.symptoms.slice(0, 3).join(', ') : '';
+    const immediateAction = assessment.recommendedActions?.[0]?.title || assessment.organicTreatment?.[0] || '';
 
-    const summaryText = `${localizedDisease}. ${localizedCondition}. ${localizedSeverity}. ${localizedSymptoms ? `${localizedSymptoms}.` : ''} ${envNote}`.trim();
+    let summaryText = '';
+    if (i18n.language === 'hi') {
+      summaryText = `${cropName} फसल स्वास्थ्य जांच: पहचाना गया रोग ${localizedDisease} है। रोग की गंभीरता ${localizedSeverity} है। मुख्य लक्षण: ${localizedSymptoms}। अनुशंसित प्राथमिक उपाय: ${immediateAction}।`;
+    } else if (i18n.language === 'gu') {
+      summaryText = `${cropName} પાક સ્વાસ્થ્ય તપાસ: નિદાન થયેલ રોગ ${localizedDisease} છે. તીવ્રતા ${localizedSeverity} છે. મુખ્ય લક્ષણો: ${localizedSymptoms}. ભલામણ કરેલ પગલાં: ${immediateAction}.`;
+    } else {
+      summaryText = `The Khedut Crop Health Check: Diagnosed condition for ${cropName} is ${localizedDisease}. Severity level is ${localizedSeverity}. Observed symptoms: ${localizedSymptoms}. Immediate recommended action: ${immediateAction}.`;
+    }
 
     const utterance = new SpeechSynthesisUtterance(summaryText);
     const localeMap: Record<string, string> = {
-      en: 'en-US', hi: 'hi-IN', gu: 'gu-IN', mr: 'mr-IN', pa: 'pa-IN',
+      en: 'en-IN', hi: 'hi-IN', gu: 'gu-IN', mr: 'mr-IN', pa: 'pa-IN',
       bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN', ml: 'ml-IN'
     };
-    utterance.lang = localeMap[i18n.language] || 'en-US';
+    utterance.lang = localeMap[i18n.language] || 'en-IN';
     utterance.rate = 0.95;
 
     const setVoiceAndSpeak = () => {
-      const voices = window.speechSynthesis.getVoices();
-      if (voices && voices.length > 0) {
-        const matched = voices.find(v => v.lang.toLowerCase().startsWith(i18n.language.toLowerCase()))
-          || voices.find(v => v.lang.toLowerCase().includes(utterance.lang.toLowerCase()));
-        if (matched) utterance.voice = matched;
-      }
-      utterance.onend = () => setSpeaking(false);
-      utterance.onerror = (e) => {
-        console.warn('Speech synthesis error:', e);
+      try {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          const matched = voices.find(v => v.lang.toLowerCase().replace('_', '-').startsWith(i18n.language.toLowerCase()))
+            || voices.find(v => v.lang.toLowerCase().includes(utterance.lang.toLowerCase()));
+          if (matched) utterance.voice = matched;
+        }
+        utterance.onend = () => setSpeaking(false);
+        utterance.onerror = (e) => {
+          console.warn('Speech synthesis error:', e);
+          setSpeaking(false);
+        };
+        setSpeaking(true);
+        window.speechSynthesis.speak(utterance);
+      } catch (speechErr) {
+        console.warn('Speech execution error:', speechErr);
         setSpeaking(false);
-      };
-      setSpeaking(true);
-      window.speechSynthesis.speak(utterance);
+      }
     };
 
     const currentVoices = window.speechSynthesis.getVoices();
@@ -292,7 +305,7 @@ export const DiseaseDetection: React.FC = () => {
         window.speechSynthesis.onvoiceschanged = null;
         setVoiceAndSpeak();
       };
-      setTimeout(setVoiceAndSpeak, 200);
+      setTimeout(setVoiceAndSpeak, 250);
     } else {
       setVoiceAndSpeak();
     }
@@ -300,10 +313,23 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleCopyText = async () => {
     if (!assessment) return;
-    const txt = `THE KHEDUT - Crop Health Assessment\n-----------------------------\nCrop: ${selectedCrop || assessment.crop || 'Crop'}\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName}${assessment.scientificName ? ` (${assessment.scientificName})` : ''}\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ') || 'N/A'}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title || a).join(' | ') || 'Consult agronomist'}\n\nGenerated via The Khedut Smart Agriculture`;
+    const cropName = selectedCrop || assessment.crop || 'Crop';
+    const txt = `THE KHEDUT - Crop Health Assessment\n-----------------------------\nCrop: ${cropName}\nCondition: ${assessment.condition || 'DIAGNOSED'}\nDisease: ${assessment.diseaseName}${assessment.scientificName ? ` (${assessment.scientificName})` : ''}\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ') || 'N/A'}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title || a).join(' | ') || assessment.organicTreatment?.[0] || 'Consult agronomist'}\n\nGenerated via The Khedut: https://thekhedut.ai`;
 
     let copiedSuccessfully = false;
-    if (navigator.clipboard && window.isSecureContext) {
+
+    // 1. Try Native Capacitor Clipboard
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Clipboard.write({ string: txt });
+        copiedSuccessfully = true;
+      } catch (clipErr) {
+        console.warn('[Native Clipboard Warning]', clipErr);
+      }
+    }
+
+    // 2. Try Browser Clipboard API
+    if (!copiedSuccessfully && navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(txt);
         copiedSuccessfully = true;
@@ -312,6 +338,7 @@ export const DiseaseDetection: React.FC = () => {
       }
     }
 
+    // 3. Fallback textarea copy
     if (!copiedSuccessfully) {
       try {
         const textArea = document.createElement('textarea');
@@ -340,21 +367,22 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleShare = async () => {
     if (!assessment) return;
-    const txt = `THE KHEDUT Crop Health Assessment:\nCrop: ${selectedCrop || assessment.crop || 'Crop'}\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition}\nSeverity: ${assessment.severity}\nRecommended Action: ${assessment.recommendedActions?.[0]?.title || 'Consult agronomist'}`;
+    const cropName = selectedCrop || assessment.crop || 'Crop';
+    const txt = `THE KHEDUT Crop Health Assessment:\nCrop: ${cropName}\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition || 'DIAGNOSED'}\nSeverity: ${assessment.severity}\nRecommended Action: ${assessment.recommendedActions?.[0]?.title || assessment.organicTreatment?.[0] || 'Consult agronomist'}\n\nVerified by The Khedut: https://thekhedut.ai`;
     const shareTitle = `${assessment.diseaseName} - The Khedut Diagnosis`;
 
     if (Capacitor.isNativePlatform()) {
       try {
-        const canShare = await Share.canShare();
-        if (canShare.value) {
-          await Share.share({
-            title: shareTitle,
-            text: txt,
-            dialogTitle: t('common.share') || 'Share Diagnosis',
-          });
-          return;
+        await Share.share({
+          title: shareTitle,
+          text: txt,
+          dialogTitle: t('common.share') || 'Share Diagnosis',
+        });
+        return;
+      } catch (capErr: any) {
+        if (capErr?.message?.includes('canceled') || capErr?.message?.includes('dismissed') || capErr?.code === '10') {
+          return; // User dismissed share dialog
         }
-      } catch (capErr) {
         console.warn('[Native Share Warning]', capErr);
       }
     }

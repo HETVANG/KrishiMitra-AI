@@ -265,6 +265,7 @@ export const AppContent = () => {
     // Native Capacitor initialization
     if (Capacitor.isNativePlatform()) {
       try {
+        StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
         StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
         StatusBar.setBackgroundColor({ color: '#15803d' }).catch(() => {});
         SplashScreen.hide().catch(() => {});

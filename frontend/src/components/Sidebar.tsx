@@ -24,7 +24,8 @@ import {
   ChevronDown,
   ChevronUp,
   Settings as SettingsIcon,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -50,8 +51,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onOpenRegio
   // Category 1: CORE FARMING TOOLS
   const farmLinks = [
     { to: '/dashboard', label: t('nav.dashboard') || 'Dashboard', icon: LayoutDashboard },
+    { to: '/weather', label: t('nav.weather') || 'Weather Forecast', icon: CloudSun },
     { to: '/disease', label: t('nav.disease') || 'Crop Health Diagnosis', icon: ScanEye },
-    { to: '/market', label: t('nav.market') || 'Mandi Prices Index', icon: CloudSun },
+    { to: '/market', label: t('nav.market') || 'Mandi Prices Index', icon: TrendingUp },
     { to: '/crop-cycles', label: t('nav.my_farm') || 'Farm Lifecycle', icon: Activity },
     { to: '/irrigation', label: t('nav.irrigation') || 'Smart Irrigation', icon: Droplets },
   ];

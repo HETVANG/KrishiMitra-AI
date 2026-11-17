@@ -85,6 +85,18 @@ export class WeatherService {
     return weatherAdvisories[code] || weatherAdvisories.en;
   }
 
+  private static mapWmoWeatherCode(code: number): { condition: string; description: string } {
+    if (code === 0) return { condition: 'Clear', description: 'Clear sky' };
+    if (code === 1 || code === 2) return { condition: 'Clouds', description: 'Partly cloudy' };
+    if (code === 3) return { condition: 'Clouds', description: 'Overcast' };
+    if (code === 45 || code === 48) return { condition: 'Fog', description: 'Fog / Mist' };
+    if (code >= 51 && code <= 55) return { condition: 'Rain', description: 'Light drizzle' };
+    if (code >= 61 && code <= 65) return { condition: 'Rain', description: 'Rain showers' };
+    if (code >= 80 && code <= 82) return { condition: 'Rain', description: 'Heavy rain showers' };
+    if (code >= 95) return { condition: 'Thunderstorm', description: 'Thunderstorm' };
+    return { condition: code > 0 ? 'Clouds' : 'Clear', description: code > 0 ? 'Cloudy' : 'Clear sky' };
+  }
+
   private static validateNumeric(value: any, min: number, max: number, fallback: number): number {
     if (typeof value === 'number' && !Number.isNaN(value) && value >= min && value <= max) {
       return value;
@@ -204,7 +216,9 @@ export class WeatherService {
         const humidity = this.validateNumeric(current.relative_humidity_2m, 0, 100, 50);
         const windSpeed = this.validateNumeric(current.wind_speed_10m, 0, 150, 5);
         const code = current.weather_code || 0;
-        const condition = code >= 80 ? 'Rain' : code >= 50 ? 'Rain' : code >= 1 ? 'Clouds' : 'Clear';
+        const mapped = this.mapWmoWeatherCode(code);
+        const condition = mapped.condition;
+        const description = mapped.description;
         const rainProb = daily.precipitation_probability_max?.[0] || (condition === 'Rain' ? 80 : 15);
 
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -214,12 +228,12 @@ export class WeatherService {
         for (let i = 0; i < Math.min(times.length, 7); i++) {
           const dDate = new Date(times[i]);
           const codeDay = daily.weather_code?.[i] || 0;
-          const condDay = codeDay >= 80 ? 'Rain' : codeDay >= 50 ? 'Rain' : codeDay >= 1 ? 'Clouds' : 'Clear';
+          const mappedDay = this.mapWmoWeatherCode(codeDay);
           forecast.push({
             day: daysOfWeek[dDate.getDay()],
             tempMin: Math.round(this.validateNumeric(daily.temperature_2m_min?.[i], -50, 60, temp - 4)),
             tempMax: Math.round(this.validateNumeric(daily.temperature_2m_max?.[i], -50, 60, temp + 4)),
-            condition: condDay,
+            condition: mappedDay.condition,
             rainProb: daily.precipitation_probability_max?.[i] || 15
           });
         }
@@ -235,7 +249,7 @@ export class WeatherService {
             rainProb,
             aqi: 40,
             condition,
-            description: `Live Open-Meteo ${condition} feed`
+            description: `Live Open-Meteo ${description}`
           },
           forecast,
           alerts,

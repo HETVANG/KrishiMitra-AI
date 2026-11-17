@@ -86,6 +86,7 @@ export const FarmCopilot: React.FC = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [contextLoading, setContextLoading] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, { rating: 'like' | 'dislike'; reason?: string }>>({});
 
   const handleFeedback = (msgId: string, rating: 'like' | 'dislike') => {
@@ -295,19 +296,19 @@ export const FarmCopilot: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-left">
       {/* Top Copilot Header */}
-      <div className="bg-gradient-to-r from-brand-700 via-brand-600 to-emerald-700 text-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2 max-w-2xl z-10">
+      <div className="bg-gradient-to-r from-brand-700 via-brand-600 to-emerald-700 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 relative overflow-hidden">
+        <div className="space-y-1.5 sm:space-y-2 max-w-2xl z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold text-brand-100 uppercase tracking-wider">
             <Brain size={14} className="text-emerald-300" /> Farm Intelligence Layer
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">AI Farm Copilot</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">AI Farm Copilot</h1>
           <p className="text-xs md:text-sm text-brand-100 leading-relaxed">
             Multi-factor decision engine combining live weather telemetry, soil parameters, market pricing, and leaf pathology into personalized agronomic guidance.
           </p>
         </div>
 
         {/* Farm Selector Dropdown */}
-        <div className="z-10 w-full md:w-auto shrink-0 bg-white/10 dark:bg-dark-900/40 backdrop-blur-md p-3 rounded-2xl border border-white/20 flex flex-col gap-1.5">
+        <div className="z-10 w-full md:w-auto shrink-0 bg-white/10 dark:bg-dark-900/40 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/20 flex flex-col gap-1.5">
           <span className="text-[10px] uppercase font-bold text-brand-200 tracking-wider">Active Farm Context</span>
           {farms.length > 0 ? (
             <select
@@ -397,10 +398,10 @@ export const FarmCopilot: React.FC = () => {
 
       {/* Tabs Navigation */}
 
-      <div className="flex border-b border-gray-200 dark:border-dark-800 overflow-x-auto gap-2">
+      <div className="flex border-b border-gray-200 dark:border-dark-800 overflow-x-auto no-scrollbar gap-1 sm:gap-2 px-1">
         <button
           onClick={() => setActiveTab('chat')}
-          className={`pb-3 px-4 text-xs md:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
+          className={`pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 min-h-[44px] ${
             activeTab === 'chat'
               ? 'border-brand-600 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-dark-400'
@@ -411,7 +412,7 @@ export const FarmCopilot: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('daily')}
-          className={`pb-3 px-4 text-xs md:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
+          className={`pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 min-h-[44px] ${
             activeTab === 'daily'
               ? 'border-brand-600 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-dark-400'
@@ -427,7 +428,7 @@ export const FarmCopilot: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('weekly')}
-          className={`pb-3 px-4 text-xs md:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
+          className={`pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 min-h-[44px] ${
             activeTab === 'weekly'
               ? 'border-brand-600 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-dark-400'
@@ -438,7 +439,7 @@ export const FarmCopilot: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('insights')}
-          className={`pb-3 px-4 text-xs md:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
+          className={`pb-3 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 min-h-[44px] ${
             activeTab === 'insights'
               ? 'border-brand-600 text-brand-600 dark:text-brand-400'
               : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-dark-400'
@@ -455,9 +456,9 @@ export const FarmCopilot: React.FC = () => {
 
       {/* Tab 1: Live Copilot Chat Interface */}
       {activeTab === 'chat' && (
-        <div className="flex flex-col h-[650px] bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/30 rounded-3xl overflow-hidden shadow-sm">
+        <div className="flex flex-col min-h-[480px] h-[calc(100vh-230px)] max-h-[760px] bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800/30 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
           {/* Chat Messages Log */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-gray-50/50 dark:bg-dark-950/20">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-50/50 dark:bg-dark-950/20">
             {messages.map((msg) => {
               const isBot = msg.role === 'model';
               const struct = msg.structured;
@@ -625,18 +626,31 @@ export const FarmCopilot: React.FC = () => {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Dynamic Suggested Questions */}
-          {messages.length <= 2 && (
-            <div className="px-6 py-3 bg-white dark:bg-dark-900 border-t border-gray-100 dark:border-dark-800/40 text-left">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                <Sparkles size={12} className="text-brand-500" /> Context-Aware Questions
-              </p>
-              <div className="flex flex-wrap gap-2">
+          {/* Compact Horizontally Scrollable Context-Aware Suggestions */}
+          {suggestedQuestions.length > 0 && showSuggestions && (
+            <div className="px-3 sm:px-4 py-2 bg-white/95 dark:bg-dark-900/95 border-t border-gray-100 dark:border-dark-800/50 transition-all">
+              <div className="flex items-center justify-between mb-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400">
+                  <Sparkles size={11} />
+                  <span>{t('copilot.context_questions') || 'Context-Aware Suggestions'}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestions(false)}
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-dark-200 rounded transition-colors"
+                  title={t('common.dismiss') || 'Dismiss'}
+                  aria-label="Dismiss suggestions"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              <div className="flex overflow-x-auto no-scrollbar gap-2 py-0.5 scroll-smooth">
                 {suggestedQuestions.map((sug, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => handleSendMessage(sug)}
-                    className="px-3 py-1.5 bg-gray-50 hover:bg-brand-50 dark:bg-dark-800/50 dark:hover:bg-brand-950/20 text-gray-600 dark:text-dark-300 hover:text-brand-700 text-xs font-semibold rounded-xl border border-gray-200/50 dark:border-dark-800 transition-all text-left"
+                    className="px-3 py-1.5 bg-slate-50 hover:bg-brand-50 dark:bg-dark-800/60 dark:hover:bg-brand-950/30 text-slate-700 dark:text-dark-200 hover:text-brand-700 text-xs font-medium rounded-xl border border-slate-200/60 dark:border-dark-700/60 whitespace-nowrap shrink-0 transition-all text-left active:scale-95 shadow-2xs"
                   >
                     {sug}
                   </button>
@@ -645,11 +659,23 @@ export const FarmCopilot: React.FC = () => {
             </div>
           )}
 
-          {/* Input Form with Integrated Voice-to-Text */}
+          {/* Input Form with Integrated Voice-to-Text & Suggestion Recall */}
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }}
-            className="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2 items-center"
+            className="px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 md:py-4 border-t border-gray-100 dark:border-dark-800/40 bg-white dark:bg-dark-900 flex gap-2 items-center"
           >
+            {!showSuggestions && suggestedQuestions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowSuggestions(true)}
+                className="p-2.5 text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 border border-brand-200/50 dark:border-brand-800/50 rounded-xl hover:bg-brand-100 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                title={t('copilot.show_suggestions') || 'Show Suggestions'}
+                aria-label="Show Suggestions"
+              >
+                <Sparkles size={16} />
+              </button>
+            )}
+
             <div className="relative flex-1 flex items-center">
               <input
                 type="text"

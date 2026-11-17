@@ -61,14 +61,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md border-b border-slate-200/70 dark:border-dark-800/60 shadow-xs max-w-full overflow-hidden">
-      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 shrink">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-2.5 sm:px-4 md:px-6 py-2 sm:py-2.5 safe-area-pt bg-white/95 dark:bg-dark-900/95 backdrop-blur-md border-b border-slate-200/70 dark:border-dark-800/60 shadow-xs max-w-full overflow-hidden">
+      <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 min-w-0 flex-1 mr-2">
         {/* Mobile Menu Trigger */}
         <button
           onClick={onMenuToggle}
           type="button"
           aria-label="Toggle Navigation Drawer"
-          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl lg:hidden transition-colors shrink-0"
+          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl lg:hidden transition-colors shrink-0 active:scale-95"
         >
           <Menu size={20} />
         </button>
@@ -89,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
         <button
           type="button"
           onClick={() => setIsSearchOpen(true)}
-          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800/80 dark:hover:bg-dark-700 text-slate-500 dark:text-dark-300 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[36px] sm:min-h-[38px] transition-all group shrink-0"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800/80 dark:hover:bg-dark-700 text-slate-500 dark:text-dark-300 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px] min-w-[38px] justify-center transition-all group shrink-0 active:scale-95"
           title={`${t('common.search') || 'Search'} (Ctrl+K)`}
           aria-label="Open Search and Voice Assistant"
         >
@@ -113,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
         )}
 
         {/* Language Selector */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/80 px-1.5 sm:px-2 py-1 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[36px] sm:min-h-[38px] shrink-0">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800/80 px-1.5 sm:px-2 py-1 rounded-xl border border-slate-200/60 dark:border-dark-700/40 min-h-[38px] shrink-0">
           <Globe size={14} className="text-slate-500 dark:text-dark-400 shrink-0" />
           <select
             value={i18n.language}
@@ -147,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, title, onOpenRegio
           onClick={handleThemeToggle}
           type="button"
           aria-label="Toggle Light and Dark Mode"
-          className="flex items-center justify-center min-w-[36px] min-h-[36px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors shrink-0"
+          className="flex items-center justify-center min-w-[38px] min-h-[38px] p-2 text-slate-600 dark:text-dark-300 hover:bg-slate-100 dark:hover:bg-dark-800 rounded-xl transition-colors shrink-0 active:scale-95"
         >
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>

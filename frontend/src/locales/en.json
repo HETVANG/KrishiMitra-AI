@@ -98,7 +98,9 @@
     "days_left": "days left",
     "view_all_risks": "View all risks",
     "confirmation": "The Khedut Confirmation",
-    "personal_workspace": "Personal Workspace"
+    "personal_workspace": "Personal Workspace",
+    "not_found_title": "404 - Page Not Found",
+    "not_found_desc": "The agronomic page or resource you are trying to visit does not exist or has been shifted."
   },
   "search": {
     "placeholder": "Search crops, diseases, mandi prices, or schemes...",
@@ -276,7 +278,8 @@
     "telemetry_mandi": "Mandi Trend",
     "ask_anything": "Ask your farm anything",
     "sample_question": "What should I do today?",
-    "ask_button": "Ask Copilot"
+    "ask_button": "Ask Copilot",
+    "context_questions": "Context-Aware Questions"
   },
   "weather": {
     "title": "Weather Forecast & Spray Advisory",

@@ -154,6 +154,13 @@ export const Dashboard: React.FC = () => {
         console.warn('[Dashboard] Geolocation could not retrieve coordinates:', locResult.error);
         setLocating(false);
         setLocationError(locResult.error || 'Permission denied');
+        // Graceful fallback: Use saved user location or default agricultural zone (Gujarat / Rajkot)
+        const defaultLat = user?.farmLocation?.latitude || 22.3039;
+        const defaultLon = user?.farmLocation?.longitude || 70.8022;
+        const defaultAddr = user?.farmLocation?.address || 'Rajkot, Gujarat (Default Farming Zone)';
+        const fallbackLoc = { latitude: defaultLat, longitude: defaultLon, address: defaultAddr };
+        setActiveLocation(fallbackLoc);
+        localStorage.setItem('selectedLocation', JSON.stringify(fallbackLoc));
         return;
       }
 
@@ -220,21 +227,21 @@ export const Dashboard: React.FC = () => {
   // Main data fetching effect
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!activeLocation.latitude || !activeLocation.longitude) {
-        setLoadingWeather(false);
-        setLoadingMandi(false);
-        return;
-      }
+      const lat = activeLocation.latitude || user?.farmLocation?.latitude || 22.3039;
+      const lon = activeLocation.longitude || user?.farmLocation?.longitude || 70.8022;
 
       // 1. Weather
       try {
         setLoadingWeather(true);
-        const res = await api.get(`/weather?lat=${activeLocation.latitude}&lon=${activeLocation.longitude}&lang=${i18n.language}`);
-        if (res.data && res.data.success) {
+        const res = await api.get(`/weather?lat=${lat}&lon=${lon}&lang=${i18n.language}`);
+        if (res.data && res.data.success && res.data.weather) {
           setWeather(res.data.weather);
+        } else {
+          setWeather(null);
         }
       } catch (err) {
         console.error('Error loading weather dashboard:', err);
+        setWeather(null);
       } finally {
         setLoadingWeather(false);
       }
@@ -443,21 +450,40 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {loadingWeather ? (
-              <div className="py-6 flex justify-center"><div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div></div>
-            ) : (
+              <div className="py-6 flex flex-col items-center justify-center gap-2">
+                <div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+                <span className="text-[11px] text-gray-400">{t('weather.fetching') || 'Fetching live telemetry...'}</span>
+              </div>
+            ) : weather?.current && weather.freshness !== 'UNAVAILABLE' ? (
               <div className="space-y-3">
                 <div className="flex items-baseline justify-between">
                   <span className="text-3xl font-extrabold text-gray-800 dark:text-dark-50">
-                    {weather?.current?.temp != null ? `${weather.current.temp}°C` : '--'}
+                    {weather.current.temp}°C
                   </span>
                   <span className="text-xs font-bold text-gray-600 dark:text-dark-300 uppercase">
-                    {weather?.current?.condition || 'Clear'}
+                    {t(`weather.${(weather.current.condition || '').toLowerCase()}`) || weather.current.condition}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-[11px] bg-gray-50 dark:bg-dark-850 p-2.5 rounded-xl text-gray-600 dark:text-dark-300 font-medium">
-                  <div>{t('dashboard.humidity') || 'Humidity'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.humidity || 60}%</span></div>
-                  <div>{t('dashboard.rain') || 'Rain Chance'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather?.current?.rainProb || 10}%</span></div>
+                  <div>{t('dashboard.humidity') || 'Humidity'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather.current.humidity}%</span></div>
+                  <div>{t('dashboard.rain') || 'Rain Chance'}: <span className="font-bold text-gray-800 dark:text-dark-100">{weather.current.rainProb}%</span></div>
                 </div>
+              </div>
+            ) : (
+              <div className="py-3 space-y-2 text-left">
+                <p className="text-xs font-bold text-gray-700 dark:text-dark-200">
+                  {t('weather.telemetry_unavailable') || 'Live weather telemetry unavailable'}
+                </p>
+                <p className="text-[11px] text-gray-400 leading-relaxed">
+                  {t('weather.unavailable_desc') || 'Select your district or verify connection to view localized weather.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationModal(true)}
+                  className="px-3 py-1 bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 text-[11px] font-bold rounded-lg border border-brand-200/50"
+                >
+                  {t('dashboard.select_location') || 'Set Location'}
+                </button>
               </div>
             )}
 

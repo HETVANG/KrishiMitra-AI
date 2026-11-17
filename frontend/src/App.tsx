@@ -33,6 +33,7 @@ const PredictiveIntelligence = React.lazy(() => import('./pages/PredictiveIntell
 const SmartIrrigation = React.lazy(() => import('./pages/SmartIrrigation').then(m => ({ default: m.SmartIrrigation })));
 const DiseaseDetection = React.lazy(() => import('./pages/DiseaseDetection').then(m => ({ default: m.DiseaseDetection })));
 const SoilAnalysis = React.lazy(() => import('./pages/SoilAnalysis').then(m => ({ default: m.SoilAnalysis })));
+const Weather = React.lazy(() => import('./pages/Weather').then(m => ({ default: m.Weather })));
 const MarketDashboard = React.lazy(() => import('./pages/MarketDashboard').then(m => ({ default: m.MarketDashboard })));
 const Marketplace = React.lazy(() => import('./pages/Marketplace').then(m => ({ default: m.Marketplace })));
 const GovSchemes = React.lazy(() => import('./pages/GovSchemes').then(m => ({ default: m.GovSchemes })));
@@ -149,6 +150,7 @@ const DashboardLayout = () => {
   const getHeaderTitle = () => {
     const path = location.pathname;
     if (path === '/' || path === '/dashboard') return t('nav.dashboard') || 'Farmer Intelligence Dashboard';
+    if (path === '/weather') return t('nav.weather') || 'Agricultural Weather & Forecast';
     if (path === '/agents') return t('nav.agents') || 'Farm Intelligence & Agents';
     if (path === '/crop-cycles') return t('nav.my_farm') || 'Farm Lifecycle Management';
     if (path === '/predictive-intelligence') return t('predictive.title') || 'Predictive Crop Intelligence Engine';
@@ -326,6 +328,7 @@ export const AppContent = () => {
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/weather" element={<Weather />} />
               <Route path="/disease" element={<DiseaseDetection />} />
               <Route path="/market" element={<MarketDashboard />} />
               <Route path="/schemes" element={<GovSchemes />} />

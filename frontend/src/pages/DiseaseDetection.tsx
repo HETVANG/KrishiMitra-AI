@@ -34,6 +34,7 @@ import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 import { ReportPreviewModal } from '../components/ReportPreviewModal';
 import { captureOrPickPhoto, downloadOrSharePdf } from '../services/native';
 import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 export const DiseaseDetection: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -240,59 +241,141 @@ export const DiseaseDetection: React.FC = () => {
 
   const handleReadAloud = () => {
     if (!assessment) return;
-    if ('speechSynthesis' in window) {
-      if (speaking) {
-        window.speechSynthesis.cancel();
-        setSpeaking(false);
-        return;
-      }
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      notify.warning(t('voice.tts_unsupported') || 'Speech synthesis is not supported on this device.', 'Voice');
+      return;
+    }
 
+    if (speaking) {
       window.speechSynthesis.cancel();
-      const txt = `${assessment.diseaseName}. Condition is ${assessment.condition}. Severity is ${assessment.severity}. Symptoms: ${assessment.symptoms?.join(', ')}. Environmental note: ${assessment.environmentalContext?.favorabilityNote || ''}`;
-      const utterance = new SpeechSynthesisUtterance(txt);
-      
-      const localeMap: Record<string, string> = {
-        en: 'en-US', hi: 'hi-IN', gu: 'gu-IN', mr: 'mr-IN', pa: 'pa-IN',
-        bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN', ml: 'ml-IN'
-      };
-      utterance.lang = localeMap[i18n.language] || 'en-US';
+      setSpeaking(false);
+      return;
+    }
 
-      utterance.onend = () => setSpeaking(false);
-      utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.cancel();
 
+    const localizedDisease = assessment.diseaseName || '';
+    const localizedCondition = assessment.condition || '';
+    const localizedSeverity = assessment.severity || '';
+    const localizedSymptoms = assessment.symptoms?.length ? assessment.symptoms.join(', ') : '';
+    const envNote = assessment.environmentalContext?.favorabilityNote || '';
+
+    const summaryText = `${localizedDisease}. ${localizedCondition}. ${localizedSeverity}. ${localizedSymptoms ? `${localizedSymptoms}.` : ''} ${envNote}`.trim();
+
+    const utterance = new SpeechSynthesisUtterance(summaryText);
+    const localeMap: Record<string, string> = {
+      en: 'en-US', hi: 'hi-IN', gu: 'gu-IN', mr: 'mr-IN', pa: 'pa-IN',
+      bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN', kn: 'kn-IN', ml: 'ml-IN'
+    };
+    utterance.lang = localeMap[i18n.language] || 'en-US';
+    utterance.rate = 0.95;
+
+    const setVoiceAndSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const matched = voices.find(v => v.lang.startsWith(i18n.language));
-      if (matched) utterance.voice = matched;
-
+      if (voices && voices.length > 0) {
+        const matched = voices.find(v => v.lang.toLowerCase().startsWith(i18n.language.toLowerCase()))
+          || voices.find(v => v.lang.toLowerCase().includes(utterance.lang.toLowerCase()));
+        if (matched) utterance.voice = matched;
+      }
+      utterance.onend = () => setSpeaking(false);
+      utterance.onerror = (e) => {
+        console.warn('Speech synthesis error:', e);
+        setSpeaking(false);
+      };
       setSpeaking(true);
       window.speechSynthesis.speak(utterance);
+    };
+
+    const currentVoices = window.speechSynthesis.getVoices();
+    if (!currentVoices || currentVoices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        setVoiceAndSpeak();
+      };
+      setTimeout(setVoiceAndSpeak, 200);
+    } else {
+      setVoiceAndSpeak();
     }
   };
 
-  const handleCopyText = () => {
+  const handleCopyText = async () => {
     if (!assessment) return;
-    const txt = `THE KHEDUT Crop Health Assessment:\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName} (${assessment.scientificName})\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ')}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title).join(' | ')}`;
-    navigator.clipboard.writeText(txt);
-    setCopied(true);
-    notify.success('Assessment summary copied to clipboard!', 'Copied');
-    setTimeout(() => setCopied(false), 2000);
+    const txt = `THE KHEDUT - Crop Health Assessment\n-----------------------------\nCrop: ${selectedCrop || assessment.crop || 'Crop'}\nCondition: ${assessment.condition}\nDisease: ${assessment.diseaseName}${assessment.scientificName ? ` (${assessment.scientificName})` : ''}\nSeverity: ${assessment.severity}\nSymptoms: ${assessment.symptoms?.join(', ') || 'N/A'}\nAction Plan: ${assessment.recommendedActions?.map((a: any) => a.title || a).join(' | ') || 'Consult agronomist'}\n\nGenerated via The Khedut Smart Agriculture`;
+
+    let copiedSuccessfully = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(txt);
+        copiedSuccessfully = true;
+      } catch (err) {
+        console.warn('Clipboard writeText failed, falling back:', err);
+      }
+    }
+
+    if (!copiedSuccessfully) {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = txt;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        copiedSuccessfully = document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr);
+      }
+    }
+
+    if (copiedSuccessfully) {
+      setCopied(true);
+      notify.success(t('common.copied') || 'Assessment summary copied to clipboard!', t('common.copied') || 'Copied');
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      notify.warning(txt, t('common.copy') || 'Copy');
+    }
   };
 
   const handleShare = async () => {
     if (!assessment) return;
-    const txt = `THE KHEDUT Crop Health Assessment:\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition}\nSeverity: ${assessment.severity}`;
+    const txt = `THE KHEDUT Crop Health Assessment:\nCrop: ${selectedCrop || assessment.crop || 'Crop'}\nDisease: ${assessment.diseaseName}\nCondition: ${assessment.condition}\nSeverity: ${assessment.severity}\nRecommended Action: ${assessment.recommendedActions?.[0]?.title || 'Consult agronomist'}`;
+    const shareTitle = `${assessment.diseaseName} - The Khedut Diagnosis`;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const canShare = await Share.canShare();
+        if (canShare.value) {
+          await Share.share({
+            title: shareTitle,
+            text: txt,
+            dialogTitle: t('common.share') || 'Share Diagnosis',
+          });
+          return;
+        }
+      } catch (capErr) {
+        console.warn('[Native Share Warning]', capErr);
+      }
+    }
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'THE KHEDUT Crop Pathology Report',
+          title: shareTitle,
           text: txt,
         });
-      } catch (err) {
-        console.warn('Share cancelled:', err);
+        return;
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.warn('Web Share API error:', err);
+        } else {
+          return; // User canceled
+        }
       }
-    } else {
-      handleCopyText();
     }
+
+    await handleCopyText();
   };
 
   const handleDownloadPdf = async () => {

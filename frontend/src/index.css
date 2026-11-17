@@ -157,3 +157,19 @@
   z-index: 9999 !important;
 }
 
+/* Print layout optimizations */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  header, nav, aside, [role="navigation"], .no-print, .voice-assistant-overlay {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+

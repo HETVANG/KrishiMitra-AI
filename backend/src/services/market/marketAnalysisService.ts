@@ -62,18 +62,18 @@ export class MarketAnalysisService {
       if (trend.trend === 'RISING') trendText = `बढ़त की ओर (${changeStr})`;
       else if (trend.trend === 'FALLING') trendText = `गिरावट की ओर (${changeStr})`;
       else if (trend.trend === 'MIXED') trendText = 'मिश्रित';
-      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'संकलन जारी';
+      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'पर्याप्त ऐतिहासिक डेटा उपलब्ध नहीं';
 
       summary = hasPrice
-        ? `${localizedCrop} का वर्तमान औसत मॉडल भाव ${priceText} है। पिछले ${trend.period} में बाजार का रुझान ${trendText} रहा है।`
-        : `${localizedCrop} के लिए नवीनतम मंडी दरों का संकलन जारी है। पिछले ${trend.period} का रुझान ${trendText} है।`;
+        ? `${localizedCrop} का वर्तमान औसत मॉडल भाव ${priceText} है। ${trend.trend === 'INSUFFICIENT_DATA' ? 'ऐतिहासिक रुझान के लिए डेटा संकलित किया जा रहा है।' : `पिछले ${trend.period} में बाजार का रुझान ${trendText} रहा है।`}`
+        : `${localizedCrop} के लिए नवीनतम मंडी दरों का संकलन जारी है।`;
 
       if (trend.trend === 'RISING') {
         keyInsights.push(`बाजार के आंकड़ों के अनुसार पिछले ${trend.period} में कीमतों में सकारात्मक बढ़त (${changeStr}) दर्ज की गई है।`);
       } else if (trend.trend === 'FALLING') {
         keyInsights.push(`बाजार के आंकड़ों के अनुसार पिछले ${trend.period} में कीमतों में गिरावट (${changeStr}) का दबाव देखा गया है।`);
       } else if (trend.trend === 'INSUFFICIENT_DATA') {
-        keyInsights.push(`स्थानीय मंडी में हालिया व्यापारिक डेटा संकलित किया जा रहा है।`);
+        keyInsights.push(`रुझान प्रदर्शित करने के लिए पर्याप्त ऐतिहासिक डेटा उपलब्ध नहीं है।`);
       } else {
         keyInsights.push(`पिछले दिनों में ${localizedCrop} के भाव अपेक्षाकृत स्थिर बने हुए हैं।`);
       }
@@ -95,18 +95,18 @@ export class MarketAnalysisService {
       if (trend.trend === 'RISING') trendText = `વધારા તરફ (${changeStr})`;
       else if (trend.trend === 'FALLING') trendText = `ઘટાડા તરફ (${changeStr})`;
       else if (trend.trend === 'MIXED') trendText = 'મિશ્ર';
-      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'સંકલન ચાલુ';
+      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'પૂરતો ઐતિહાસિક ડેટા ઉપલબ્ધ નથી';
 
       summary = hasPrice
-        ? `${localizedCrop} નો વર્તમાન સરેરાશ મોડલ ભાવ ${priceText} છે. છેલ્લા ${trend.period} માં બજારનું વલણ ${trendText} રહ્યું છે.`
-        : `${localizedCrop} માટે નવીનતમ માર્કેટ યાર્ડના દરોનું સંકલન ચાલુ છે. છેલ્લા ${trend.period} નું વલણ ${trendText} છે.`;
+        ? `${localizedCrop} નો વર્તમાન સરેરાશ મોડલ ભાવ ${priceText} છે. ${trend.trend === 'INSUFFICIENT_DATA' ? 'ઐતિહાસિક વલણ માટે ડેટા સંકલન ચાલુ છે.' : `છેલ્લા ${trend.period} માં બજારનું વલણ ${trendText} રહ્યું છે.`}`
+        : `${localizedCrop} માટે નવીનતમ માર્કેટ યાર્ડના દરોનું સંકલન ચાલુ છે.`;
 
       if (trend.trend === 'RISING') {
         keyInsights.push(`બજારના ડેટા અનુસાર છેલ્લા ${trend.period} માં કિંમતોમાં સારો વધારો (${changeStr}) નોંધાયો છે.`);
       } else if (trend.trend === 'FALLING') {
         keyInsights.push(`બજારના ડેટા અનુસાર છેલ્લા ${trend.period} માં કિંમતોમાં ઘટાડો (${changeStr}) જોવા મળ્યો છે.`);
       } else if (trend.trend === 'INSUFFICIENT_DATA') {
-        keyInsights.push(`સ્થાનિક માર્કેટ યાર્ડમાં હાલના વેપાર ડેટાનું સંકલન પ્રગતિમાં છે.`);
+        keyInsights.push(`વલણ દર્શાવવા માટે પૂરતો ઐતિહાસિક ડેટા ઉપલબ્ધ નથી.`);
       } else {
         keyInsights.push(`છેલ્લા દિવસોમાં ${localizedCrop} ના ભાવો સામાન્ય રીતે સ્થિર રહ્યા છે.`);
       }
@@ -125,22 +125,22 @@ export class MarketAnalysisService {
       // English default
       const priceText = hasPrice ? `₹${effectivePrice}/Quintal` : 'Rate compilation in progress';
       
-      let trendText = 'STABLE';
-      if (trend.trend === 'RISING') trendText = `RISING (${changeStr || 'positive'})`;
-      else if (trend.trend === 'FALLING') trendText = `FALLING (${changeStr || 'downward'})`;
-      else if (trend.trend === 'MIXED') trendText = 'MIXED';
-      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'Being Established';
+      let trendText = 'Stable';
+      if (trend.trend === 'RISING') trendText = `Rising (${changeStr || 'positive'})`;
+      else if (trend.trend === 'FALLING') trendText = `Falling (${changeStr || 'downward'})`;
+      else if (trend.trend === 'MIXED') trendText = 'Mixed';
+      else if (trend.trend === 'INSUFFICIENT_DATA') trendText = 'Not enough historical data';
 
       summary = hasPrice
-        ? `${localizedCrop} is currently trading at an average modal price of ${priceText}. Market trend over the past ${trend.period} is classified as ${trendText}.`
-        : `Market rates for ${localizedCrop} are currently being compiled. Trend over the past ${trend.period} is classified as ${trendText}.`;
+        ? `${localizedCrop} is currently trading at an average modal price of ${priceText}. ${trend.trend === 'INSUFFICIENT_DATA' ? 'Historical data is being compiled.' : `Market trend over the past ${trend.period} is ${trendText}.`}`
+        : `Market rates for ${localizedCrop} are currently being compiled.`;
 
       if (trend.trend === 'RISING') {
         keyInsights.push(`Current market data indicates an upward price movement (${changeStr || 'rising'}) over the last ${trend.period}.`);
       } else if (trend.trend === 'FALLING') {
         keyInsights.push(`Current market data indicates downward price pressure (${changeStr || 'falling'}) over the last ${trend.period}.`);
       } else if (trend.trend === 'INSUFFICIENT_DATA') {
-        keyInsights.push(`Recent physical market records are currently being compiled for this trading center.`);
+        keyInsights.push(`Not enough historical data to show the trend.`);
       } else {
         keyInsights.push(`Prices for ${localizedCrop} have remained relatively stable over the selected period.`);
       }

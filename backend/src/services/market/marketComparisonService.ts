@@ -39,21 +39,43 @@ export class MarketComparisonService {
       limit?: number;
     } = {}
   ): Promise<RegionalMarketComparison> {
-    const limit = options.limit || 6;
+    const limit = options.limit || 8;
     const safeCrop = escapeRegex((crop || 'Wheat').trim());
-    const filter: any = {
+    const baseFilter: any = {
       crop: new RegExp(`^${safeCrop}$`, 'i')
     };
 
     if (options.state && options.state.trim()) {
-      filter.state = new RegExp(`^${escapeRegex(options.state.trim())}$`, 'i');
+      baseFilter.state = new RegExp(`^${escapeRegex(options.state.trim())}$`, 'i');
     }
 
     try {
-      const records = await MarketPrice.find(filter)
-        .sort({ lastUpdated: -1, date: -1 })
-        .limit(30)
-        .lean();
+      let records: any[] = [];
+
+      // If district is provided, prioritize district mandis first
+      if (options.district && options.district.trim()) {
+        const districtFilter = {
+          ...baseFilter,
+          district: new RegExp(`^${escapeRegex(options.district.trim())}$`, 'i')
+        };
+        const districtRecords = await MarketPrice.find(districtFilter)
+          .sort({ lastUpdated: -1, date: -1 })
+          .limit(20)
+          .lean();
+
+        // Also fetch regional mandis in the state
+        const otherRecords = await MarketPrice.find(baseFilter)
+          .sort({ lastUpdated: -1, date: -1 })
+          .limit(30)
+          .lean();
+
+        records = [...districtRecords, ...otherRecords];
+      } else {
+        records = await MarketPrice.find(baseFilter)
+          .sort({ lastUpdated: -1, date: -1 })
+          .limit(40)
+          .lean();
+      }
 
       // Deduplicate by market name to get latest entry per mandi
       const uniqueMarketsMap = new Map<string, any>();

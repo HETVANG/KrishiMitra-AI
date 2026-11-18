@@ -1,33 +1,41 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { api } from '../services/api';
 import { 
   Search, 
   TrendingUp, 
   TrendingDown, 
-  HelpCircle, 
   LineChart, 
   RefreshCw, 
   ArrowLeft, 
   ArrowRight,
   Heart,
-  Activity,
-  Layers,
   Sparkles,
-  Info,
   Building2,
-  Check
+  MapPin,
+  Compass,
+  RotateCcw,
+  ChevronDown,
+  X,
+  Check,
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { VoiceInputButton } from '../components/voice/VoiceInputButton';
-
+import { getDeviceLocation } from '../services/native';
+import { 
+  resolveMandiCoordinates, 
+  getDistanceMetadata, 
+  type DistanceResult 
+} from '../utils/mandiLocationUtils';
 
 export const MarketDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { user, token } = useAuth();
+  const { user, token, setFarmLocationLocally } = useAuth();
 
-  // Core Market Intelligence Data
+  // Core Market Data
   const [intelligence, setIntelligence] = useState<any>(null);
   const [prices, setPrices] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
@@ -44,6 +52,33 @@ export const MarketDashboard: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
 
+  // Crop Selector Search & Dropdown State
+  const [cropDropdownOpen, setCropDropdownOpen] = useState(false);
+  const [cropSearchQuery, setCropSearchQuery] = useState('');
+  const cropDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Location States
+  const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(() => {
+    if (user?.farmLocation?.latitude && user?.farmLocation?.longitude) {
+      return { lat: user.farmLocation.latitude, lon: user.farmLocation.longitude };
+    }
+    try {
+      const stored = localStorage.getItem('selectedLocation');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.latitude && parsed.longitude) {
+          return { lat: parsed.latitude, lon: parsed.longitude };
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const [locationName, setLocationName] = useState<string>(() => {
+    return user?.farmLocation?.address || user?.farmLocation?.city || 'Detecting Location...';
+  });
+  const [locating, setLocating] = useState(false);
+
   // Status & Loading States
   const [loading, setLoading] = useState(false);
   const [loadingIntel, setLoadingIntel] = useState(false);
@@ -51,8 +86,28 @@ export const MarketDashboard: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [watchlistUpdating, setWatchlistUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fallbackSource, setFallbackSource] = useState<string | null>(null);
 
+  // Popular quick-pick commodities
+  const POPULAR_CROPS = [
+    { id: 'wheat', name: 'Wheat', icon: '🌾' },
+    { id: 'cotton', name: 'Cotton', icon: '🌿' },
+    { id: 'paddy', name: 'Paddy', icon: '🌾' },
+    { id: 'soyabean', name: 'Soyabean', icon: '🌱' },
+    { id: 'groundnut', name: 'Groundnut', icon: '🥜' },
+    { id: 'gram', name: 'Gram', icon: '🌰' },
+    { id: 'mustard', name: 'Mustard', icon: '🟡' },
+    { id: 'onion', name: 'Onion', icon: '🧅' },
+    { id: 'potato', name: 'Potato', icon: '🥔' },
+    { id: 'maize', name: 'Maize', icon: '🌽' },
+  ];
+
+  // Helper to format currency in Indian numbering (₹X,XXX)
+  const formatRupee = (val?: number | null): string => {
+    if (val === null || val === undefined || isNaN(val)) return 'N/A';
+    return `₹${val.toLocaleString('en-IN')}`;
+  };
+
+  // Helper for localized crop name
   const getTranslatedCropName = (englishName: string): string => {
     if (!englishName) return '';
     const clean = englishName.trim().toLowerCase();
@@ -69,6 +124,17 @@ export const MarketDashboard: React.FC = () => {
     }
     return englishName;
   };
+
+  // Close crop dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (cropDropdownRef.current && !cropDropdownRef.current.contains(e.target as Node)) {
+        setCropDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 1. Load Commodity Categories
   useEffect(() => {
@@ -97,6 +163,59 @@ export const MarketDashboard: React.FC = () => {
         .catch(err => console.warn('Failed to load watchlist:', err));
     }
   }, [token]);
+
+  // Request Device Location for Nearby Mandis
+  const handleDetectLocation = async () => {
+    setLocating(true);
+    try {
+      const locResult = await getDeviceLocation({ enableHighAccuracy: true, timeout: 10000 });
+      if (locResult.coords) {
+        const { latitude, longitude } = locResult.coords;
+        setUserCoords({ lat: latitude, lon: longitude });
+
+        // Reverse geocode via weather or address fallback
+        try {
+          const wRes = await api.get(`/weather?lat=${latitude}&lon=${longitude}&lang=${i18n.language}`);
+          if (wRes.data?.location?.city || wRes.data?.location?.district) {
+            const resolvedCity = wRes.data.location.city || wRes.data.location.district;
+            const resolvedState = wRes.data.location.state || '';
+            const fullAddr = `${resolvedCity}${resolvedState ? ', ' + resolvedState : ''}`;
+            setLocationName(fullAddr);
+            if (resolvedState && !searchState) setSearchState(resolvedState);
+            if (resolvedCity && !searchDistrict) setSearchDistrict(resolvedCity);
+
+            const newLoc = {
+              latitude,
+              longitude,
+              address: fullAddr,
+              city: resolvedCity,
+              district: resolvedCity,
+              state: resolvedState
+            };
+            setFarmLocationLocally(newLoc);
+            localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+          } else {
+            setLocationName(`${latitude.toFixed(2)}°N, ${longitude.toFixed(2)}°E`);
+          }
+        } catch {
+          setLocationName(`${latitude.toFixed(2)}°N, ${longitude.toFixed(2)}°E`);
+        }
+      }
+    } catch (err) {
+      console.warn('Geolocation detection skipped:', err);
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  // Try passive location setup on mount
+  useEffect(() => {
+    if (!userCoords) {
+      void handleDetectLocation();
+    } else if (locationName === 'Detecting Location...') {
+      setLocationName(user?.farmLocation?.address || 'Current Location');
+    }
+  }, []);
 
   // 3. Fetch Unified Market Intelligence
   const fetchMarketIntelligence = async (cropName = searchCrop) => {
@@ -136,18 +255,13 @@ export const MarketDashboard: React.FC = () => {
       if (res.data?.success) {
         setPrices(res.data.prices || []);
         setPagination(res.data.pagination || null);
-        setFallbackSource(res.data.fallbackSource || 'exact-match');
       } else {
         setError(t('market.price_load_error') || 'Unable to load mandi prices right now.');
       }
     } catch (err: any) {
       console.error('Failed to load mandi prices:', err);
-      if (err.response?.status === 400 && err.response?.data?.code === 'INVALID_RESOURCE_IDENTIFIER') {
-        setError(t('market.price_load_error') || 'Unable to load mandi rates for this search. Please try adjusting your filters.');
-      } else {
-        const userMsg = err.response?.data?.userMessage || err.response?.data?.message;
-        setError(userMsg || t('market.price_load_error') || 'Failed to load mandi prices.');
-      }
+      const userMsg = err.response?.data?.userMessage || err.response?.data?.message;
+      setError(userMsg || t('market.price_load_error') || 'Failed to load mandi prices.');
     } finally {
       setLoading(false);
     }
@@ -161,7 +275,7 @@ export const MarketDashboard: React.FC = () => {
         crop: cropName,
         state: searchState,
         district: searchDistrict,
-        limit: String(period === 90 ? 90 : period === 30 ? 30 : 12),
+        limit: String(period === 90 ? 90 : period === 30 ? 30 : 14),
       });
       const res = await api.get(`/market/history?${query.toString()}`);
       if (res.data?.success) {
@@ -181,7 +295,7 @@ export const MarketDashboard: React.FC = () => {
         crop: cropName,
         state: searchState,
         district: searchDistrict,
-        limit: '6'
+        limit: '8'
       });
       const res = await api.get(`/market/compare?${query.toString()}`);
       if (res.data?.success) {
@@ -210,6 +324,16 @@ export const MarketDashboard: React.FC = () => {
     runMasterFetch(searchCrop, periodDays, 1);
   };
 
+  const handleResetFilters = () => {
+    setSearchCrop('Wheat');
+    setSearchState('');
+    setSearchDistrict('');
+    setSearchDate('');
+    setPeriodDays(7);
+    setPage(1);
+    runMasterFetch('Wheat', 7, 1);
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     setError(null);
@@ -224,7 +348,7 @@ export const MarketDashboard: React.FC = () => {
       runMasterFetch(searchCrop, periodDays, page);
     } catch (err) {
       console.error('Failed to refresh mandi prices:', err);
-      setError(t('market.refresh_error') || 'Refresh failed. The app will continue using the latest cached prices.');
+      setError(t('market.refresh_error') || 'Refresh failed. Using latest cached prices.');
     } finally {
       setRefreshing(false);
     }
@@ -257,62 +381,134 @@ export const MarketDashboard: React.FC = () => {
     }
   };
 
-  const getTrendBadgeStyle = (trend?: string) => {
-    switch (trend) {
-      case 'RISING':
-        return 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200';
-      case 'FALLING':
-        return 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 border-red-200';
-      case 'STABLE':
-        return 'bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border-blue-200';
-      default:
-        return 'bg-gray-100 dark:bg-dark-800 text-gray-700 dark:text-dark-300 border-gray-200';
+  // Filtered commodities for the searchable combobox
+  const filteredCommoditiesList = useMemo(() => {
+    if (!cropSearchQuery.trim()) {
+      return categories.flatMap(cat => cat.items || []);
     }
-  };
+    const q = cropSearchQuery.toLowerCase().trim();
+    const matches: any[] = [];
+    for (const cat of categories) {
+      for (const item of cat.items || []) {
+        const dName = (item.displayName || '').toLowerCase();
+        const aName = (item.apiCommodity || '').toLowerCase();
+        const aliases = (item.aliases || []).map((a: string) => a.toLowerCase());
+        const trans = Object.values(item.translations || {}).map((t: any) => String(t).toLowerCase());
 
-  const getVolatilityBadgeStyle = (volatility?: string) => {
-    switch (volatility) {
-      case 'HIGH':
-        return 'bg-red-500 text-white font-bold';
-      case 'MODERATE':
-        return 'bg-amber-500 text-white font-bold';
-      case 'LOW':
-        return 'bg-emerald-500 text-white font-bold';
-      default:
-        return 'bg-gray-500 text-white font-bold';
+        if (
+          dName.includes(q) || 
+          aName.includes(q) || 
+          aliases.some(a => a.includes(q)) ||
+          trans.some(t => t.includes(q))
+        ) {
+          matches.push(item);
+        }
+      }
     }
-  };
+    return matches;
+  }, [categories, cropSearchQuery]);
+
+  // Nearby Mandis computed with realistic distance sorting
+  const nearbyMandisWithDistances = useMemo(() => {
+    if (!comparison || !comparison.comparisons || comparison.comparisons.length === 0) {
+      return [];
+    }
+
+    const items = comparison.comparisons.map((c: any) => {
+      const coords = resolveMandiCoordinates(c.market, c.district);
+      const distanceMeta: DistanceResult | null = coords && userCoords
+        ? getDistanceMetadata(userCoords.lat, userCoords.lon, coords.lat, coords.lon)
+        : null;
+
+      return {
+        ...c,
+        coords,
+        distanceMeta,
+        distanceKm: distanceMeta ? distanceMeta.distanceKm : 99999
+      };
+    });
+
+    // If user has coordinates, sort by ascending physical distance
+    if (userCoords) {
+      return items.sort((a: any, b: any) => a.distanceKm - b.distanceKm);
+    }
+
+    return items;
+  }, [comparison, userCoords]);
+
+  // Check if any local mandis exist within 50 km
+  const hasLocalMandisWithin50Km = useMemo(() => {
+    return nearbyMandisWithDistances.some((m: any) => m.distanceMeta && m.distanceMeta.tier === 'local');
+  }, [nearbyMandisWithDistances]);
 
   return (
-    <div className="space-y-6 pb-12 text-left">
-      {/* Banner */}
-      <div className="bg-gradient-to-r from-amber-600 to-amber-800 text-white p-6 rounded-3xl shadow-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <LineChart size={24} className="text-amber-200" />
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">{t('market.mandi_rates_title') || 'Market Intelligence Engine (eNAM)'}</h1>
+    <div className="space-y-6 pb-32 md:pb-24 text-left max-w-full overflow-hidden">
+      {/* ============================================================== */}
+      {/* 1. Header Banner & Location Bar                                 */}
+      {/* ============================================================== */}
+      <div className="bg-gradient-to-r from-emerald-700 via-emerald-800 to-emerald-900 text-white p-5 sm:p-6 rounded-3xl shadow-md space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-2 bg-emerald-600/60 rounded-xl">
+                <LineChart size={22} className="text-emerald-100" />
+              </span>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
+                {t('market.mandi_rates_title') || 'Mandi Prices & Market Intelligence'}
+              </h1>
+            </div>
+            <p className="text-emerald-100/90 text-xs sm:text-sm mt-1.5 font-medium max-w-2xl leading-relaxed">
+              {t('market.mandi_rates_sub') || 'Compare live APMC rates, find nearest mandis, and track price trends to make better selling decisions.'}
+            </p>
           </div>
-          <p className="text-amber-100 text-xs md:text-sm mt-1 font-medium max-w-2xl">
-            {t('market.mandi_rates_sub') || 'Live Mandi rates, 7D/30D price trends, regional market comparisons, volatility scores, and watchlist intelligence.'}
-          </p>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="px-4 py-2.5 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 min-h-[42px] active:scale-95"
+            >
+              <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+              <span>{refreshing ? (t('market.refreshing') || 'Updating...') : (t('market.refresh_feed') || 'Refresh Rates')}</span>
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="px-4 py-2.5 bg-white text-amber-900 hover:bg-amber-50 font-bold rounded-xl text-xs md:text-sm shadow-sm transition-colors flex items-center gap-2 min-h-[44px]"
-          >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? (t('market.refreshing') || 'Syncing Mandis...') : (t('market.refresh_feed') || 'Refresh Data')}
-          </button>
+
+        {/* Location Detection & Status Bar */}
+        <div className="pt-3 border-t border-emerald-600/60 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="flex items-center gap-2 text-emerald-100">
+            <MapPin size={15} className="text-emerald-300 shrink-0" />
+            <span className="font-semibold text-white">
+              {locationName}
+            </span>
+            {userCoords && (
+              <span className="text-[10px] font-bold bg-emerald-600/70 text-emerald-100 px-2 py-0.5 rounded-full">
+                {t('market.location_detected') || 'GPS Active'}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDetectLocation}
+              disabled={locating}
+              className="px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1.5 min-h-[32px]"
+            >
+              <Compass size={13} className={locating ? 'animate-spin' : ''} />
+              <span>{locating ? (t('market.locating') || 'Locating...') : (t('market.use_my_location') || 'Use My Location')}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* User Watchlist Bar */}
+      {/* ============================================================== */}
+      {/* 2. User Watchlist Bar                                           */}
+      {/* ============================================================== */}
       {token && watchlist.length > 0 && (
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-4 border border-gray-100 dark:border-dark-800/30 shadow-sm flex items-center gap-3 overflow-x-auto">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 pl-2">
+        <div className="bg-white dark:bg-dark-900 rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-dark-800 shadow-xs flex items-center gap-3 overflow-x-auto">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 pl-1">
             <Heart size={14} className="text-red-500 fill-red-500" /> {t('market.watchlist') || 'Watchlist'}:
           </span>
           <div className="flex items-center gap-2 shrink-0">
@@ -323,14 +519,14 @@ export const MarketDashboard: React.FC = () => {
                   setSearchCrop(w.crop);
                   if (w.state) setSearchState(w.state);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 active:scale-95 ${
                   searchCrop.toLowerCase() === w.crop.toLowerCase()
-                    ? 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
-                    : 'bg-gray-50 dark:bg-dark-850 border-gray-200 dark:border-dark-800 text-gray-700 dark:text-dark-200 hover:border-amber-300'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+                    : 'bg-slate-50 dark:bg-dark-850 border-slate-200 dark:border-dark-800 text-slate-700 dark:text-dark-200 hover:border-emerald-300'
                 }`}
               >
                 <span>{getTranslatedCropName(w.crop)}</span>
-                <span className="font-extrabold text-amber-600 dark:text-amber-400">
+                <span className="font-extrabold text-emerald-700 dark:text-emerald-400">
                   {w.currentPrice ? `₹${w.currentPrice}` : 'N/A'}
                 </span>
               </button>
@@ -339,189 +535,327 @@ export const MarketDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Filters Form */}
-      <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm">
-        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">
-              {t('market.target_commodity') || t('market.search_crop') || 'Target Commodity / Crop'}
+      {/* ============================================================== */}
+      {/* 3. Crop Selection & Filtering Toolbar                           */}
+      {/* ============================================================== */}
+      <div className="bg-white dark:bg-dark-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-dark-800 shadow-xs space-y-4">
+        {/* Quick-Pick Popular Crops Carousel */}
+        <div>
+          <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
+            {t('market.popular_crops') || 'Popular Crops'}
+          </label>
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {POPULAR_CROPS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  setSearchCrop(c.name);
+                  setPage(1);
+                  runMasterFetch(c.name, periodDays, 1);
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all shrink-0 flex items-center gap-1.5 active:scale-95 ${
+                  searchCrop.toLowerCase() === c.name.toLowerCase()
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-dark-800 text-slate-700 dark:text-dark-200 border-slate-200 dark:border-dark-700 hover:border-emerald-300'
+                }`}
+              >
+                <span>{c.icon}</span>
+                <span>{getTranslatedCropName(c.name)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Detailed Search & Filters Grid */}
+        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end pt-2 border-t border-slate-100 dark:border-dark-800">
+          {/* Searchable Crop Combobox (4 cols) */}
+          <div className="lg:col-span-4 relative" ref={cropDropdownRef}>
+            <label className="block text-[11px] font-extrabold text-slate-500 dark:text-dark-400 uppercase mb-1">
+              {t('market.target_commodity') || 'Commodity / Crop'}
             </label>
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={searchCrop}
-                onChange={(e) => setSearchCrop(e.target.value)}
-                placeholder="e.g. Wheat, Cotton"
-                className="custom-input text-sm pr-12"
-              />
-              <div className="absolute right-1 top-1">
-                <VoiceInputButton
-                  onTranscript={(text) => setSearchCrop(text)}
-                  lang={i18n.language}
-                  size="sm"
-                  showTextFeedback
-                />
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.state_label') || 'State'}</label>
-            <select value={searchState} onChange={(e) => setSearchState(e.target.value)} className="custom-input text-sm">
-              <option value="">{t('market.all_states') || 'All States'}</option>
-              <option value="Haryana">Haryana</option>
-              <option value="Punjab">Punjab</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Gujarat">Gujarat</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
-              <option value="West Bengal">West Bengal</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Rajasthan">Rajasthan</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.district_label') || 'District / Mandi'}</label>
-            <input type="text" value={searchDistrict} onChange={(e) => setSearchDistrict(e.target.value)} placeholder="e.g. Karnal" className="custom-input text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase mb-1.5">{t('market.date_label') || 'Date Filter'}</label>
-            <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} className="custom-input text-sm" />
-          </div>
-          <button type="submit" className="btn-primary py-3 flex items-center justify-center gap-1.5 min-h-[44px]">
-            <Search size={16} />
-            <span>{t('market.search_rates_btn') || 'Search Mandi Rates'}</span>
-          </button>
-        </form>
-      </div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setCropDropdownOpen(prev => !prev)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-xl text-xs sm:text-sm font-bold text-slate-800 dark:text-dark-100 focus:outline-none min-h-[42px]"
+              >
+                <span className="truncate">{getTranslatedCropName(searchCrop) || searchCrop}</span>
+                <ChevronDown size={16} className={`text-slate-400 transition-transform ${cropDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-      {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
-      )}
+              {/* Dropdown Menu */}
+              {cropDropdownOpen && (
+                <div className="absolute left-0 right-0 top-12 z-50 bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-700 rounded-2xl shadow-xl max-h-72 overflow-hidden flex flex-col animate-slide-up">
+                  <div className="p-2 border-b border-slate-100 dark:border-dark-800 flex items-center gap-2">
+                    <Search size={14} className="text-slate-400 shrink-0 ml-1" />
+                    <input
+                      type="text"
+                      value={cropSearchQuery}
+                      onChange={(e) => setCropSearchQuery(e.target.value)}
+                      placeholder={t('market.select_crop_placeholder') || 'Search crop...'}
+                      className="w-full text-xs bg-transparent focus:outline-none text-slate-800 dark:text-dark-100 placeholder-slate-400 font-medium"
+                      autoFocus
+                    />
+                    {cropSearchQuery && (
+                      <button type="button" onClick={() => setCropSearchQuery('')} className="p-1 text-slate-400 hover:text-slate-600">
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
 
-      {/* Main Intelligence Overview Card */}
-      {intelligence && (
-        <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-dark-800">
-            <div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className={`text-[10px] font-extrabold px-3 py-0.5 rounded-full uppercase border ${getTrendBadgeStyle(intelligence.trend7d?.trend)}`}>
-                  7D Trend: {intelligence.trend7d?.trend || 'STABLE'}
-                </span>
-                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase ${getVolatilityBadgeStyle(intelligence.trend7d?.volatility)}`}>
-                  {intelligence.trend7d?.volatility === 'HIGH' ? (t('market.high_volatility') || 'High Volatility') : (t('market.low_volatility') || 'Low Volatility')}
-                </span>
-                <span className="text-[10px] text-gray-400 font-bold bg-gray-50 dark:bg-dark-800 px-2 py-0.5 rounded-full uppercase">
-                  {t('market.source_label') || 'Source'}: {intelligence.currentPrice?.source || 'agmarknet'}
-                </span>
-              </div>
-
-              <h2 className="font-extrabold text-2xl md:text-3xl text-gray-800 dark:text-dark-100 mt-2">
-                {getTranslatedCropName(intelligence.commodity)}
-              </h2>
-              <p className="text-xs text-gray-400 dark:text-dark-500 font-semibold mt-0.5">
-                {t('market.date_col') || 'Arrival Date'}: {intelligence.currentPrice?.arrivalDate ? new Date(intelligence.currentPrice.arrivalDate).toLocaleDateString('en-IN') : (t('common.na') || 'N/A')} | {t('market.last_updated') || 'Updated'}: {intelligence.currentPrice?.sourceTimestamp ? new Date(intelligence.currentPrice.sourceTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (t('common.na') || 'N/A')}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 shrink-0">
-              <div className="text-right">
-                <span className="block text-[10px] text-gray-400 font-bold uppercase">{t('market.modal_price_title') || 'Current Modal Rate'}</span>
-                <span className="block font-extrabold text-2xl md:text-3xl text-amber-600 dark:text-amber-400">
-                  {intelligence.currentPrice?.modalPrice === null ? (t('common.na') || 'Price Unavailable') : `₹${intelligence.currentPrice.modalPrice}`}
-                </span>
-                {intelligence.currentPrice?.modalPrice !== null && (
-                  <span className="text-[10px] text-gray-400 font-bold">per {intelligence.currentPrice.unit}</span>
-                )}
-              </div>
-
-              {token && (
-                <button
-                  onClick={toggleWatchlist}
-                  disabled={watchlistUpdating}
-                  className={`p-3 rounded-2xl border transition-all ${
-                    intelligence.isWatchlisted
-                      ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-950/30'
-                      : 'bg-gray-50 border-gray-200 text-gray-400 hover:text-red-500 dark:bg-dark-850 dark:border-dark-800'
-                  }`}
-                  title={intelligence.isWatchlisted ? (t('market.remove_from_watchlist') || 'Remove from Watchlist') : (t('market.add_to_watchlist') || 'Add to Watchlist')}
-                >
-                  <Heart size={20} className={intelligence.isWatchlisted ? 'fill-red-500' : ''} />
-                </button>
+                  <div className="overflow-y-auto p-1.5 divide-y divide-slate-100 dark:divide-dark-800/60 max-h-60">
+                    {filteredCommoditiesList.length > 0 ? (
+                      filteredCommoditiesList.map((item: any) => {
+                        const isSelected = searchCrop.toLowerCase() === (item.displayName || '').toLowerCase() ||
+                          searchCrop.toLowerCase() === (item.apiCommodity || '').toLowerCase();
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              setSearchCrop(item.displayName || item.apiCommodity);
+                              setCropDropdownOpen(false);
+                              setCropSearchQuery('');
+                              setPage(1);
+                              runMasterFetch(item.displayName || item.apiCommodity, periodDays, 1);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left transition-colors ${
+                              isSelected
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold'
+                                : 'hover:bg-slate-50 dark:hover:bg-dark-800 text-slate-700 dark:text-dark-200'
+                            }`}
+                          >
+                            <span>{item.translations?.[i18n.language] || item.displayName}</span>
+                            {isSelected && <Check size={14} className="text-emerald-600 dark:text-emerald-400" />}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="py-4 text-center text-xs text-slate-400">
+                        No commodity matched "{cropSearchQuery}"
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
-          {/* 7-Day & 30-Day Statistics Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left pt-1">
-            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.trend_7d') || '7D Price Change'}</span>
-              <span className={`text-base font-extrabold mt-1 block ${
-                (intelligence.trend7d?.percentageChange || 0) >= 0 ? 'text-emerald-600' : 'text-red-500'
-              }`}>
-                {intelligence.trend7d?.percentageChange !== null
-                  ? `${intelligence.trend7d.percentageChange >= 0 ? '+' : ''}${intelligence.trend7d.percentageChange}% (₹${intelligence.trend7d.absoluteChange})`
+          {/* State Dropdown (3 cols) */}
+          <div className="lg:col-span-3">
+            <label className="block text-[11px] font-extrabold text-slate-500 dark:text-dark-400 uppercase mb-1">
+              {t('market.state_label') || 'State'}
+            </label>
+            <select
+              value={searchState}
+              onChange={(e) => setSearchState(e.target.value)}
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-dark-200 focus:outline-none min-h-[42px]"
+            >
+              <option value="">{t('market.all_states') || 'All States'}</option>
+              <option value="Gujarat">Gujarat</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Madhya Pradesh">Madhya Pradesh</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Haryana">Haryana</option>
+              <option value="Rajasthan">Rajasthan</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Andhra Pradesh">Andhra Pradesh</option>
+              <option value="West Bengal">West Bengal</option>
+            </select>
+          </div>
+
+          {/* District Input (3 cols) */}
+          <div className="lg:col-span-3">
+            <label className="block text-[11px] font-extrabold text-slate-500 dark:text-dark-400 uppercase mb-1">
+              {t('market.district_label') || 'District / Mandi'}
+            </label>
+            <input
+              type="text"
+              value={searchDistrict}
+              onChange={(e) => setSearchDistrict(e.target.value)}
+              placeholder="e.g. Rajkot, Nashik"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-dark-200 focus:outline-none min-h-[42px]"
+            />
+          </div>
+
+          {/* Search & Reset Buttons (2 cols) */}
+          <div className="lg:col-span-2 flex items-center gap-2">
+            <button
+              type="submit"
+              className="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 min-h-[42px] active:scale-95"
+            >
+              <Search size={15} />
+              <span>{t('common.search') || 'Search'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              title={t('market.reset_filters') || 'Reset Filters'}
+              className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-700 text-slate-600 dark:text-dark-300 rounded-xl transition-colors min-h-[42px] flex items-center justify-center"
+            >
+              <RotateCcw size={15} />
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 flex items-center gap-2">
+          <AlertCircle size={16} className="text-red-500 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 4. Market Intelligence Summary (Simplified & Farmer-Friendly)  */}
+      {/* ============================================================== */}
+      {intelligence && (
+        <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-dark-800 shadow-xs space-y-4">
+          {/* Header Row: Commodity Name + Watchlist Button */}
+          <div className="flex items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-dark-800">
+            <div>
+              <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                {t('market.market_insights') || 'Market Overview'}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-dark-50 tracking-tight mt-0.5">
+                {getTranslatedCropName(intelligence.commodity || searchCrop)}
+              </h2>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                {t('market.source_ename') || 'Official APMC Mandi Rates (eNAM / Agmarknet)'}
+              </p>
+            </div>
+
+            {token && (
+              <button
+                onClick={toggleWatchlist}
+                disabled={watchlistUpdating}
+                className={`p-2.5 rounded-2xl border transition-all active:scale-95 ${
+                  intelligence.isWatchlisted
+                    ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-950/30'
+                    : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-red-500 dark:bg-dark-850 dark:border-dark-800'
+                }`}
+                title={intelligence.isWatchlisted ? (t('market.remove_from_watchlist') || 'Remove from Watchlist') : (t('market.add_to_watchlist') || 'Add to Watchlist')}
+              >
+                <Heart size={18} className={intelligence.isWatchlisted ? 'fill-red-500' : ''} />
+              </button>
+            )}
+          </div>
+
+          {/* 4-Card Clean Summary Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left">
+            {/* 1. Selected Crop Modal Price */}
+            <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold uppercase block">
+                {t('market.modal_price') || 'Modal Market Rate'}
+              </span>
+              <span className="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-300 mt-1 block">
+                {formatRupee(intelligence.currentPrice?.modalPrice)}
+              </span>
+              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 font-semibold block mt-0.5">
+                {t('market.per_quintal') || 'per Quintal'}
+              </span>
+            </div>
+
+            {/* 2. Regional Average */}
+            <div className="p-3.5 bg-slate-50 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800">
+              <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                {t('market.regional_average') || 'Regional Average'}
+              </span>
+              <span className="text-lg sm:text-xl font-black text-slate-800 dark:text-dark-100 mt-1 block">
+                {formatRupee(intelligence.trend7d?.averagePrice || comparison?.regionalAverage)}
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                Across nearby mandis
+              </span>
+            </div>
+
+            {/* 3. Recorded Range (Lowest to Highest) */}
+            <div className="p-3.5 bg-slate-50 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800">
+              <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                {t('market.recorded_range') || 'Price Range (Min - Max)'}
+              </span>
+              <span className="text-sm sm:text-base font-black text-slate-800 dark:text-dark-100 mt-1 block truncate">
+                {intelligence.trend7d?.lowestPrice && intelligence.trend7d?.highestPrice
+                  ? `₹${intelligence.trend7d.lowestPrice} - ₹${intelligence.trend7d.highestPrice}`
+                  : comparison?.lowestPrice && comparison?.highestPrice
+                  ? `₹${comparison.lowestPrice} - ₹${comparison.highestPrice}`
                   : 'N/A'
                 }
               </span>
-            </div>
-
-            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.recorded_range') || '7D Range (Min - Max)'}</span>
-              <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
-                {intelligence.trend7d?.lowestPrice ? `₹${intelligence.trend7d.lowestPrice} - ₹${intelligence.trend7d.highestPrice}` : 'N/A'}
+              <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">
+                Current trading range
               </span>
             </div>
 
-            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.regional_average') || '7D Regional Average'}</span>
-              <span className="text-base font-extrabold text-gray-800 dark:text-dark-100 mt-1 block">
-                {intelligence.trend7d?.averagePrice ? `₹${intelligence.trend7d.averagePrice}` : 'N/A'}
+            {/* 4. 7-Day Trend */}
+            <div className="p-3.5 bg-slate-50 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800">
+              <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                {t('market.price_trend') || '7-Day Trend'}
               </span>
-            </div>
-
-            <div className="p-3.5 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800/40">
-              <span className="text-[10px] text-gray-400 font-bold uppercase block">{t('market.volatility_30d') || '30D Price Trend'}</span>
-              <span className="text-base font-extrabold text-brand-600 dark:text-brand-400 mt-1 block">
-                {intelligence.trend30d?.percentageChange !== null
-                  ? `${intelligence.trend30d.percentageChange >= 0 ? '+' : ''}${intelligence.trend30d.percentageChange}%`
-                  : 'N/A'
-                }
-              </span>
+              {intelligence.trend7d?.trend && intelligence.trend7d.trend !== 'INSUFFICIENT_DATA' && intelligence.trend7d.percentageChange !== null ? (
+                <div className="mt-1">
+                  <span className={`text-base font-extrabold flex items-center gap-1 ${
+                    intelligence.trend7d.percentageChange >= 0 ? 'text-emerald-600' : 'text-red-500'
+                  }`}>
+                    {intelligence.trend7d.percentageChange >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                    {intelligence.trend7d.percentageChange >= 0 ? '+' : ''}{intelligence.trend7d.percentageChange}%
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold block">
+                    {intelligence.trend7d.trend === 'RISING' ? 'Prices Rising' : intelligence.trend7d.trend === 'FALLING' ? 'Prices Falling' : 'Prices Stable'}
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-1">
+                  <span className="text-xs font-bold text-slate-500 dark:text-dark-300 block">
+                    {t('market.insufficient_trend') || 'Not enough historical data to show the trend.'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Agronomic Advisory Summary */}
+          {/* Actionable Smart Selling Advisory */}
           {intelligence.advisory && (
-            <div className="p-4 bg-amber-50/40 dark:bg-amber-950/15 border border-amber-100 dark:border-amber-900/20 rounded-2xl space-y-2">
-              <h4 className="font-bold text-xs md:text-sm text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
-                <Sparkles size={16} /> {t('market.advisory_title') || 'Market Intelligence Summary & Advisory'}
-              </h4>
-              <p className="text-xs text-gray-600 dark:text-dark-300 leading-relaxed">
-                {intelligence.advisory.summary}
-              </p>
-              <div className="space-y-1 pt-1">
-                {intelligence.advisory.keyInsights?.map((ins: string, idx: number) => (
-                  <div key={idx} className="text-[11px] text-gray-600 dark:text-dark-350 flex items-start gap-1.5">
-                    <span className="text-amber-500 font-bold">•</span>
-                    <span>{ins}</span>
-                  </div>
-                ))}
+            <div className="p-3.5 sm:p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl flex items-start gap-3">
+              <span className="p-1.5 bg-emerald-600 text-white rounded-lg shrink-0 mt-0.5">
+                <Sparkles size={14} />
+              </span>
+              <div className="text-left text-xs leading-relaxed space-y-1">
+                <span className="font-extrabold text-emerald-900 dark:text-emerald-300 block">
+                  {t('market.smart_advisory') || 'Smart Selling Advisory'}
+                </span>
+                <p className="text-slate-600 dark:text-dark-300">
+                  {intelligence.advisory.summary}
+                </p>
+                {intelligence.advisory.keyInsights?.length > 0 && (
+                  <p className="text-[11px] text-slate-500 dark:text-dark-400 pt-0.5 font-medium">
+                    💡 {intelligence.advisory.keyInsights[0]}
+                  </p>
+                )}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Grid: Historical Chart (7 cols) + Regional Nearby Mandi Comparison (5 cols) */}
+      {/* ============================================================== */}
+      {/* 5. Historical Chart + Nearby Mandi Recommendations              */}
+      {/* ============================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Historical Price Chart */}
-        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-50 dark:border-dark-850 pb-3">
-            <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
-              <LineChart className="text-amber-600" size={18} /> {getTranslatedCropName(searchCrop) || 'Crop'} {t('market.history_chart_title') || 'Price History Chart'}
+        {/* Historical Price Chart (7 cols) */}
+        <div className="lg:col-span-7 bg-white dark:bg-dark-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-dark-800 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-dark-800 pb-3">
+            <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-dark-100 flex items-center gap-2">
+              <LineChart className="text-emerald-600" size={17} /> 
+              <span>{getTranslatedCropName(searchCrop)} {t('market.historical_chart') || 'Price History'}</span>
             </h3>
 
-            {/* Timeline Period Selector */}
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-dark-850 p-1 rounded-xl">
+            {/* Timeline Period Buttons */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-dark-800 p-1 rounded-xl">
               {[7, 30, 90].map((d) => (
                 <button
                   key={d}
@@ -529,8 +863,10 @@ export const MarketDashboard: React.FC = () => {
                     setPeriodDays(d);
                     void fetchHistory(searchCrop, d);
                   }}
-                  className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all ${
-                    periodDays === d ? 'bg-white dark:bg-dark-900 text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                  className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${
+                    periodDays === d 
+                      ? 'bg-white dark:bg-dark-900 text-emerald-700 dark:text-emerald-400 shadow-xs' 
+                      : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
                   {d}D
@@ -539,67 +875,101 @@ export const MarketDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-[280px] w-full">
+          <div className="h-[260px] sm:h-[280px] w-full">
             {loadingHistory ? (
-              <div className="flex items-center justify-center h-full text-amber-600">
-                <div className="w-8 h-8 border-4 border-t-transparent border-amber-500 rounded-full animate-spin"></div>
+              <div className="flex items-center justify-center h-full text-emerald-600">
+                <div className="w-8 h-8 border-4 border-t-transparent border-emerald-500 rounded-full animate-spin"></div>
               </div>
-            ) : history.length > 0 ? (
+            ) : history.length >= 2 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={history} margin={{ top: 10, right: 5, left: -10, bottom: 0 }}>
+                <AreaChart data={history} margin={{ top: 10, right: 10, left: -5, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                    <linearGradient id="mandiPriceGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#15803d" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#15803d" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', fontSize: '12px' }} />
-                  <Area type="monotone" dataKey="avgPrice" name="Average Price (₹/Qtl)" stroke="#F59E0B" fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2.5} />
-                  <Area type="monotone" dataKey="minPrice" name="Min Price" stroke="#EF4444" fillOpacity={0} strokeWidth={1} strokeDasharray="3 3" />
-                  <Area type="monotone" dataKey="maxPrice" name="Max Price" stroke="#10B981" fillOpacity={0} strokeWidth={1} strokeDasharray="3 3" />
+                  <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} tickFormatter={(v) => `₹${v}`} />
+                  <Tooltip 
+                    formatter={(value: any) => [`₹${value}`, 'Modal Rate']}
+                    contentStyle={{ borderRadius: '12px', fontSize: '12px', border: '1px solid #E2E8F0' }} 
+                  />
+                  <Area type="monotone" dataKey="avgPrice" stroke="#15803d" fillOpacity={1} fill="url(#mandiPriceGrad)" strokeWidth={2.5} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400 p-4">
-                <HelpCircle size={36} className="text-gray-300 mb-2" />
-                <p className="font-bold text-xs text-center">{t('market.no_history_data') || 'No historical trend data recorded for this period.'}</p>
-                <p className="text-[11px] text-gray-400 mt-1 max-w-xs text-center">{t('market.no_history_subtext') || 'Historical APMC data for this commodity is currently unavailable. Live rates are still updated regularly.'}</p>
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 p-4 text-center">
+                <LineChart size={36} className="text-slate-300 mb-2 stroke-[1.5]" />
+                <p className="font-bold text-xs text-slate-600 dark:text-dark-300">
+                  {t('market.insufficient_trend') || 'Not enough historical data to show the trend.'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-1 max-w-xs">
+                  Historical daily records for {getTranslatedCropName(searchCrop)} are being compiled. Live rates are updated in the directory below.
+                </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Regional Nearby Mandi Comparison (5 cols) */}
-        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
-          <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
-            <span className="flex items-center gap-2"><Building2 className="text-amber-600" size={18} /> {t('market.nearby_comparisons') || 'Nearby Mandi Comparisons'}</span>
-            <span className="text-[10px] text-gray-400 font-bold uppercase">{t('market.regional_mandis') || 'Regional Mandis'}</span>
-          </h3>
+        {/* Nearby Mandi Recommendations (5 cols) */}
+        <div className="lg:col-span-5 bg-white dark:bg-dark-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-dark-800 shadow-xs space-y-4">
+          <div className="pb-3 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+            <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-dark-100 flex items-center gap-2">
+              <Building2 className="text-emerald-600" size={17} />
+              <span>{t('market.nearby_mandis') || 'Nearby Mandi Recommendations'}</span>
+            </h3>
+            {hasLocalMandisWithin50Km && (
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                {t('market.local_mandi_badge') || 'Within 50 km'}
+              </span>
+            )}
+          </div>
 
-          {comparison && comparison.comparisons?.length > 0 ? (
-            <div className="space-y-3">
-              <div className="p-3 bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl border border-amber-100/50 dark:border-amber-900/10 text-xs flex justify-between items-center">
-                <span>{t('market.regional_average') || 'Regional Average Modal Price'}:</span>
-                <strong className="font-extrabold text-amber-700 dark:text-amber-400">₹{comparison.regionalAverage}/Qtl</strong>
-              </div>
+          {nearbyMandisWithDistances.length > 0 ? (
+            <div className="space-y-2.5">
+              {!userCoords && (
+                <div className="p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <MapPin size={13} className="shrink-0" />
+                  <span>{t('market.enable_location_tip') || 'Enable GPS for exact distance in km.'}</span>
+                </div>
+              )}
 
-              <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                {comparison.comparisons.map((c: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-gray-50/70 dark:bg-dark-850 rounded-2xl border border-gray-100 dark:border-dark-800 flex items-center justify-between text-xs">
-                    <div>
-                      <h4 className="font-bold text-gray-800 dark:text-dark-100">{c.market} Mandi</h4>
-                      <p className="text-[10px] text-gray-400">{c.district}, {c.state}</p>
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {nearbyMandisWithDistances.map((c: any, idx: number) => (
+                  <div key={idx} className="p-3 bg-slate-50/80 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800 flex items-center justify-between text-xs hover:border-emerald-300 transition-colors">
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-extrabold text-slate-800 dark:text-dark-100 truncate">
+                          {c.market}
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                        {c.district}, {c.state}
+                      </p>
+                      {c.distanceMeta && (
+                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md mt-1 ${
+                          c.distanceMeta.tier === 'local'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                            : c.distanceMeta.tier === 'regional'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                            : 'bg-slate-100 text-slate-700 dark:bg-dark-800 dark:text-dark-300'
+                        }`}>
+                          📍 {c.distanceMeta.label}
+                        </span>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <span className="font-extrabold text-gray-800 dark:text-dark-100 block">
-                        {c.modalPrice ? `₹${c.modalPrice}` : 'N/A'}
+
+                    <div className="text-right shrink-0">
+                      <span className="font-black text-sm sm:text-base text-emerald-700 dark:text-emerald-400 block">
+                        {formatRupee(c.modalPrice)}
                       </span>
-                      {c.priceDifference !== null && (
-                        <span className={`text-[9px] font-bold ${c.priceDifference >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                          {c.priceDifference >= 0 ? `+₹${c.priceDifference}` : `-₹${Math.abs(c.priceDifference)}`} vs Avg
+                      {c.priceDifference !== null && c.priceDifference !== 0 && (
+                        <span className={`text-[10px] font-bold block ${
+                          c.priceDifference > 0 ? 'text-emerald-600' : 'text-red-500'
+                        }`}>
+                          {c.priceDifference > 0 ? `+₹${c.priceDifference}` : `-₹${Math.abs(c.priceDifference)}`} vs Avg
                         </span>
                       )}
                     </div>
@@ -608,98 +978,188 @@ export const MarketDashboard: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="py-12 text-center text-gray-400 text-xs font-semibold">
-              {t('market.no_rates_found') || 'No nearby regional mandi comparisons available.'}
+            <div className="py-10 text-center text-slate-400 text-xs font-semibold">
+              <Building2 size={32} className="mx-auto mb-2 text-slate-300 stroke-[1.5]" />
+              <p>{t('market.no_rates_found') || 'No mandi rates found for this crop in this region.'}</p>
+              <p className="text-[11px] text-slate-400 mt-1">Try selecting another commodity or resetting filters.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mandi Listings Table */}
-      <div className="bg-white dark:bg-dark-900 rounded-3xl p-6 border border-gray-100 dark:border-dark-800/30 shadow-sm space-y-4">
-        <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 pb-2 border-b border-gray-50 dark:border-dark-850 flex items-center justify-between">
-          <span>{t('market.mandi_rates_title') || 'Live Mandi Price Directory'}</span>
-          {fallbackSource && fallbackSource !== 'exact-match' && (
-            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-md">
-              {t(`market.source_${fallbackSource.replace('-', '_')}`) || `Showing fallback level: ${fallbackSource}`}
+      {/* ============================================================== */}
+      {/* 6. Mandi Prices Directory (Responsive Cards & Desktop Table)   */}
+      {/* ============================================================== */}
+      <div className="bg-white dark:bg-dark-900 rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-dark-800 shadow-xs space-y-4">
+        <div className="pb-3 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
+          <div>
+            <h3 className="font-extrabold text-base text-slate-800 dark:text-dark-100">
+              {getTranslatedCropName(searchCrop)} {t('market.mandi_rates_title') || 'Directory'}
+            </h3>
+            <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+              Displaying reported APMC daily arrivals and modal rates
+            </p>
+          </div>
+
+          {pagination && (
+            <span className="text-xs font-bold text-slate-400">
+              Total: {pagination.total || prices.length} mandis
             </span>
           )}
-        </h3>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-gray-100 dark:border-dark-800 text-gray-400 uppercase font-bold text-[10px]">
-                <th className="py-3 px-2">{t('market.mandi_col') || 'Market / Mandi'}</th>
-                <th className="py-3 px-2">{t('market.district_state_col') || 'District / State'}</th>
-                <th className="py-3 px-2">{t('market.target_commodity') || 'Commodity'}</th>
-                <th className="py-3 px-2 text-right">{t('market.min_price') || 'Min Rate'}</th>
-                <th className="py-3 px-2 text-right">{t('market.modal_price') || 'Modal Rate'}</th>
-                <th className="py-3 px-2 text-right">{t('market.max_price') || 'Max Rate'}</th>
-                <th className="py-3 px-2 text-right">{t('market.date_col') || 'Arrival Date'}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-dark-850">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-amber-600">
-                    <div className="w-6 h-6 border-2 border-t-transparent border-amber-500 rounded-full animate-spin mx-auto"></div>
-                  </td>
-                </tr>
-              ) : prices.length > 0 ? (
-                prices.map((p: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-dark-850/50">
-                    <td className="py-3 px-2 font-bold text-gray-800 dark:text-dark-100">{p.market || p.mandiName}</td>
-                    <td className="py-3 px-2 text-gray-500 dark:text-dark-400">{p.district}, {p.state}</td>
-                    <td className="py-3 px-2 font-semibold text-amber-700 dark:text-amber-400">{getTranslatedCropName(p.crop)}</td>
-                    <td className="py-3 px-2 text-right text-gray-600 dark:text-dark-300">
-                      {p.minPrice === 0 && !p.isTrulyZero ? 'N/A' : `₹${p.minPrice}`}
-                    </td>
-                    <td className="py-3 px-2 text-right font-extrabold text-amber-600 dark:text-amber-400">
-                      {(p.modalPrice || p.avgPrice) === 0 && !p.isTrulyZero ? 'Price Not Available' : `₹${p.modalPrice || p.avgPrice}`}
-                    </td>
-                    <td className="py-3 px-2 text-right text-gray-600 dark:text-dark-300">
-                      {p.maxPrice === 0 && !p.isTrulyZero ? 'N/A' : `₹${p.maxPrice}`}
-                    </td>
-                    <td className="py-3 px-2 text-right text-gray-400">
-                      {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-400">
-                    <p className="font-bold text-xs">{t('market.no_rates_found') || 'No mandi rates matched your active filters.'}</p>
-                    <p className="text-[11px] text-gray-400 mt-1">{t('market.no_rates_subtext') || 'Try selecting a different district, state or checking spelling.'}</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
         </div>
 
-        {pagination && (
-          <div className="flex justify-between items-center pt-4 border-t border-gray-50 dark:border-dark-850">
-            <p className="text-xs text-gray-400">Page {pagination.page} of {pagination.totalPages}</p>
-            <div className="flex items-center gap-2">
-              <button 
-                type="button" 
-                onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchPrices(next); }} 
-                className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
-              >
-                <ArrowLeft size={14} /> {t('common.prev') || 'Prev'}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => { const next = Math.min(pagination.totalPages, page + 1); setPage(next); void fetchPrices(next); }} 
-                className="flex items-center gap-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:text-amber-600"
-              >
-                {t('common.next') || 'Next'} <ArrowRight size={14} />
-              </button>
+        {/* Loading Spinner */}
+        {loading ? (
+          <div className="py-12 text-center text-emerald-600">
+            <div className="w-8 h-8 border-4 border-t-transparent border-emerald-500 rounded-full animate-spin mx-auto"></div>
+            <p className="text-xs font-bold text-slate-500 mt-3">Loading mandi rates...</p>
+          </div>
+        ) : prices.length > 0 ? (
+          <>
+            {/* MOBILE LAYOUT: Attractive Mandi Cards (No Horizontal Scrolling) */}
+            <div className="block md:hidden space-y-3">
+              {prices.map((p: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className="p-4 bg-slate-50 dark:bg-dark-850 rounded-2xl border border-slate-200 dark:border-dark-800 space-y-2.5 text-left shadow-xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-black text-sm text-slate-900 dark:text-dark-50">
+                        {p.market || p.mandiName}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-dark-400 font-medium">
+                        {p.district}, {p.state}
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-full shrink-0">
+                      {getTranslatedCropName(p.crop)}
+                    </span>
+                  </div>
+
+                  {/* Highlighted Modal Rate */}
+                  <div className="p-3 bg-white dark:bg-dark-900 rounded-xl border border-slate-150 dark:border-dark-750 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                        {t('market.modal_price') || 'Modal Rate'}
+                      </span>
+                      <span className="text-base font-black text-emerald-700 dark:text-emerald-400">
+                        {formatRupee(p.modalPrice || p.avgPrice)}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 font-extrabold uppercase block">
+                        Range (Min - Max)
+                      </span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-dark-200">
+                        {formatRupee(p.minPrice)} - {formatRupee(p.maxPrice)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Footer Date */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 font-medium">
+                    <span>Arrival: {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}</span>
+                    <span>per {p.unit || 'Qtl'}</span>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* DESKTOP LAYOUT: Clean Aligned Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-dark-800 text-slate-400 uppercase font-extrabold text-[10px] tracking-wider">
+                    <th className="py-3 px-3">{t('market.mandi_col') || 'Mandi / Market'}</th>
+                    <th className="py-3 px-3">{t('market.district_state_col') || 'District & State'}</th>
+                    <th className="py-3 px-3">{t('market.target_commodity') || 'Commodity'}</th>
+                    <th className="py-3 px-3 text-right">{t('market.min_price') || 'Min Price'}</th>
+                    <th className="py-3 px-3 text-right">{t('market.modal_price') || 'Modal Rate'}</th>
+                    <th className="py-3 px-3 text-right">{t('market.max_price') || 'Max Price'}</th>
+                    <th className="py-3 px-3 text-right">{t('market.date_col') || 'Arrival Date'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-dark-850">
+                  {prices.map((p: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-dark-850/50 transition-colors">
+                      <td className="py-3.5 px-3 font-extrabold text-slate-800 dark:text-dark-100">
+                        {p.market || p.mandiName}
+                      </td>
+                      <td className="py-3.5 px-3 text-slate-500 dark:text-dark-400">
+                        {p.district}, {p.state}
+                      </td>
+                      <td className="py-3.5 px-3 font-semibold text-emerald-800 dark:text-emerald-400">
+                        {getTranslatedCropName(p.crop)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right text-slate-600 dark:text-dark-300">
+                        {formatRupee(p.minPrice)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right font-black text-sm text-emerald-700 dark:text-emerald-400">
+                        <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg">
+                          {formatRupee(p.modalPrice || p.avgPrice)}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-3 text-right text-slate-600 dark:text-dark-300">
+                        {formatRupee(p.maxPrice)}
+                      </td>
+                      <td className="py-3.5 px-3 text-right text-slate-400">
+                        {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-dark-800 text-xs">
+                <p className="text-slate-400 font-medium">
+                  Page {pagination.page} of {pagination.totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button" 
+                    disabled={page <= 1}
+                    onClick={() => { const next = Math.max(1, page - 1); setPage(next); void fetchPrices(next); }} 
+                    className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-dark-700 px-3 py-1.5 text-slate-700 dark:text-dark-200 hover:bg-slate-50 disabled:opacity-40 font-bold"
+                  >
+                    <ArrowLeft size={14} /> {t('common.prev') || 'Prev'}
+                  </button>
+                  <button 
+                    type="button" 
+                    disabled={page >= pagination.totalPages}
+                    onClick={() => { const next = Math.min(pagination.totalPages, page + 1); setPage(next); void fetchPrices(next); }} 
+                    className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-dark-700 px-3 py-1.5 text-slate-700 dark:text-dark-200 hover:bg-slate-50 disabled:opacity-40 font-bold"
+                  >
+                    {t('common.next') || 'Next'} <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="py-12 text-center text-slate-400">
+            <p className="font-extrabold text-sm text-slate-600 dark:text-dark-200">
+              {t('market.no_rates_found') || 'No mandi rates matched your active filters.'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+              No reported arrivals for {getTranslatedCropName(searchCrop)} in this state/district. Try searching another crop or resetting filters.
+            </p>
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors"
+            >
+              {t('market.reset_filters') || 'Reset Filters'}
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 };
+
+export default MarketDashboard;

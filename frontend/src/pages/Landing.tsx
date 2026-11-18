@@ -413,7 +413,7 @@ export const Landing: React.FC = () => {
           <div className="space-y-2.5">
             <h4 className="font-bold text-white text-[10px] uppercase tracking-wider">Farmer Support</h4>
             <div className="flex flex-col gap-1.5">
-              <span className="flex items-center gap-1.5 font-medium"><Mail size={12} /> {BRAND.supportEmail}</span>
+              <a href={`mailto:${BRAND.supportEmail}`} className="flex items-center gap-1.5 font-medium hover:text-white transition-colors"><Mail size={12} /> {BRAND.supportEmail}</a>
               <span className="text-[10px] text-slate-500 leading-normal">Our typical response window is under 24 hours.</span>
             </div>
           </div>

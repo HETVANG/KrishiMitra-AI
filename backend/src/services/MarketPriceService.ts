@@ -69,12 +69,14 @@ class MarketPriceService {
         }
       }
 
-      // Level 4: latest-country (Drop state filter, keep crop only)
-      if (total === 0) {
+      // Level 4: latest-country (Drop state filter, keep crop only) - ONLY if state was not explicitly specified or national fallback requested
+      if (total === 0 && (!query.state || query.allowNationalFallback)) {
         console.info('[Market Price Service Fallback] Level 3 (latest-state) returned 0 records. Attempting Level 4 (latest-country) by keeping crop only...');
         delete filter.state;
         total = await MarketPrice.countDocuments(filter);
-        fallbackSource = 'latest-country';
+        if (total > 0) {
+          fallbackSource = 'latest-country';
+        }
       }
     }
 
@@ -86,10 +88,16 @@ class MarketPriceService {
     console.info(`[Market Price Query Completed] Fallback Level: ${fallbackSource} | Filter: ${JSON.stringify(filter)} | Count: ${total}`);
 
     const { resolveCropToDisplayName } = require('../config/commodities');
-    const enrichedPrices = prices.map((p) => ({
-      ...p,
-      displayName: resolveCropToDisplayName(p.crop)
-    }));
+    const { calculateFreshness } = require('../utils/geoNormalization');
+    const enrichedPrices = prices.map((p: any) => {
+      const freshness = calculateFreshness(p.arrivalDate || p.date || p.lastUpdated);
+      return {
+        ...p,
+        displayName: resolveCropToDisplayName(p.crop),
+        arrivalDate: freshness.formattedDate,
+        freshness
+      };
+    });
 
     const analytics = this.buildAnalytics(prices, latestHistory[0]);
     const lastUpdated = await MarketPrice.findOne(filter).sort({ lastUpdated: -1 }).lean();
@@ -204,17 +212,16 @@ class MarketPriceService {
   }
 
   public async getNearby(query: MarketQueryOptions = {}) {
-    const cacheKey = `nearby:${JSON.stringify(query)}`;
-    const cachedResult = this.getCached<any>(cacheKey);
-    if (cachedResult) {
-      return cachedResult;
-    }
-
-    const filter = buildMarketFilter(query);
-    const prices = await MarketPrice.find(filter).sort({ lastUpdated: -1 }).limit(6).lean();
-    
-    this.setCache(cacheKey, prices);
-    return prices;
+    const { MarketComparisonService } = require('./market/marketComparisonService');
+    const result = await MarketComparisonService.compareMarkets(query.crop || 'Wheat', {
+      state: query.state,
+      district: query.district,
+      limit: query.limit || 8,
+      lat: query.lat,
+      lon: query.lon,
+      allowNationalFallback: query.allowNationalFallback
+    });
+    return result.comparisons;
   }
 
   public async getLastUpdate() {

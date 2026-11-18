@@ -385,7 +385,19 @@
     "enable_location_tip": "सटीक दूरी देखने के लिए GPS लोकेशन चालू करें",
     "per_quintal": "प्रति क्विंटल",
     "last_updated_label": "अंतिम अपडेट",
-    "source_ename": "अधिकृत APMC मंडी भाव (ई-नाम / एगमार्कनेट)"
+    "source_ename": "अधिकृत APMC मंडी भाव (ई-नाम / एगमार्कनेट)",
+    "markets_near": "{{location}} के पास की मंडियां",
+    "verified_mandi_badge": "सत्यापित APMC यार्ड",
+    "district_estimate_badge": "जिला अनुमान",
+    "distance_unavailable": "दूरी अनुपलब्ध",
+    "search_across_india": "पूरे भारत में खोजें (राष्ट्रीय तुलना)",
+    "national_comparison_notice": "अखिल भारतीय राष्ट्रीय बेंचमार्क मंडियां (विस्तृत तुलना, स्थानीय मंडी नहीं)",
+    "live_today_badge": "आज का लाइव",
+    "recent_badge": "हालिया",
+    "historical_rate_badge": "ऐतिहासिक दर",
+    "historical_disclaimer": "ऐतिहासिक मूल्य रिकॉर्ड — हालिया दैनिक आवक अभी APMC द्वारा दर्ज नहीं की गई है।",
+    "reset_to_local": "स्थानीय मंडियों पर वापस जाएं",
+    "no_nearby_found": "{{location}} में {{crop}} के लिए कोई नजदीकी मंडी भाव नहीं मिला।"
   },
   "irrigation": {
     "title": "स्मार्ट सिंचाई केंद्र",

@@ -188,8 +188,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, onOpenRegionalSett
           <Menu size={22} className="stroke-[2.2]" />
         </button>
 
-        {/* Official Brand Logo Artwork */}
-        <div className="flex items-center gap-2 select-none min-w-0">
+        {/* Official Brand Logo Artwork - Clickable to Dashboard */}
+        <div 
+          onClick={() => navigate(user ? '/dashboard' : '/')} 
+          className="flex items-center gap-2 select-none min-w-0 cursor-pointer active:scale-95 transition-transform"
+          role="button"
+          tabIndex={0}
+          title="Return to Dashboard"
+        >
           <img
             src="/brand/the-khedut-symbol.png"
             alt="The Khedut"

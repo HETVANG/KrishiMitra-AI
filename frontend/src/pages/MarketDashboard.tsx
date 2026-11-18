@@ -18,7 +18,10 @@ import {
   X,
   Check,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Globe,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from 'react-i18next';
@@ -28,8 +31,36 @@ import { getDeviceLocation } from '../services/native';
 import { 
   resolveMandiCoordinates, 
   getDistanceMetadata, 
-  type DistanceResult 
+  type DistanceResult,
+  type CoordinateResolution
 } from '../utils/mandiLocationUtils';
+
+// Helper to resolve saved location from authenticated farm profile or stored preference
+function resolveInitialLocation(user: any) {
+  if (user?.farmLocation?.state || user?.farmLocation?.city) {
+    const state = user.farmLocation.state || 'Gujarat';
+    const district = user.farmLocation.district || user.farmLocation.city || '';
+    const address = user.farmLocation.address || (district ? `${district}, ${state}` : state);
+    const coords = (user.farmLocation.latitude && user.farmLocation.longitude)
+      ? { lat: user.farmLocation.latitude, lon: user.farmLocation.longitude }
+      : null;
+    return { state, district, address, coords };
+  }
+  try {
+    const stored = localStorage.getItem('selectedLocation');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const state = parsed.state || 'Gujarat';
+      const district = parsed.district || parsed.city || '';
+      const address = parsed.address || (district ? `${district}, ${state}` : state);
+      const coords = (parsed.latitude && parsed.longitude)
+        ? { lat: parsed.latitude, lon: parsed.longitude }
+        : null;
+      return { state, district, address, coords };
+    }
+  } catch {}
+  return { state: 'Gujarat', district: '', address: 'Gujarat, India', coords: { lat: 21.1702, lon: 72.8311 } };
+}
 
 export const MarketDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -43,14 +74,18 @@ export const MarketDashboard: React.FC = () => {
   const [watchlist, setWatchlist] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
+  // Initial location resolution (Profile farmLocation -> Saved localStorage -> Default Zone)
+  const initialLoc = useMemo(() => resolveInitialLocation(user), [user]);
+
   // Filter States
   const [searchCrop, setSearchCrop] = useState('Wheat');
-  const [searchState, setSearchState] = useState('');
-  const [searchDistrict, setSearchDistrict] = useState('');
+  const [searchState, setSearchState] = useState<string>(initialLoc.state);
+  const [searchDistrict, setSearchDistrict] = useState<string>(initialLoc.district);
   const [searchDate, setSearchDate] = useState('');
   const [periodDays, setPeriodDays] = useState<number>(7);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
+  const [allowNationalSearch, setAllowNationalSearch] = useState<boolean>(false);
 
   // Crop Selector Search & Dropdown State
   const [cropDropdownOpen, setCropDropdownOpen] = useState(false);
@@ -58,25 +93,8 @@ export const MarketDashboard: React.FC = () => {
   const cropDropdownRef = useRef<HTMLDivElement>(null);
 
   // Location States
-  const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(() => {
-    if (user?.farmLocation?.latitude && user?.farmLocation?.longitude) {
-      return { lat: user.farmLocation.latitude, lon: user.farmLocation.longitude };
-    }
-    try {
-      const stored = localStorage.getItem('selectedLocation');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.latitude && parsed.longitude) {
-          return { lat: parsed.latitude, lon: parsed.longitude };
-        }
-      }
-    } catch {}
-    return null;
-  });
-
-  const [locationName, setLocationName] = useState<string>(() => {
-    return user?.farmLocation?.address || user?.farmLocation?.city || 'Detecting Location...';
-  });
+  const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(initialLoc.coords);
+  const [locationName, setLocationName] = useState<string>(initialLoc.address);
   const [locating, setLocating] = useState(false);
 
   // Status & Loading States
@@ -289,14 +307,24 @@ export const MarketDashboard: React.FC = () => {
   };
 
   // 6. Fetch Nearby Market Comparisons
-  const fetchComparison = async (cropName = searchCrop) => {
+  const fetchComparison = async (
+    cropName = searchCrop, 
+    allowNational = allowNationalSearch,
+    targetState = searchState,
+    targetDistrict = searchDistrict
+  ) => {
     try {
       const query = new URLSearchParams({
         crop: cropName,
-        state: searchState,
-        district: searchDistrict,
-        limit: '8'
+        state: targetState,
+        district: targetDistrict,
+        limit: '12',
+        allowNationalFallback: allowNational ? 'true' : 'false'
       });
+      if (userCoords) {
+        query.set('lat', userCoords.lat.toString());
+        query.set('lon', userCoords.lon.toString());
+      }
       const res = await api.get(`/market/compare?${query.toString()}`);
       if (res.data?.success) {
         setComparison(res.data.comparison);
@@ -307,16 +335,23 @@ export const MarketDashboard: React.FC = () => {
   };
 
   // Master fetch trigger
-  const runMasterFetch = (cropName = searchCrop, pDays = periodDays, targetPage = 1) => {
+  const runMasterFetch = (
+    cropName = searchCrop, 
+    pDays = periodDays, 
+    targetPage = 1,
+    targetState = searchState,
+    targetDistrict = searchDistrict,
+    allowNational = allowNationalSearch
+  ) => {
     void fetchMarketIntelligence(cropName);
     void fetchPrices(targetPage, cropName);
     void fetchHistory(cropName, pDays);
-    void fetchComparison(cropName);
+    void fetchComparison(cropName, allowNational, targetState, targetDistrict);
   };
 
   useEffect(() => {
     runMasterFetch(searchCrop, periodDays, 1);
-  }, [searchCrop, periodDays, searchState]);
+  }, [searchCrop, periodDays, searchState, searchDistrict, allowNationalSearch]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,13 +360,17 @@ export const MarketDashboard: React.FC = () => {
   };
 
   const handleResetFilters = () => {
+    const loc = resolveInitialLocation(user);
     setSearchCrop('Wheat');
-    setSearchState('');
-    setSearchDistrict('');
+    setSearchState(loc.state);
+    setSearchDistrict(loc.district);
+    setLocationName(loc.address);
+    setUserCoords(loc.coords);
     setSearchDate('');
     setPeriodDays(7);
     setPage(1);
-    runMasterFetch('Wheat', 7, 1);
+    setAllowNationalSearch(false);
+    runMasterFetch('Wheat', 7, 1, loc.state, loc.district, false);
   };
 
   const handleRefresh = async () => {
@@ -408,32 +447,36 @@ export const MarketDashboard: React.FC = () => {
     return matches;
   }, [categories, cropSearchQuery]);
 
-  // Nearby Mandis computed with realistic distance sorting
+  // Nearby Mandis computed with verified coordinates and realistic distance sorting
   const nearbyMandisWithDistances = useMemo(() => {
     if (!comparison || !comparison.comparisons || comparison.comparisons.length === 0) {
       return [];
     }
 
     const items = comparison.comparisons.map((c: any) => {
-      const coords = resolveMandiCoordinates(c.market, c.district);
-      const distanceMeta: DistanceResult | null = coords && userCoords
-        ? getDistanceMetadata(userCoords.lat, userCoords.lon, coords.lat, coords.lon)
+      const coordRes: CoordinateResolution | null = resolveMandiCoordinates(c.market, c.district);
+      const distanceMeta: DistanceResult | null = coordRes && userCoords
+        ? getDistanceMetadata(userCoords.lat, userCoords.lon, coordRes.lat, coordRes.lon, coordRes.isVerifiedMandi)
         : null;
 
       return {
         ...c,
-        coords,
+        coordRes,
         distanceMeta,
         distanceKm: distanceMeta ? distanceMeta.distanceKm : 99999
       };
     });
 
-    // If user has coordinates, sort by ascending physical distance
-    if (userCoords) {
-      return items.sort((a: any, b: any) => a.distanceKm - b.distanceKm);
-    }
-
-    return items;
+    // Tier-first sorting:
+    // 1) Scope (district=1, state=2, neighboring=3, national=4)
+    // 2) Distance in km ascending
+    return items.sort((a: any, b: any) => {
+      const scopeRank: Record<string, number> = { district: 1, state: 2, neighboring: 3, national: 4 };
+      const rankA = scopeRank[a.scope] || 2;
+      const rankB = scopeRank[b.scope] || 2;
+      if (rankA !== rankB) return rankA - rankB;
+      return a.distanceKm - b.distanceKm;
+    });
   }, [comparison, userCoords]);
 
   // Check if any local mandis exist within 50 km
@@ -918,14 +961,37 @@ export const MarketDashboard: React.FC = () => {
           <div className="pb-3 border-b border-slate-100 dark:border-dark-800 flex items-center justify-between">
             <h3 className="font-extrabold text-sm sm:text-base text-slate-800 dark:text-dark-100 flex items-center gap-2">
               <Building2 className="text-emerald-600" size={17} />
-              <span>{t('market.nearby_mandis') || 'Nearby Mandi Recommendations'}</span>
+              <span>
+                {t('market.markets_near', { location: locationName || searchDistrict || searchState || 'Selected Location' }) || `Markets near ${locationName || searchDistrict || searchState || 'Selected Location'}`}
+              </span>
             </h3>
             {hasLocalMandisWithin50Km && (
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                 {t('market.local_mandi_badge') || 'Within 50 km'}
               </span>
             )}
           </div>
+
+          {comparison?.isNationalFallback && (
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-2xl text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-1.5 font-medium leading-relaxed">
+                  <Globe size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                  <span>{t('market.national_comparison_notice') || 'Showing National Benchmark Markets across India (Broader comparison, not local mandis)'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAllowNationalSearch(false);
+                    fetchComparison(searchCrop, false);
+                  }}
+                  className="underline hover:text-amber-950 font-extrabold text-[10px] shrink-0"
+                >
+                  {t('market.reset_to_local') || 'Return to Local'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {nearbyMandisWithDistances.length > 0 ? (
             <div className="space-y-2.5">
@@ -936,52 +1002,106 @@ export const MarketDashboard: React.FC = () => {
                 </div>
               )}
 
-              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-                {nearbyMandisWithDistances.map((c: any, idx: number) => (
-                  <div key={idx} className="p-3 bg-slate-50/80 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800 flex items-center justify-between text-xs hover:border-emerald-300 transition-colors">
-                    <div className="min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-extrabold text-slate-800 dark:text-dark-100 truncate">
-                          {c.market}
-                        </h4>
-                      </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-                        {c.district}, {c.state}
-                      </p>
-                      {c.distanceMeta && (
-                        <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md mt-1 ${
-                          c.distanceMeta.tier === 'local'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
-                            : c.distanceMeta.tier === 'regional'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
-                            : 'bg-slate-100 text-slate-700 dark:bg-dark-800 dark:text-dark-300'
-                        }`}>
-                          📍 {c.distanceMeta.label}
-                        </span>
-                      )}
-                    </div>
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                {nearbyMandisWithDistances.map((c: any, idx: number) => {
+                  const freshness = c.freshness;
+                  return (
+                    <div key={idx} className="p-3 bg-slate-50/80 dark:bg-dark-850 rounded-2xl border border-slate-150 dark:border-dark-800 flex items-center justify-between text-xs hover:border-emerald-300 transition-colors">
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-extrabold text-slate-800 dark:text-dark-100 truncate">
+                            {c.market}
+                          </h4>
+                          {c.scope === 'district' ? (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded">
+                              District APMC
+                            </span>
+                          ) : c.scope === 'national' ? (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 bg-slate-200 text-slate-700 dark:bg-dark-700 dark:text-dark-300 rounded">
+                              National Benchmark
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-dark-400 mt-0.5 truncate">
+                          {c.district}, {c.state}
+                        </p>
+                        
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          {c.distanceMeta ? (
+                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                              c.distanceMeta.tier === 'local'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                : c.distanceMeta.tier === 'regional'
+                                ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300'
+                                : 'bg-slate-100 text-slate-700 dark:bg-dark-800 dark:text-dark-300'
+                            }`}>
+                              📍 {c.distanceMeta.label}
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[10px] font-medium text-slate-400 px-1.5 py-0.5 bg-slate-100 dark:bg-dark-800 rounded">
+                              {t('market.distance_unavailable') || 'Distance unavailable'}
+                            </span>
+                          )}
 
-                    <div className="text-right shrink-0">
-                      <span className="font-black text-sm sm:text-base text-emerald-700 dark:text-emerald-400 block">
-                        {formatRupee(c.modalPrice)}
-                      </span>
-                      {c.priceDifference !== null && c.priceDifference !== 0 && (
-                        <span className={`text-[10px] font-bold block ${
-                          c.priceDifference > 0 ? 'text-emerald-600' : 'text-red-500'
-                        }`}>
-                          {c.priceDifference > 0 ? `+₹${c.priceDifference}` : `-₹${Math.abs(c.priceDifference)}`} vs Avg
+                          {freshness && (
+                            <span className={`inline-block text-[9.5px] font-bold px-1.5 py-0.5 rounded ${
+                              freshness.status === 'live'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : freshness.status === 'recent'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                : freshness.status === 'moderate'
+                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                                : 'bg-slate-200 text-slate-600 dark:bg-dark-700 dark:text-dark-300'
+                            }`}>
+                              {freshness.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="font-black text-sm sm:text-base text-emerald-700 dark:text-emerald-400 block">
+                          {formatRupee(c.modalPrice)}
                         </span>
-                      )}
+                        {c.priceDifference !== null && c.priceDifference !== 0 && (
+                          <span className={`text-[10px] font-bold block ${
+                            c.priceDifference > 0 ? 'text-emerald-600' : 'text-red-500'
+                          }`}>
+                            {c.priceDifference > 0 ? `+₹${c.priceDifference}` : `-₹${Math.abs(c.priceDifference)}`} vs Avg
+                          </span>
+                        )}
+                        <span className="text-[9px] text-slate-400 block mt-0.5">
+                          Arrival: {c.arrivalDate || 'N/A'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
-            <div className="py-10 text-center text-slate-400 text-xs font-semibold">
-              <Building2 size={32} className="mx-auto mb-2 text-slate-300 stroke-[1.5]" />
-              <p>{t('market.no_rates_found') || 'No mandi rates found for this crop in this region.'}</p>
-              <p className="text-[11px] text-slate-400 mt-1">Try selecting another commodity or resetting filters.</p>
+            <div className="py-8 text-center text-slate-400 text-xs font-semibold space-y-3">
+              <Building2 size={36} className="mx-auto text-slate-300 stroke-[1.5]" />
+              <div>
+                <p className="font-bold text-slate-700 dark:text-dark-200">
+                  {t('market.no_nearby_found', { crop: getTranslatedCropName(searchCrop), location: locationName || searchState || 'this location' }) || `No nearby mandi prices found for ${getTranslatedCropName(searchCrop)} in ${locationName || searchState || 'this location'}.`}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Local APMC mandis have not reported arrivals for this commodity today.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAllowNationalSearch(true);
+                  fetchComparison(searchCrop, true);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all inline-flex items-center gap-1.5 active:scale-95"
+              >
+                <Globe size={14} />
+                <span>{t('market.search_across_india') || 'Search Across India (National Comparison)'}</span>
+              </button>
             </div>
           )}
         </div>
@@ -1058,9 +1178,24 @@ export const MarketDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Footer Date */}
+                  {/* Footer Date & Freshness */}
                   <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 font-medium">
-                    <span>Arrival: {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span>Arrival: {p.arrivalDate || (p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A')}</span>
+                      {p.freshness && (
+                        <span className={`inline-block text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                          p.freshness.status === 'live'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                            : p.freshness.status === 'recent'
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                            : p.freshness.status === 'moderate'
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
+                            : 'bg-slate-200 text-slate-600 dark:bg-dark-700 dark:text-dark-300'
+                        }`}>
+                          {p.freshness.label}
+                        </span>
+                      )}
+                    </div>
                     <span>per {p.unit || 'Qtl'}</span>
                   </div>
                 </div>
@@ -1105,7 +1240,22 @@ export const MarketDashboard: React.FC = () => {
                         {formatRupee(p.maxPrice)}
                       </td>
                       <td className="py-3.5 px-3 text-right text-slate-400">
-                        {p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A'}
+                        <div>
+                          <span>{p.arrivalDate || (p.date ? new Date(p.date).toLocaleDateString('en-IN') : 'N/A')}</span>
+                          {p.freshness && (
+                            <span className={`block text-[9.5px] font-bold mt-0.5 ${
+                              p.freshness.status === 'live'
+                                ? 'text-emerald-600'
+                                : p.freshness.status === 'recent'
+                                ? 'text-emerald-700'
+                                : p.freshness.status === 'moderate'
+                                ? 'text-amber-600'
+                                : 'text-slate-400'
+                            }`}>
+                              {p.freshness.label}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

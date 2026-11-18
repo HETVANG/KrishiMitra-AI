@@ -196,7 +196,11 @@ export class MarketPriceController {
       const result = await MarketComparisonService.compareMarkets(commodity, {
         state: req.query.state as string,
         district: req.query.district as string,
-        limit: Number(req.query.limit || 6)
+        limit: Number(req.query.limit || 8),
+        lat: req.query.lat ? Number(req.query.lat) : undefined,
+        lon: req.query.lon ? Number(req.query.lon) : undefined,
+        allowNationalFallback: req.query.allowNationalFallback === 'true',
+        allowNeighboringFallback: req.query.allowNeighboringFallback === 'true'
       });
       return res.json({ success: true, comparison: result });
     } catch (error) {

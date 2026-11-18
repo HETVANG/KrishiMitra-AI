@@ -385,7 +385,19 @@
     "enable_location_tip": "ચોક્કસ અંતર જોવા માટે GPS ચાલુ કરો",
     "per_quintal": "પ્રતિ ક્વિન્ટલ",
     "last_updated_label": "છેલ્લું અપડેટ",
-    "source_ename": "સત્તાવાર APMC માર્કેટ યાર્ડ ભાવો (eNAM / Agmarknet)"
+    "source_ename": "સત્તાવાર APMC માર્કેટ યાર્ડ ભાવો (eNAM / Agmarknet)",
+    "markets_near": "{{location}} નજીકના માર્કેટ યાર્ડ",
+    "verified_mandi_badge": "ચકાસાયેલ APMC યાર્ડ",
+    "district_estimate_badge": "જિલ્લા અંદાજ",
+    "distance_unavailable": "અંતર અનુપલબ્ધ",
+    "search_across_india": "સમગ્ર ભારતમાં શોધો (રાષ્ટ્રીય સરખામણી)",
+    "national_comparison_notice": "સમગ્ર ભારતના રાષ્ટ્રીય બેન્ચમાર્ક યાર્ડ (વ્યાપક સરખામણી, સ્થાનિક યાર્ડ નથી)",
+    "live_today_badge": "આજનો લાઈવ",
+    "recent_badge": "તાજેતરનું",
+    "historical_rate_badge": "ઐતિહાસિક ભાવ",
+    "historical_disclaimer": "ઐતિહાસિક ભાવ નોંધ — APMC દ્વારા તાજેતરની દૈનિક આવક હજુ નોંધાયેલ નથી.",
+    "reset_to_local": "સ્થાનિક યાર્ડ પર પાછા જાઓ",
+    "no_nearby_found": "{{location}} માં {{crop}} માટે કોઈ નજીકનું માર્કેટ યાર્ડ મળ્યું નથી."
   },
   "irrigation": {
     "title": "સ્માર્ટ સિંચાઈ કેન્દ્ર",

@@ -385,7 +385,19 @@
     "enable_location_tip": "Enable GPS for exact distance to nearby mandis",
     "per_quintal": "per Quintal",
     "last_updated_label": "Last updated",
-    "source_ename": "Official APMC Mandi Rates (eNAM / Agmarknet)"
+    "source_ename": "Official APMC Mandi Rates (eNAM / Agmarknet)",
+    "markets_near": "Markets near {{location}}",
+    "verified_mandi_badge": "Verified APMC Yard",
+    "district_estimate_badge": "District Estimate",
+    "distance_unavailable": "Distance unavailable",
+    "search_across_india": "Search Across India (National Comparison)",
+    "national_comparison_notice": "Showing National Benchmark Markets across India (Broader comparison, not local mandis)",
+    "live_today_badge": "Live Today",
+    "recent_badge": "Recent",
+    "historical_rate_badge": "Historical Rate",
+    "historical_disclaimer": "Historical price record — recent day arrivals not yet reported by APMC.",
+    "reset_to_local": "Return to Local Mandis",
+    "no_nearby_found": "No nearby mandi prices found for {{crop}} in {{location}}."
   },
   "irrigation": {
     "title": "स्मार्ट सिंचाई केंद्र",

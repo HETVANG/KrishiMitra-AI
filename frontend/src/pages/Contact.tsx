@@ -52,7 +52,7 @@ export const Contact: React.FC = () => {
               </div>
               <div className="min-w-0">
                 <span className="font-bold block text-slate-400 uppercase text-[9px]">{t('contact.email_label') || 'Email Address'}</span>
-                <span className="font-semibold text-slate-800 dark:text-dark-200 break-all">{BRAND.supportEmail}</span>
+                <a href={`mailto:${BRAND.supportEmail}`} className="font-semibold text-emerald-700 dark:text-emerald-400 hover:underline break-all">{BRAND.supportEmail}</a>
               </div>
             </div>
 

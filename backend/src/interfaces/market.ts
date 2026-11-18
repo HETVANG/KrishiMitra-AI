@@ -23,6 +23,9 @@ export interface MarketQueryOptions {
   date?: string;
   page?: number;
   limit?: number;
+  lat?: number;
+  lon?: number;
+  allowNationalFallback?: boolean;
 }
 
 export interface MarketSyncResult {

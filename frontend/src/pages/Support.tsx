@@ -71,8 +71,11 @@ export const Support: React.FC = () => {
           ))}
         </div>
 
-        <div className="bg-brand-50/70 dark:bg-brand-950/20 p-5 rounded-2xl border border-brand-200/50 dark:border-brand-900/30 text-center text-xs text-brand-800 dark:text-brand-300 font-bold">
-          {t('support.contact_support') || 'Need direct assistance? Contact our agritech support team.'}
+        <div className="bg-brand-50/70 dark:bg-brand-950/20 p-5 rounded-2xl border border-brand-200/50 dark:border-brand-900/30 text-center text-xs text-brand-800 dark:text-brand-300 font-bold space-y-1.5">
+          <p>{t('support.contact_support') || 'Need direct assistance? Contact our agritech support team.'}</p>
+          <a href={`mailto:${BRAND.supportEmail}`} className="inline-block text-emerald-700 dark:text-emerald-400 underline font-extrabold hover:text-emerald-800">
+            {BRAND.supportEmail}
+          </a>
         </div>
       </main>
 

@@ -534,13 +534,13 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner border border-gray-200 dark:border-dark-800">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-inner border border-gray-200 dark:border-dark-800 isolate z-0">
       {/* Map Element */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[350px]" />
 
       {/* SEARCH BOX OVERLAY */}
       {!readOnly && (
-        <div className="absolute top-3 left-3 z-[1000] w-[calc(100%-90px)] sm:w-64 md:w-72 max-w-[260px] pointer-events-auto map-search-overlay">
+        <div className="absolute top-3 left-3 z-20 w-[calc(100%-90px)] sm:w-64 md:w-72 max-w-[260px] pointer-events-auto map-search-overlay">
           <div className="relative bg-white/95 dark:bg-dark-900/95 backdrop-blur-md rounded-xl border border-gray-200/80 dark:border-dark-800 shadow-md flex flex-col p-1 transition-all">
             <div className="relative flex items-center h-8 md:h-9">
               <span className="pl-2 text-gray-400 shrink-0">
@@ -577,7 +577,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
             {/* Suggestions dropdown */}
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white/98 dark:bg-dark-900/98 backdrop-blur-md border border-gray-200 dark:border-dark-800 rounded-xl shadow-xl divide-y divide-gray-100 dark:divide-dark-850 text-left z-[1001]">
+              <div className="absolute top-full left-0 right-0 mt-1 max-h-44 overflow-y-auto bg-white/98 dark:bg-dark-900/98 backdrop-blur-md border border-gray-200 dark:border-dark-800 rounded-xl shadow-xl divide-y divide-gray-100 dark:divide-dark-850 text-left z-30">
                 {suggestions.map((sug, idx) => (
                   <button
                     key={idx}
@@ -591,12 +591,12 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
             )}
             
             {searching && (
-              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-gray-400 z-[1001]">
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-gray-400 z-30">
                 Searching...
               </div>
             )}
             {searchError && (
-              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-red-500 font-semibold z-[1001]">
+              <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-white/95 dark:bg-dark-900/95 border border-gray-200 dark:border-dark-800 rounded-xl text-center text-[10px] text-red-500 font-semibold z-30">
                 {searchError}
               </div>
             )}
@@ -606,7 +606,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* MAP DETAILS PANEL */}
       {!readOnly && selectedLoc && (
-        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-xs sm:max-w-sm w-full flex flex-col gap-2.5 pointer-events-auto transition-all map-details-overlay">
+        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-20 bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 md:p-4 rounded-2xl border border-gray-150 dark:border-dark-800 shadow-xl max-w-xs sm:max-w-sm w-full flex flex-col gap-2.5 pointer-events-auto transition-all map-details-overlay">
           <div className="flex items-start justify-between pb-2 border-b border-gray-100 dark:border-dark-800 text-left">
             <div>
               <span className="block text-[8px] uppercase tracking-wider text-brand-600 dark:text-brand-400 font-extrabold">Active Farm Location</span>
@@ -658,7 +658,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
 
       {/* NO LOCATION SET ALERTER */}
       {!readOnly && !selectedLoc && (
-        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-[1000] bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-xs sm:max-w-sm w-full flex items-center gap-2.5 pointer-events-auto text-left map-alert-overlay">
+        <div className="absolute bottom-3 left-3 right-3 sm:right-auto z-20 bg-white/95 dark:bg-dark-900/95 backdrop-blur-md p-3 rounded-2xl border border-yellow-100 dark:border-yellow-950/20 shadow-xl max-w-xs sm:max-w-sm w-full flex items-center gap-2.5 pointer-events-auto text-left map-alert-overlay">
           <div className="p-1.5 bg-yellow-50 dark:bg-yellow-950/20 rounded-xl text-yellow-600 shrink-0">
             <MapPin size={16} />
           </div>
@@ -670,7 +670,7 @@ const LeafletMapInner: React.FC<LeafletMapProps> = ({
       )}
 
       {/* Floating View Control Overlays */}
-      <div className="absolute right-3 top-3 z-[1000] flex flex-col gap-2 pointer-events-auto map-controls-overlay">
+      <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 pointer-events-auto map-controls-overlay">
         <button
           onClick={resetNorth}
           className="p-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-lg text-gray-700 shadow-sm"

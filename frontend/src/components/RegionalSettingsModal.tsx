@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { MapPin, Check, X, ShieldCheck, Globe, Info, RefreshCw } from 'lucide-react';
+import { ModalPortal } from './common/ModalPortal';
 
 interface CountryItem {
   countryCode: string;
@@ -117,8 +118,17 @@ export const RegionalSettingsModal: React.FC<RegionalSettingsModalProps> = ({
   const isSelectedSupported = selectedCountryObj?.supported ?? true;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+    <ModalPortal
+      isOpen={isOpen}
+      onClose={onClose}
+      zIndex={100}
+      backdropClassName="bg-slate-950/70 backdrop-blur-md"
+      containerClassName="flex items-center justify-center p-4"
+    >
+      <div 
+        className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400">
@@ -246,7 +256,7 @@ export const RegionalSettingsModal: React.FC<RegionalSettingsModalProps> = ({
           </form>
         )}
       </div>
-    </div>
+    </ModalPortal>
   );
 };
 

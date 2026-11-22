@@ -10,6 +10,7 @@ import {
   Activity,
   Sparkles
 } from 'lucide-react';
+import { ModalPortal } from './common/ModalPortal';
 
 interface FarmerTimelineModalProps {
   isOpen: boolean;
@@ -43,8 +44,17 @@ export const FarmerTimelineModal: React.FC<FarmerTimelineModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl overflow-hidden bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800">
+    <ModalPortal
+      isOpen={isOpen}
+      onClose={onClose}
+      zIndex={100}
+      backdropClassName="bg-slate-950/70 backdrop-blur-md"
+      containerClassName="flex items-center justify-center p-4"
+    >
+      <div 
+        className="relative w-full max-w-xl overflow-hidden bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-green-700 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -111,6 +121,6 @@ export const FarmerTimelineModal: React.FC<FarmerTimelineModalProps> = ({ isOpen
           </button>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 };

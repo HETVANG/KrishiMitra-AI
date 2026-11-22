@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { Capacitor } from '@capacitor/core';
+import { ModalPortal } from './common/ModalPortal';
 import { Share } from '@capacitor/share';
 
 export interface ReportPreviewModalProps {
@@ -145,13 +146,20 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div 
-      className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 backdrop-blur-sm animate-fade-in text-left"
-      role="dialog"
-      aria-modal="true"
+    <ModalPortal
+      isOpen={isOpen}
+      onClose={onClose}
+      zIndex={100}
+      backdropClassName="bg-black/75 backdrop-blur-sm"
+      containerClassName="flex items-center justify-center p-2 sm:p-4 md:p-6"
     >
-      <div className="bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div 
+        className="bg-white dark:bg-dark-900 border border-gray-200 dark:border-dark-800 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* MODAL HEADER */}
         <div className="p-3.5 sm:p-5 border-b border-gray-150 dark:border-dark-800 flex items-center justify-between bg-[#F7F9F5] dark:bg-dark-850">
@@ -398,6 +406,6 @@ export const ReportPreviewModal: React.FC<ReportPreviewModalProps> = ({
         </div>
 
       </div>
-    </div>
+    </ModalPortal>
   );
 };

@@ -26,6 +26,7 @@ import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 import { VoiceInputButton } from '../components/voice/VoiceInputButton';
+import { ModalPortal } from '../components/common/ModalPortal';
 import { getDeviceLocation } from '../services/native';
 
 export const Dashboard: React.FC = () => {
@@ -696,7 +697,7 @@ export const Dashboard: React.FC = () => {
               {t('dashboard.select_location') || 'Change Location'}
             </button>
           </div>
-          <div className="h-[200px] w-full rounded-2xl overflow-hidden">
+          <div className="h-[200px] w-full rounded-2xl overflow-hidden isolate z-0">
             <LeafletMap 
               initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
               boundary={boundary}
@@ -775,190 +776,207 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* LOCATION SEARCH MODAL */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-left flex flex-col max-h-[80vh]">
-            <button
-              onClick={() => { setShowLocationModal(false); setSearchQuery(''); setSuggestions([]); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
-            >
-              ✕
-            </button>
+      <ModalPortal
+        isOpen={showLocationModal}
+        onClose={() => { setShowLocationModal(false); setSearchQuery(''); setSuggestions([]); }}
+        zIndex={100}
+        backdropClassName="bg-slate-950/70 backdrop-blur-md"
+        containerClassName="flex items-center justify-center p-4"
+      >
+        <div 
+          className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative text-left flex flex-col max-h-[80vh]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => { setShowLocationModal(false); setSearchQuery(''); setSuggestions([]); }}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-dark-100 font-extrabold text-lg p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            ✕
+          </button>
 
-            <h2 className="text-lg font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-1">
-              {t('dashboard.select_location') || 'Select Location'}
-            </h2>
-            <p className="text-[11px] text-gray-400 mb-4 font-semibold">
-              {t('dashboard.select_location_desc') || "Search by City, District, or State in India to fetch today's weather."}
-            </p>
+          <h2 className="text-lg font-extrabold text-gray-800 dark:text-dark-50 tracking-tight mb-1">
+            {t('dashboard.select_location') || 'Select Location'}
+          </h2>
+          <p className="text-[11px] text-gray-400 mb-4 font-semibold">
+            {t('dashboard.select_location_desc') || "Search by City, District, or State in India to fetch today's weather."}
+          </p>
 
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('dashboard.search_location_placeholder') || "Search location (e.g. Nagpur, Rajkot...)"}
-                className="custom-input text-xs pl-8 pr-16"
-                autoFocus
-              />
-              <span className="absolute left-2.5 top-2.5 text-gray-400">
-                <Search size={14} />
-              </span>
-              <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="p-1 text-gray-400 hover:text-gray-600 rounded text-xs"
-                    title={t('common.clear') || 'Clear'}
-                  >
-                    ✕
-                  </button>
-                )}
-                <VoiceInputButton
-                  onTranscript={(text) => setSearchQuery(text)}
-                  size="sm"
-                  showTextFeedback
-                />
-              </div>
-            </div>
-
-            {/* Suggestions list */}
-            <div className="flex-1 overflow-y-auto mt-4 space-y-1.5 pr-1 min-h-[180px]">
-              {searching ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
-                </div>
-              ) : searchError ? (
-                <p className="text-center text-xs text-red-500 py-6 font-bold">{searchError}</p>
-              ) : suggestions.length > 0 ? (
-                suggestions.map((sug, idx) => (
-                  <button
-                    key={idx}
-                    onClick={async () => {
-                      const newLoc = {
-                        latitude: sug.lat,
-                        longitude: sug.lon,
-                        address: sug.state ? `${sug.city}, ${sug.state}` : sug.city
-                      };
-                      setActiveLocation(newLoc);
-                      localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
-                      
-                      if (user) {
-                        setFarmLocationLocally(newLoc);
-                        try {
-                          await api.put('/auth/settings', {
-                            language: i18n.language,
-                            theme: user.settings?.theme || 'light',
-                            farmLocation: newLoc
-                          });
-                        } catch (saveErr) {
-                          console.error('Failed to save selected location to backend:', saveErr);
-                        }
-                      }
-                      
-                      setShowLocationModal(false);
-                      setSearchQuery('');
-                      setSuggestions([]);
-                    }}
-                    className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-dark-850 rounded-xl border border-gray-100/50 dark:border-dark-850 text-xs font-bold text-gray-700 dark:text-dark-250 transition-colors flex flex-col gap-0.5"
-                  >
-                    <span>{sug.city}</span>
-                    <span className="text-[10px] text-gray-400 font-semibold">{sug.state ? `${sug.state}, ` : ''}{sug.country}</span>
-                  </button>
-                ))
-              ) : searchQuery.trim() ? (
-                <p className="text-center text-xs text-gray-450 py-8">{t('dashboard.no_matching_locations') || 'No matching locations found.'}</p>
-              ) : (
-                <div className="text-center py-4 text-gray-400 space-y-2">
-                  <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400/80">{t('dashboard.popular_centers') || 'Popular Indian Farming Centers'}</p>
-                  <div className="grid grid-cols-2 gap-1.5 pt-1">
-                    {[
-                      { city: 'Karnal', state: 'Haryana', lat: 29.6857, lon: 76.9905 },
-                      { city: 'Rajkot', state: 'Gujarat', lat: 22.3039, lon: 70.8022 },
-                      { city: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882 },
-                      { city: 'Ludhiana', state: 'Punjab', lat: 30.9010, lon: 75.8573 }
-                    ].map((pop, pIdx) => (
-                      <button
-                        key={pIdx}
-                        onClick={async () => {
-                          const newLoc = {
-                            latitude: pop.lat,
-                            longitude: pop.lon,
-                            address: `${pop.city}, ${pop.state}`
-                          };
-                          setActiveLocation(newLoc);
-                          localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
-                          if (user) {
-                            setFarmLocationLocally(newLoc);
-                            try {
-                              await api.put('/auth/settings', {
-                                language: i18n.language,
-                                theme: user.settings?.theme || 'light',
-                                farmLocation: newLoc
-                              });
-                            } catch (saveErr) {
-                              console.error(saveErr);
-                            }
-                          }
-                          setShowLocationModal(false);
-                        }}
-                        className="p-2.5 text-center bg-gray-50/50 dark:bg-dark-850 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-gray-700 dark:text-dark-250 border rounded-xl text-[10px] font-bold transition-all duration-150"
-                      >
-                        {pop.city}, {pop.state}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('dashboard.search_location_placeholder') || "Search location (e.g. Nagpur, Rajkot...)"}
+              className="custom-input text-xs pl-8 pr-16"
+              autoFocus
+            />
+            <span className="absolute left-2.5 top-2.5 text-gray-400">
+              <Search size={14} />
+            </span>
+            <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded text-xs"
+                  title={t('common.clear') || 'Clear'}
+                >
+                  ✕
+                </button>
               )}
+              <VoiceInputButton
+                onTranscript={(text) => setSearchQuery(text)}
+                size="sm"
+                showTextFeedback
+              />
             </div>
           </div>
+
+          {/* Suggestions list */}
+          <div className="flex-1 overflow-y-auto mt-4 space-y-1.5 pr-1 min-h-[180px]">
+            {searching ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+              </div>
+            ) : searchError ? (
+              <p className="text-center text-xs text-red-500 py-6 font-bold">{searchError}</p>
+            ) : suggestions.length > 0 ? (
+              suggestions.map((sug, idx) => (
+                <button
+                  key={idx}
+                  onClick={async () => {
+                    const newLoc = {
+                      latitude: sug.lat,
+                      longitude: sug.lon,
+                      address: sug.state ? `${sug.city}, ${sug.state}` : sug.city
+                    };
+                    setActiveLocation(newLoc);
+                    localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+                    
+                    if (user) {
+                      setFarmLocationLocally(newLoc);
+                      try {
+                        await api.put('/auth/settings', {
+                          language: i18n.language,
+                          theme: user.settings?.theme || 'light',
+                          farmLocation: newLoc
+                        });
+                      } catch (saveErr) {
+                        console.error('Failed to save selected location to backend:', saveErr);
+                      }
+                    }
+                    
+                    setShowLocationModal(false);
+                    setSearchQuery('');
+                    setSuggestions([]);
+                  }}
+                  className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-dark-850 rounded-xl border border-gray-100/50 dark:border-dark-850 text-xs font-bold text-gray-700 dark:text-dark-250 transition-colors flex flex-col gap-0.5"
+                >
+                  <span>{sug.city}</span>
+                  <span className="text-[10px] text-gray-400 font-semibold">{sug.state ? `${sug.state}, ` : ''}{sug.country}</span>
+                </button>
+              ))
+            ) : searchQuery.trim() ? (
+              <p className="text-center text-xs text-gray-450 py-8">{t('dashboard.no_matching_locations') || 'No matching locations found.'}</p>
+            ) : (
+              <div className="text-center py-4 text-gray-400 space-y-2">
+                <p className="text-[10px] uppercase font-extrabold tracking-wider text-gray-400/80">{t('dashboard.popular_centers') || 'Popular Indian Farming Centers'}</p>
+                <div className="grid grid-cols-2 gap-1.5 pt-1">
+                  {[
+                    { city: 'Karnal', state: 'Haryana', lat: 29.6857, lon: 76.9905 },
+                    { city: 'Rajkot', state: 'Gujarat', lat: 22.3039, lon: 70.8022 },
+                    { city: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882 },
+                    { city: 'Ludhiana', state: 'Punjab', lat: 30.9010, lon: 75.8573 }
+                  ].map((pop, pIdx) => (
+                    <button
+                      key={pIdx}
+                      onClick={async () => {
+                        const newLoc = {
+                          latitude: pop.lat,
+                          longitude: pop.lon,
+                          address: `${pop.city}, ${pop.state}`
+                        };
+                        setActiveLocation(newLoc);
+                        localStorage.setItem('selectedLocation', JSON.stringify(newLoc));
+                        if (user) {
+                          setFarmLocationLocally(newLoc);
+                          try {
+                            await api.put('/auth/settings', {
+                              language: i18n.language,
+                              theme: user.settings?.theme || 'light',
+                              farmLocation: newLoc
+                            });
+                          } catch (saveErr) {
+                            console.error(saveErr);
+                          }
+                        }
+                        setShowLocationModal(false);
+                      }}
+                      className="p-2.5 text-center bg-gray-50/50 dark:bg-dark-850 hover:bg-brand-50 dark:hover:bg-brand-950/20 text-gray-700 dark:text-dark-250 border rounded-xl text-[10px] font-bold transition-all duration-150"
+                    >
+                      {pop.city}, {pop.state}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </ModalPortal>
 
       {/* PREMIUM EXPIRY MODAL */}
-      {showExpiryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in text-left">
-          <div className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative flex flex-col gap-4">
-            <h2 className="text-lg font-extrabold text-red-650 dark:text-red-400 tracking-tight flex items-center gap-2">
-              ⚠️ Your Premium Plan Has Expired
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-dark-300 leading-relaxed font-medium">
-              Your Premium plan expired on <span className="font-extrabold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>. Renew your plan to continue enjoying premium features.
-            </p>
-            <div className="bg-slate-50 dark:bg-dark-950 p-4 rounded-2xl border border-slate-100 dark:border-dark-850 text-xs text-slate-655 dark:text-dark-300 space-y-2">
-              <div className="flex justify-between font-medium">
-                <span>Previous Plan:</span>
-                <span className="font-bold text-slate-805 dark:text-dark-100 uppercase">Premium</span>
-              </div>
-              <div className="flex justify-between font-medium">
-                <span>Expiry Date:</span>
-                <span className="font-bold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>
-              </div>
+      <ModalPortal
+        isOpen={showExpiryModal}
+        onClose={() => {
+          setShowExpiryModal(false);
+          localStorage.setItem('premium-expiry-dismissed', 'true');
+        }}
+        zIndex={100}
+        backdropClassName="bg-slate-950/70 backdrop-blur-md"
+        containerClassName="flex items-center justify-center p-4"
+      >
+        <div 
+          className="bg-white dark:bg-dark-900 border border-gray-100 dark:border-dark-800 rounded-3xl max-w-md w-full p-6 shadow-2xl relative flex flex-col gap-4 text-left"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-lg font-extrabold text-red-650 dark:text-red-400 tracking-tight flex items-center gap-2">
+            ⚠️ Your Premium Plan Has Expired
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-dark-300 leading-relaxed font-medium">
+            Your Premium plan expired on <span className="font-extrabold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>. Renew your plan to continue enjoying premium features.
+          </p>
+          <div className="bg-slate-50 dark:bg-dark-950 p-4 rounded-2xl border border-slate-100 dark:border-dark-850 text-xs text-slate-655 dark:text-dark-300 space-y-2">
+            <div className="flex justify-between font-medium">
+              <span>Previous Plan:</span>
+              <span className="font-bold text-slate-805 dark:text-dark-100 uppercase">Premium</span>
             </div>
-            <div className="flex gap-2.5 pt-2">
-              <button
-                onClick={() => {
-                  setShowExpiryModal(false);
-                  localStorage.setItem('premium-expiry-dismissed', 'true');
-                }}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-200 text-xs font-bold rounded-xl transition-all min-h-[38px]"
-              >
-                Maybe Later
-              </button>
-              <a
-                href="/pricing"
-                onClick={() => {
-                  setShowExpiryModal(false);
-                }}
-                className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl text-center shadow-md shadow-brand-600/20 transition-all min-h-[38px] flex items-center justify-center"
-              >
-                Renew Now
-              </a>
+            <div className="flex justify-between font-medium">
+              <span>Expiry Date:</span>
+              <span className="font-bold text-slate-805 dark:text-dark-100">{user?.subscriptionExpiry ? new Date(user.subscriptionExpiry).toLocaleDateString('en-IN') : 'N/A'}</span>
             </div>
           </div>
+          <div className="flex gap-2.5 pt-2">
+            <button
+              onClick={() => {
+                setShowExpiryModal(false);
+                localStorage.setItem('premium-expiry-dismissed', 'true');
+              }}
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 text-slate-700 dark:text-dark-200 text-xs font-bold rounded-xl transition-all min-h-[38px]"
+            >
+              Maybe Later
+            </button>
+            <a
+              href="/pricing"
+              onClick={() => {
+                setShowExpiryModal(false);
+              }}
+              className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl text-center shadow-md shadow-brand-600/20 transition-all min-h-[38px] flex items-center justify-center"
+            >
+              Renew Now
+            </a>
+          </div>
         </div>
-      )}
+      </ModalPortal>
 
       {/* Regional Intelligence Settings Modal */}
       <RegionalSettingsModal

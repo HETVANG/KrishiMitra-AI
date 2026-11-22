@@ -14,6 +14,7 @@ import {
   Droplets,
   Building2
 } from 'lucide-react';
+import { ModalPortal } from './common/ModalPortal';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -98,9 +99,20 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl overflow-hidden bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800">
+    <ModalPortal
+      isOpen={isOpen}
+      onClose={handleSkipAll}
+      zIndex={100}
+      backdropClassName="bg-slate-950/70 backdrop-blur-md"
+      containerClassName="flex items-center justify-center p-4"
+    >
+      <div 
+        className="relative w-full max-w-2xl overflow-hidden bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-green-700 p-6 text-white relative">
           <button
@@ -422,6 +434,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </ModalPortal>
   );
 };

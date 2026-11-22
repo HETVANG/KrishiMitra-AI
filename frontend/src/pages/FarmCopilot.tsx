@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -75,6 +76,8 @@ interface FarmTaskItem {
 export const FarmCopilot: React.FC = () => {
   const { user, farmLocation } = useAuth();
   const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<'chat' | 'daily' | 'weekly' | 'insights'>('chat');
   const [farms, setFarms] = useState<any[]>([]);
@@ -88,6 +91,18 @@ export const FarmCopilot: React.FC = () => {
   const [contextLoading, setContextLoading] = useState(true);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, { rating: 'like' | 'dislike'; reason?: string }>>({});
+
+  // Query handoff from Global Search or external links
+  useEffect(() => {
+    const passedQuery = (location.state as any)?.initialQuery || searchParams.get('q');
+    if (passedQuery && typeof passedQuery === 'string' && passedQuery.trim()) {
+      setActiveTab('chat');
+      setInput(passedQuery.trim());
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [location.state, searchParams]);
 
   const handleFeedback = (msgId: string, rating: 'like' | 'dislike') => {
     setFeedbackRatings(prev => ({

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { 
   Search, 
@@ -65,6 +66,21 @@ function resolveInitialLocation(user: any) {
 export const MarketDashboard: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, token, setFarmLocationLocally } = useAuth();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  // Query handoff from Global Search or external links
+  useEffect(() => {
+    const passedCrop = (location.state as any)?.searchCrop || searchParams.get('crop');
+    if (passedCrop && typeof passedCrop === 'string' && passedCrop.trim()) {
+      setSearchCrop(passedCrop.trim());
+    }
+    const passedDistrict = (location.state as any)?.searchLocation || searchParams.get('location');
+    if (passedDistrict && typeof passedDistrict === 'string' && passedDistrict.trim()) {
+      setSearchDistrict(passedDistrict.trim());
+      setLocationName(passedDistrict.trim());
+    }
+  }, [location.state, searchParams]);
 
   // Core Market Data
   const [intelligence, setIntelligence] = useState<any>(null);

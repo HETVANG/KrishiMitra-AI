@@ -28,7 +28,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded: any = jwt.verify(token, jwtSecret);
+    const decoded: any = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
 
     // Fetch user directly from MongoDB Atlas
     const user = await User.findById(decoded.id).select('-password');
@@ -83,7 +83,7 @@ export const optionalAuthenticate = async (req: AuthRequest, res: Response, next
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded: any = jwt.verify(token, jwtSecret);
+    const decoded: any = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
 
     const user = await User.findById(decoded.id).select('-password');
 

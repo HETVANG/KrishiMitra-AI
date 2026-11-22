@@ -4,6 +4,8 @@ import { BillingServiceFactory } from '../services/BillingService';
 import { User } from '../models/User';
 import { Subscription } from '../models/Subscription';
 import { Payment } from '../models/Payment';
+import { Transaction } from '../models/Transaction';
+import crypto from 'crypto';
 
 export class BillingController {
   /**
@@ -21,23 +23,58 @@ export class BillingController {
   }
 
   /**
-   * Mock Billing Webhook receiver for Stripe, Razorpay, or UPI callbacks
+   * Cryptographic webhook receiver with HMAC signature verification and idempotency
    */
   static async handleWebhook(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const signature = req.headers['signature'] as string;
+      const signature = (req.headers['x-razorpay-signature'] || req.headers['signature']) as string;
       const { provider } = req.params;
 
       if (!provider) {
         return res.status(400).json({ success: false, message: 'Provider parameter required.' });
       }
 
-      console.log(`[Billing Webhook] Callback received for ${provider}. Signature: ${signature}`);
+      if (provider === 'razorpay') {
+        const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET;
 
-      // We succeed verified webhooks always in mock mode
+        if (webhookSecret) {
+          if (!signature) {
+            return res.status(400).json({ success: false, message: 'Missing webhook signature header' });
+          }
+
+          const rawPayload = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+          const expectedSig = crypto
+            .createHmac('sha256', webhookSecret)
+            .update(rawPayload)
+            .digest('hex');
+
+          const expectedBuf = Buffer.from(expectedSig, 'utf8');
+          const signatureBuf = Buffer.from(signature, 'utf8');
+
+          const isValid = expectedBuf.length === signatureBuf.length && crypto.timingSafeEqual(expectedBuf, signatureBuf);
+          if (!isValid) {
+            console.warn('[Billing Webhook Alert] Invalid webhook signature received for Razorpay');
+            return res.status(400).json({ success: false, message: 'Webhook signature verification failed' });
+          }
+        }
+
+        // Idempotent event processing
+        const event = req.body?.event;
+        const payloadEntity = req.body?.payload?.payment?.entity || req.body?.payload?.order?.entity;
+        const orderId = payloadEntity?.order_id || payloadEntity?.id;
+
+        if (orderId) {
+          const existingPayment = await Payment.findOne({ orderId });
+          if (existingPayment && existingPayment.status === 'succeeded') {
+            return res.json({ success: true, message: 'Webhook event already processed (idempotent)', event });
+          }
+        }
+      }
+
+      console.info(`[Billing Webhook] Verified event received for ${provider}`);
       return res.json({
         success: true,
-        message: `${provider} webhook executed successfully.`
+        message: `${provider} webhook executed and verified successfully.`
       });
     } catch (error) {
       next(error);

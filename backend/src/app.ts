@@ -61,7 +61,13 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  frameguard: { action: 'sameorigin' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false
+}));
 app.use(requestIdMiddleware);
 app.use(cors({
   origin: (origin, callback) => {
@@ -107,9 +113,8 @@ app.use(cors({
     const isAllowed =
       allowedOrigins.includes(normalizedOrigin) ||
       isCapacitorOrigin ||
-      (process.env.NODE_ENV !== 'production') ||
-      allowedOrigins.includes('*') ||
-      normalizedOrigin.endsWith('.vercel.app');
+      (process.env.NODE_ENV === 'development') ||
+      (process.env.NODE_ENV === 'test');
 
     if (isAllowed) {
       callback(null, true);

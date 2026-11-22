@@ -193,11 +193,23 @@ export class VideoConsultationController {
 
   static async completeRequest(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Authentication required.' });
+      }
+
       const { id } = req.params;
       const request = await VideoConsultation.findById(id);
 
       if (!request) {
         return res.status(404).json({ success: false, message: 'Consultation request not found.' });
+      }
+
+      const isFarmer = request.farmer?.toString() === req.user._id.toString();
+      const isAssignedExpert = request.expert?.toString() === req.user._id.toString();
+      const isAdmin = req.user.role === 'admin';
+
+      if (!isFarmer && !isAssignedExpert && !isAdmin) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You are not authorized to complete this consultation.' });
       }
 
       request.status = 'Completed';

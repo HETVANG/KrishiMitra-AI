@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { CopilotController } from '../controllers/CopilotController';
 import { authenticate } from '../middleware/auth';
+import { aiLimiter } from '../middleware/rateLimiters';
 
 const router = Router();
 
 // All Copilot endpoints require authentication
 router.use(authenticate);
 
-router.post('/chat', CopilotController.chat);
+router.post('/chat', aiLimiter, CopilotController.chat);
 
 router.get('/context', CopilotController.getContext);
 router.get('/context/:farmId', CopilotController.getContext);

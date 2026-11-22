@@ -16,8 +16,8 @@ export class PaymentService {
     const normalizedPlan = planName as any;
     const normalizedBillingCycle = billingCycle as any;
     
-    // Apply DiscountEngine to calculate final price
-    let baseAmount = amount ?? getPlanAmount(normalizedPlan, normalizedBillingCycle);
+    // Secure server-side price calculation: Client-supplied amount is NEVER trusted to override canonical plan price
+    const baseAmount = getPlanAmount(normalizedPlan, normalizedBillingCycle);
     const finalAmount = DiscountEngine.calculateFinalPrice(baseAmount, {
       userId,
       planType: normalizedBillingCycle,
@@ -120,11 +120,34 @@ export class PaymentService {
   static async verifyPayment(input: VerifyPaymentInput) {
     const { userId, orderId, paymentId, signature, status = 'captured' } = input;
 
-    const payment = await Payment.findOne({ orderId });
+    // Strict ownership enforcement: payment order must match both orderId and authenticated userId
+    const payment = await Payment.findOne({
+      orderId,
+      userId: new Types.ObjectId(userId)
+    });
     if (!payment) {
-      const err = new Error('Payment order not found');
+      const err = new Error('Payment order not found or does not belong to the authenticated user');
       (err as any).statusCode = 404;
       throw err;
+    }
+
+    // Idempotency: If this payment has already succeeded, return clean status without double-crediting
+    if (payment.status === 'succeeded') {
+      return {
+        success: true,
+        payment: {
+          id: payment._id,
+          status: 'succeeded',
+          orderId: payment.orderId,
+          amount: payment.amount,
+          currency: payment.currency,
+          provider: 'razorpay',
+          mode: 'live',
+          mockMode: false,
+          subscriptionActivated: true,
+          alreadyVerified: true
+        }
+      };
     }
 
     const razorpayConfig = getRazorpayConfig();
@@ -146,7 +169,14 @@ export class PaymentService {
       .update(`${orderId}|${paymentId}`)
       .digest('hex');
 
-    if (generatedSignature !== signature) {
+    // Constant-time signature comparison to prevent timing attacks
+    const generatedBuf = Buffer.from(generatedSignature, 'utf8');
+    const signatureBuf = Buffer.from(signature, 'utf8');
+    const isSignatureValid = 
+      generatedBuf.length === signatureBuf.length && 
+      crypto.timingSafeEqual(generatedBuf, signatureBuf);
+
+    if (!isSignatureValid) {
       payment.status = 'failed';
       payment.paymentId = paymentId;
       payment.gatewayResponse = {

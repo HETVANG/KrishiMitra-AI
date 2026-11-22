@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { LeafletMap } from '../components/LeafletMap';
 import { 
   CloudSun, 
   MapPin, 
@@ -22,27 +21,52 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RegionalSettingsModal } from '../components/RegionalSettingsModal';
-import { OnboardingModal } from '../components/OnboardingModal';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
-import { FarmerTimelineModal } from '../components/FarmerTimelineModal';
 import { VoiceInputButton } from '../components/voice/VoiceInputButton';
 import { ModalPortal } from '../components/common/ModalPortal';
 import { getDeviceLocation } from '../services/native';
+
+// Lazy-load heavier components to keep initial Dashboard bundle lightweight
+const LeafletMap = React.lazy(() => import('../components/LeafletMap').then(m => ({ default: m.LeafletMap })));
+const OnboardingModal = React.lazy(() => import('../components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
+const FarmerTimelineModal = React.lazy(() => import('../components/FarmerTimelineModal').then(m => ({ default: m.FarmerTimelineModal })));
 
 export const Dashboard: React.FC = () => {
   console.log('[The Khedut Startup Log] Loading Dashboard');
   const { user, setFarmLocationLocally } = useAuth();
   const { t, i18n } = useTranslation();
 
-  const [weather, setWeather] = useState<any>(null);
-  const [mandiPrices, setMandiPrices] = useState<any[]>([]);
-  const [financials, setFinancials] = useState<any>(null);
+  // Instant render from local cache if available, updating silently when live API responds
+  const [weather, setWeather] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('cachedWeather');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [mandiPrices, setMandiPrices] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('cachedMandiPrices');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [financials, setFinancials] = useState<any>(() => {
+    try {
+      const cached = localStorage.getItem('cachedFinancials');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [predictions, setPredictions] = useState<any>(null);
   const [irrigationData, setIrrigationData] = useState<any>(null);
   const [activeCropCycle, setActiveCropCycle] = useState<any>(null);
   const [boundary, setBoundary] = useState<[number, number][]>([]);
-  const [loadingWeather, setLoadingWeather] = useState(true);
-  const [loadingMandi, setLoadingMandi] = useState(true);
+  const [loadingWeather, setLoadingWeather] = useState(() => !localStorage.getItem('cachedWeather'));
+  const [loadingMandi, setLoadingMandi] = useState(() => !localStorage.getItem('cachedMandiPrices'));
 
   // Load Farm profile on mount to restore saved boundary
   useEffect(() => {
@@ -233,28 +257,31 @@ export const Dashboard: React.FC = () => {
 
       // 1. Weather
       try {
-        setLoadingWeather(true);
+        if (!weather) setLoadingWeather(true);
         const res = await api.get(`/weather?lat=${lat}&lon=${lon}&lang=${i18n.language}`);
         if (res.data && res.data.success && res.data.weather) {
           setWeather(res.data.weather);
-        } else {
+          localStorage.setItem('cachedWeather', JSON.stringify(res.data.weather));
+        } else if (!weather) {
           setWeather(null);
         }
       } catch (err) {
         console.error('Error loading weather dashboard:', err);
-        setWeather(null);
+        if (!weather) setWeather(null);
       } finally {
         setLoadingWeather(false);
       }
 
       // 2. Mandi price trends
       try {
-        setLoadingMandi(true);
+        if (!mandiPrices || mandiPrices.length === 0) setLoadingMandi(true);
         const addressParts = activeLocation.address?.split(',') || [];
         const stateName = addressParts[addressParts.length - 1]?.trim() || 'Gujarat';
         const res = await api.get(`/market/search?state=${encodeURIComponent(stateName)}&crop=Wheat&lang=${i18n.language}`);
         if (res.data && res.data.success) {
-          setMandiPrices(res.data.prices.slice(0, 3));
+          const prices = res.data.prices.slice(0, 3);
+          setMandiPrices(prices);
+          localStorage.setItem('cachedMandiPrices', JSON.stringify(prices));
         }
       } catch (err) {
         console.error('Error loading mandi prices dashboard:', err);
@@ -278,6 +305,7 @@ export const Dashboard: React.FC = () => {
         const res = await api.get('/expenses/summary');
         if (res.data && res.data.success) {
           setFinancials(res.data.summary);
+          localStorage.setItem('cachedFinancials', JSON.stringify(res.data.summary));
         }
       } catch (err) {
         console.error('Error loading financials dashboard:', err);
@@ -698,20 +726,26 @@ export const Dashboard: React.FC = () => {
             </button>
           </div>
           <div className="h-[200px] w-full rounded-2xl overflow-hidden isolate z-0">
-            <LeafletMap 
-              initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
-              boundary={boundary}
-              onBoundaryChange={handleMapBoundaryChange}
-              onLocationSelect={handleLocationSelect}
-              markers={activeLocation.latitude && activeLocation.longitude ? [
-                {
-                  position: [activeLocation.latitude, activeLocation.longitude],
-                  title: 'My Farm Location',
-                  popupText: activeLocation.address || 'My Fields',
-                  type: 'farm'
-                }
-              ] : []}
-            />
+            <React.Suspense fallback={
+              <div className="h-full w-full bg-gray-50 dark:bg-dark-850 animate-pulse rounded-2xl flex items-center justify-center text-xs text-gray-400">
+                Loading farm map...
+              </div>
+            }>
+              <LeafletMap 
+                initialCenter={activeLocation.latitude && activeLocation.longitude ? [activeLocation.latitude, activeLocation.longitude] : [20.5937, 78.9629]}
+                boundary={boundary}
+                onBoundaryChange={handleMapBoundaryChange}
+                onLocationSelect={handleLocationSelect}
+                markers={activeLocation.latitude && activeLocation.longitude ? [
+                  {
+                    position: [activeLocation.latitude, activeLocation.longitude],
+                    title: 'My Farm Location',
+                    popupText: activeLocation.address || 'My Fields',
+                    type: 'farm'
+                  }
+                ] : []}
+              />
+            </React.Suspense>
           </div>
         </div>
 
@@ -985,20 +1019,28 @@ export const Dashboard: React.FC = () => {
       />
 
       {/* Farmer Fast Start Onboarding Modal */}
-      <OnboardingModal
-        isOpen={showOnboardingModal}
-        onClose={() => setShowOnboardingModal(false)}
-        onCompleted={() => {
-          setShowOnboardingModal(false);
-          window.location.reload();
-        }}
-      />
+      {showOnboardingModal && (
+        <React.Suspense fallback={null}>
+          <OnboardingModal
+            isOpen={showOnboardingModal}
+            onClose={() => setShowOnboardingModal(false)}
+            onCompleted={() => {
+              setShowOnboardingModal(false);
+              window.location.reload();
+            }}
+          />
+        </React.Suspense>
+      )}
 
       {/* Chronological Farm Activity Timeline Modal */}
-      <FarmerTimelineModal
-        isOpen={showTimelineModal}
-        onClose={() => setShowTimelineModal(false)}
-      />
+      {showTimelineModal && (
+        <React.Suspense fallback={null}>
+          <FarmerTimelineModal
+            isOpen={showTimelineModal}
+            onClose={() => setShowTimelineModal(false)}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

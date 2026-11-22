@@ -80,7 +80,10 @@ const ProtectedRoute = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-dark-950">
-        <div className="w-10 h-10 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-t-transparent border-brand-500 rounded-full animate-spin"></div>
+          <span className="text-xs font-bold text-gray-500 dark:text-dark-400">Loading The Khedut...</span>
+        </div>
       </div>
     );
   }

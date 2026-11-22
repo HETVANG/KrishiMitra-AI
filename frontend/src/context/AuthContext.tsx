@@ -63,7 +63,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // High-performance optimistic auth: if token and cached user profile exist in localStorage,
+  // do NOT stall the UI behind a spinner; render immediately and validate/refresh in background.
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    const cachedToken = localStorage.getItem('token');
+    const cachedUser = localStorage.getItem('user');
+    return !!(cachedToken && !cachedUser);
+  });
   const [farmLocation, setFarmLocation] = useState<any>(null);
   const skipProfileFetchRef = useRef<boolean>(false);
 
@@ -85,10 +91,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (silent: boolean = false) => {
     try {
-      setIsLoading(true);
-      const res = await api.get('/auth/me');
+      if (!silent) {
+        setIsLoading(true);
+      }
+      // Use a fast timeout (8000ms) for startup profile revalidation so slow backends or
+      // offline states never stall application responsiveness.
+      const res = await api.get('/auth/me', { timeout: 8000 });
       if (res.data && res.data.success) {
         setUser(res.data.user);
         localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -98,12 +108,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem('km-lang', userLang);
         }
       }
-    } catch (err) {
-      console.warn('[Auth Context] Failed to fetch profile, clearing token.');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        console.warn('[Auth Context] Session expired or invalid (401/403). Clearing credentials.');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+      } else {
+        // Offline resilience: if network fails or backend is cold-starting, preserve cached user
+        console.warn('[Auth Context] Background profile revalidation deferred. Preserving cached session for offline resilience.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +132,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
         return;
       }
-      fetchProfile();
+      // If cached user exists, revalidate in background (silent = true) so Dashboard mounts instantly (<100ms)
+      const hasCachedUser = !!user;
+      fetchProfile(hasCachedUser);
     } else {
       setIsLoading(false);
     }

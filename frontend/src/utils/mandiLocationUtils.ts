@@ -241,6 +241,149 @@ export const DISTRICT_CENTROID_COORDINATES: Record<string, Coordinates> = {
   'panipat': { lat: 29.3909, lon: 76.9635 }
 };
 
+// District to Canonical State Mapping for client-side state/district validation
+export const DISTRICT_TO_STATE_MAP: Record<string, string> = {
+  // Gujarat
+  'surat': 'Gujarat',
+  'bardoli': 'Gujarat',
+  'navsari': 'Gujarat',
+  'bilimora': 'Gujarat',
+  'chikli': 'Gujarat',
+  'chikhli': 'Gujarat',
+  'vyara': 'Gujarat',
+  'vyra': 'Gujarat',
+  'tapi': 'Gujarat',
+  'bharuch': 'Gujarat',
+  'ankleshwar': 'Gujarat',
+  'jhagadiya': 'Gujarat',
+  'valsad': 'Gujarat',
+  'rajkot': 'Gujarat',
+  'gondal': 'Gujarat',
+  'jetpur': 'Gujarat',
+  'upleta': 'Gujarat',
+  'morbi': 'Gujarat',
+  'vankaner': 'Gujarat',
+  'unjha': 'Gujarat',
+  'mehsana': 'Gujarat',
+  'deesa': 'Gujarat',
+  'diyodar': 'Gujarat',
+  'palanpur': 'Gujarat',
+  'dhanera': 'Gujarat',
+  'vadgam': 'Gujarat',
+  'himatnagar': 'Gujarat',
+  'dhansura': 'Gujarat',
+  'bayad': 'Gujarat',
+  'ahmedabad': 'Gujarat',
+  'ahmadabad': 'Gujarat',
+  'sanand': 'Gujarat',
+  'dholka': 'Gujarat',
+  'vadodara': 'Gujarat',
+  'baroda': 'Gujarat',
+  'savli': 'Gujarat',
+  'anand': 'Gujarat',
+  'khambhat': 'Gujarat',
+  'petlad': 'Gujarat',
+  'nadiad': 'Gujarat',
+  'dahod': 'Gujarat',
+  'godhra': 'Gujarat',
+  'jamnagar': 'Gujarat',
+  'jam jodhpur': 'Gujarat',
+  'dhrol': 'Gujarat',
+  'kalawad': 'Gujarat',
+  'junagadh': 'Gujarat',
+  'visavadar': 'Gujarat',
+  'amreli': 'Gujarat',
+  'savarkundla': 'Gujarat',
+  'rajula': 'Gujarat',
+  'dhari': 'Gujarat',
+  'chalala': 'Gujarat',
+  'bhavnagar': 'Gujarat',
+  'mahuva': 'Gujarat',
+  'palitana': 'Gujarat',
+  'porbandar': 'Gujarat',
+  'vadhvan': 'Gujarat',
+  'surendranagar': 'Gujarat',
+  'botad': 'Gujarat',
+  'veraval': 'Gujarat',
+  'gir somnath': 'Gujarat',
+  'patan': 'Gujarat',
+  'banaskantha': 'Gujarat',
+  'sabarkantha': 'Gujarat',
+  'kheda': 'Gujarat',
+  'narmada': 'Gujarat',
+  'dang': 'Gujarat',
+
+  // Madhya Pradesh
+  'indore': 'Madhya Pradesh',
+  'ujjain': 'Madhya Pradesh',
+  'tarana': 'Madhya Pradesh',
+  'ashoknagar': 'Madhya Pradesh',
+  'bhopal': 'Madhya Pradesh',
+  'mandsaur': 'Madhya Pradesh',
+  'neemuch': 'Madhya Pradesh',
+  'dewas': 'Madhya Pradesh',
+  'gwalior': 'Madhya Pradesh',
+  'jabalpur': 'Madhya Pradesh',
+  'sagar': 'Madhya Pradesh',
+  'ratlam': 'Madhya Pradesh',
+  'khargone': 'Madhya Pradesh',
+  'khandwa': 'Madhya Pradesh',
+  'vidisha': 'Madhya Pradesh',
+  'sehore': 'Madhya Pradesh',
+
+  // Maharashtra
+  'pune': 'Maharashtra',
+  'nashik': 'Maharashtra',
+  'lasalgaon': 'Maharashtra',
+  'malegaon': 'Maharashtra',
+  'jalgaon': 'Maharashtra',
+  'nagpur': 'Maharashtra',
+  'solapur': 'Maharashtra',
+  'karmala': 'Maharashtra',
+  'rahata': 'Maharashtra',
+  'vashi': 'Maharashtra',
+  'mumbai': 'Maharashtra',
+  'kolhapur': 'Maharashtra',
+  'ahmednagar': 'Maharashtra',
+  'ahilyanagar': 'Maharashtra',
+  'satara': 'Maharashtra',
+  'sangli': 'Maharashtra',
+  'amravati': 'Maharashtra',
+  'aurangabad': 'Maharashtra',
+  'chhatrapati sambhajinagar': 'Maharashtra',
+  'palghar': 'Maharashtra',
+
+  // Rajasthan
+  'jaipur': 'Rajasthan',
+  'kota': 'Rajasthan',
+  'jodhpur': 'Rajasthan',
+  'bikaner': 'Rajasthan',
+  'ganganagar': 'Rajasthan',
+
+  // Punjab & Haryana
+  'ludhiana': 'Punjab',
+  'amritsar': 'Punjab',
+  'karnal': 'Haryana',
+  'panipat': 'Haryana'
+};
+
+export function getCanonicalStateForDistrict(districtName?: string | null): string | null {
+  if (!districtName) return null;
+  const clean = districtName.toLowerCase().replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  if (DISTRICT_TO_STATE_MAP[clean]) {
+    return DISTRICT_TO_STATE_MAP[clean];
+  }
+
+  for (const [key, state] of Object.entries(DISTRICT_TO_STATE_MAP)) {
+    if (clean.includes(key)) {
+      return state;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Calculate Great-Circle Distance using the Haversine formula
  */

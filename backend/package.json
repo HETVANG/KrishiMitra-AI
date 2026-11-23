@@ -37,6 +37,8 @@
     "@types/node": "^20.14.2",
     "@types/node-cron": "^3.0.0",
     "@types/pdfkit": "^0.13.4",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.3.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.5"
   }

@@ -1,5 +1,6 @@
 import type { MarketApiRecord, MarketQueryOptions } from '../interfaces/market';
 import { resolveApiNameToCommodity } from '../config/commodities';
+import { normalizeState, getCanonicalStateForDistrict } from './geoNormalization';
 
 const normalizeText = (value?: string): string => (typeof value === 'string' ? value.trim() : '');
 
@@ -26,7 +27,8 @@ export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date
   
   const variety = normalizeText(record.variety || record.Variety) || 'FAQ';
   const grade = normalizeText(record.grade || record.Grade || record.GradeName) || 'FAQ';
-  const state = normalizeText(record.state || record.State) || 'Unknown State';
+  const rawState = normalizeText(record.state || record.State);
+  const state = normalizeState(rawState) || rawState || 'Unknown State';
   const district = normalizeText(record.district || record.District) || 'Unknown District';
   const market = normalizeText(record.market || record.Market || record.mandiName || record.mandi_name) || `${district} Mandi`;
 
@@ -93,8 +95,21 @@ export const buildMarketFilter = (query: MarketQueryOptions) => {
     const apiCrop = resolveCropToApiName(query.crop);
     filter.crop = new RegExp(escapeRegex(apiCrop), 'i');
   }
-  if (query.state) {
-    filter.state = new RegExp(escapeRegex(query.state), 'i');
+
+  let canonicalState = normalizeState(query.state);
+  if (query.district || query.market) {
+    const loc = query.district || query.market;
+    const inferred = getCanonicalStateForDistrict(loc);
+    if (inferred) {
+      if (!canonicalState || (canonicalState !== inferred && !query.state?.toLowerCase().includes(inferred.toLowerCase()))) {
+        canonicalState = inferred;
+      }
+    }
+  }
+
+  if (canonicalState) {
+    // Strictly anchor state name so a state query can NEVER match across other states
+    filter.state = new RegExp(`^${escapeRegex(canonicalState)}$`, 'i');
   }
   
   if (query.district || query.market) {

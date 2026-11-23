@@ -32,15 +32,22 @@ import { getDeviceLocation } from '../services/native';
 import { 
   resolveMandiCoordinates, 
   getDistanceMetadata, 
+  DISTRICT_TO_STATE_MAP,
+  getCanonicalStateForDistrict,
   type DistanceResult,
   type CoordinateResolution
 } from '../utils/mandiLocationUtils';
 
 // Helper to resolve saved location from authenticated farm profile or stored preference
 function resolveInitialLocation(user: any) {
-  if (user?.farmLocation?.state || user?.farmLocation?.city) {
-    const state = user.farmLocation.state || 'Gujarat';
-    const district = user.farmLocation.district || user.farmLocation.city || '';
+  if (user?.farmLocation?.state || user?.farmLocation?.city || user?.farmLocation?.district) {
+    const rawDistrict = user.farmLocation.district || user.farmLocation.city || '';
+    let state = user.farmLocation.state || '';
+    if (!state && rawDistrict) {
+      state = getCanonicalStateForDistrict(rawDistrict) || '';
+    }
+    state = state || 'Gujarat';
+    const district = rawDistrict;
     const address = user.farmLocation.address || (district ? `${district}, ${state}` : state);
     const coords = (user.farmLocation.latitude && user.farmLocation.longitude)
       ? { lat: user.farmLocation.latitude, lon: user.farmLocation.longitude }
@@ -51,8 +58,13 @@ function resolveInitialLocation(user: any) {
     const stored = localStorage.getItem('selectedLocation');
     if (stored) {
       const parsed = JSON.parse(stored);
-      const state = parsed.state || 'Gujarat';
-      const district = parsed.district || parsed.city || '';
+      const rawDistrict = parsed.district || parsed.city || '';
+      let state = parsed.state || '';
+      if (!state && rawDistrict) {
+        state = getCanonicalStateForDistrict(rawDistrict) || '';
+      }
+      state = state || 'Gujarat';
+      const district = rawDistrict;
       const address = parsed.address || (district ? `${district}, ${state}` : state);
       const coords = (parsed.latitude && parsed.longitude)
         ? { lat: parsed.latitude, lon: parsed.longitude }
@@ -69,26 +81,8 @@ export const MarketDashboard: React.FC = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // Query handoff from Global Search or external links
-  useEffect(() => {
-    const passedCrop = (location.state as any)?.searchCrop || searchParams.get('crop');
-    if (passedCrop && typeof passedCrop === 'string' && passedCrop.trim()) {
-      setSearchCrop(passedCrop.trim());
-    }
-    const passedDistrict = (location.state as any)?.searchLocation || searchParams.get('location');
-    if (passedDistrict && typeof passedDistrict === 'string' && passedDistrict.trim()) {
-      setSearchDistrict(passedDistrict.trim());
-      setLocationName(passedDistrict.trim());
-    }
-  }, [location.state, searchParams]);
-
-  // Core Market Data
-  const [intelligence, setIntelligence] = useState<any>(null);
-  const [prices, setPrices] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
-  const [comparison, setComparison] = useState<any>(null);
-  const [watchlist, setWatchlist] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  // Track if user has explicitly interacted with filters to prevent auto-overriding
+  const isUserManualSelection = useRef(false);
 
   // Initial location resolution (Profile farmLocation -> Saved localStorage -> Default Zone)
   const initialLoc = useMemo(() => resolveInitialLocation(user), [user]);
@@ -103,15 +97,85 @@ export const MarketDashboard: React.FC = () => {
   const [pagination, setPagination] = useState<any>(null);
   const [allowNationalSearch, setAllowNationalSearch] = useState<boolean>(false);
 
-  // Crop Selector Search & Dropdown State
-  const [cropDropdownOpen, setCropDropdownOpen] = useState(false);
-  const [cropSearchQuery, setCropSearchQuery] = useState('');
-  const cropDropdownRef = useRef<HTMLDivElement>(null);
-
   // Location States
   const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(initialLoc.coords);
   const [locationName, setLocationName] = useState<string>(initialLoc.address);
   const [locating, setLocating] = useState(false);
+
+  // Synchronize authenticated farm location if loaded after mount (without overwriting manual choice)
+  useEffect(() => {
+    if (!isUserManualSelection.current && (user?.farmLocation?.state || user?.farmLocation?.district || user?.farmLocation?.city)) {
+      const userDistrict = user.farmLocation.district || user.farmLocation.city || '';
+      let userState = user.farmLocation.state || '';
+      if (!userState && userDistrict) {
+        userState = getCanonicalStateForDistrict(userDistrict) || '';
+      }
+      if (userState) {
+        const userAddr = user.farmLocation.address || (userDistrict ? `${userDistrict}, ${userState}` : userState);
+        setSearchState(userState);
+        setSearchDistrict(userDistrict);
+        setLocationName(userAddr);
+        if (user.farmLocation.latitude && user.farmLocation.longitude) {
+          setUserCoords({ lat: user.farmLocation.latitude, lon: user.farmLocation.longitude });
+        }
+      }
+    }
+  }, [user?.farmLocation]);
+
+  // Query handoff from Global Search or external links
+  useEffect(() => {
+    const passedCrop = (location.state as any)?.searchCrop || searchParams.get('crop');
+    if (passedCrop && typeof passedCrop === 'string' && passedCrop.trim()) {
+      setSearchCrop(passedCrop.trim());
+      isUserManualSelection.current = true;
+    }
+
+    const passedState = (location.state as any)?.searchState || searchParams.get('state');
+    const passedDistrict = (location.state as any)?.searchLocation || searchParams.get('location');
+
+    let effectiveState = passedState && typeof passedState === 'string' ? passedState.trim() : '';
+    let effectiveDistrict = '';
+
+    if (passedDistrict && typeof passedDistrict === 'string' && passedDistrict.trim()) {
+      const rawLoc = passedDistrict.trim();
+      if (rawLoc.includes(',')) {
+        const parts = rawLoc.split(',').map(s => s.trim());
+        effectiveDistrict = parts[0];
+        if (!effectiveState && parts[1]) {
+          effectiveState = parts[1];
+        }
+      } else {
+        effectiveDistrict = rawLoc;
+      }
+      
+      // If state not explicitly passed, attempt to infer from district
+      if (!effectiveState) {
+        const inferred = getCanonicalStateForDistrict(effectiveDistrict);
+        if (inferred) effectiveState = inferred;
+      }
+
+      setSearchDistrict(effectiveDistrict);
+      if (effectiveState) {
+        setSearchState(effectiveState);
+        setLocationName(`${effectiveDistrict}, ${effectiveState}`);
+      } else {
+        setLocationName(effectiveDistrict);
+      }
+      isUserManualSelection.current = true;
+    } else if (effectiveState) {
+      setSearchState(effectiveState);
+      setLocationName(effectiveState);
+      isUserManualSelection.current = true;
+    }
+  }, [location.state, searchParams]);
+
+  // Core Market Data
+  const [intelligence, setIntelligence] = useState<any>(null);
+  const [prices, setPrices] = useState<any[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [comparison, setComparison] = useState<any>(null);
+  const [watchlist, setWatchlist] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Status & Loading States
   const [loading, setLoading] = useState(false);
@@ -199,7 +263,7 @@ export const MarketDashboard: React.FC = () => {
   }, [token]);
 
   // Request Device Location for Nearby Mandis
-  const handleDetectLocation = async () => {
+  const handleDetectLocation = async (isManualClick = false) => {
     setLocating(true);
     try {
       const locResult = await getDeviceLocation({ enableHighAccuracy: true, timeout: 10000 });
@@ -215,8 +279,11 @@ export const MarketDashboard: React.FC = () => {
             const resolvedState = wRes.data.location.state || '';
             const fullAddr = `${resolvedCity}${resolvedState ? ', ' + resolvedState : ''}`;
             setLocationName(fullAddr);
-            if (resolvedState && !searchState) setSearchState(resolvedState);
-            if (resolvedCity && !searchDistrict) setSearchDistrict(resolvedCity);
+
+            if (isManualClick || !isUserManualSelection.current) {
+              if (resolvedState) setSearchState(resolvedState);
+              if (resolvedCity) setSearchDistrict(resolvedCity);
+            }
 
             const newLoc = {
               latitude,
@@ -242,22 +309,49 @@ export const MarketDashboard: React.FC = () => {
     }
   };
 
+  // Synchronize state and district changes with manual selection tracking
+  const handleStateChange = (newState: string) => {
+    isUserManualSelection.current = true;
+    setSearchState(newState);
+    if (searchDistrict && newState) {
+      const canonicalStateForDistrict = getCanonicalStateForDistrict(searchDistrict);
+      if (canonicalStateForDistrict && canonicalStateForDistrict.toLowerCase() !== newState.toLowerCase()) {
+        setSearchDistrict('');
+      }
+    }
+  };
+
+  const handleDistrictChange = (newDistrict: string) => {
+    isUserManualSelection.current = true;
+    setSearchDistrict(newDistrict);
+    if (newDistrict.trim()) {
+      const canonicalState = getCanonicalStateForDistrict(newDistrict.trim());
+      if (canonicalState && canonicalState.toLowerCase() !== searchState.toLowerCase()) {
+        setSearchState(canonicalState);
+      }
+    }
+  };
+
   // Try passive location setup on mount
   useEffect(() => {
     if (!userCoords) {
-      void handleDetectLocation();
+      void handleDetectLocation(false);
     } else if (locationName === 'Detecting Location...') {
       setLocationName(user?.farmLocation?.address || 'Current Location');
     }
   }, []);
 
   // 3. Fetch Unified Market Intelligence
-  const fetchMarketIntelligence = async (cropName = searchCrop) => {
+  const fetchMarketIntelligence = async (
+    cropName = searchCrop,
+    targetState = searchState,
+    targetDistrict = searchDistrict
+  ) => {
     setLoadingIntel(true);
     try {
       const query = new URLSearchParams({
-        state: searchState,
-        district: searchDistrict,
+        state: targetState,
+        district: targetDistrict,
         lang: i18n.language
       });
       const res = await api.get(`/market/intelligence/${encodeURIComponent(cropName)}?${query.toString()}`);
@@ -272,7 +366,13 @@ export const MarketDashboard: React.FC = () => {
   };
 
   // 4. Fetch Prices List & Pagination
-  const fetchPrices = async (targetPage = page, cropName = searchCrop) => {
+  const fetchPrices = async (
+    targetPage = page, 
+    cropName = searchCrop,
+    targetState = searchState,
+    targetDistrict = searchDistrict,
+    allowNational = allowNationalSearch
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -280,8 +380,9 @@ export const MarketDashboard: React.FC = () => {
         page: String(targetPage),
         limit: '8',
         crop: cropName,
-        state: searchState,
-        district: searchDistrict,
+        state: targetState,
+        district: targetDistrict,
+        allowNationalFallback: allowNational ? 'true' : 'false'
       });
       if (searchDate) query.set('date', searchDate);
 
@@ -302,13 +403,18 @@ export const MarketDashboard: React.FC = () => {
   };
 
   // 5. Fetch Historical Trend Data
-  const fetchHistory = async (cropName = searchCrop, period = periodDays) => {
+  const fetchHistory = async (
+    cropName = searchCrop, 
+    period = periodDays,
+    targetState = searchState,
+    targetDistrict = searchDistrict
+  ) => {
     setLoadingHistory(true);
     try {
       const query = new URLSearchParams({
         crop: cropName,
-        state: searchState,
-        district: searchDistrict,
+        state: targetState,
+        district: targetDistrict,
         limit: String(period === 90 ? 90 : period === 30 ? 30 : 14),
       });
       const res = await api.get(`/market/history?${query.toString()}`);
@@ -359,9 +465,9 @@ export const MarketDashboard: React.FC = () => {
     targetDistrict = searchDistrict,
     allowNational = allowNationalSearch
   ) => {
-    void fetchMarketIntelligence(cropName);
-    void fetchPrices(targetPage, cropName);
-    void fetchHistory(cropName, pDays);
+    void fetchMarketIntelligence(cropName, targetState, targetDistrict);
+    void fetchPrices(targetPage, cropName, targetState, targetDistrict, allowNational);
+    void fetchHistory(cropName, pDays, targetState, targetDistrict);
     void fetchComparison(cropName, allowNational, targetState, targetDistrict);
   };
 
@@ -376,6 +482,7 @@ export const MarketDashboard: React.FC = () => {
   };
 
   const handleResetFilters = () => {
+    isUserManualSelection.current = false;
     const loc = resolveInitialLocation(user);
     setSearchCrop('Wheat');
     setSearchState(loc.state);
@@ -551,7 +658,7 @@ export const MarketDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleDetectLocation}
+              onClick={() => void handleDetectLocation(true)}
               disabled={locating}
               className="px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1.5 min-h-[32px]"
             >
@@ -708,7 +815,7 @@ export const MarketDashboard: React.FC = () => {
             </label>
             <select
               value={searchState}
-              onChange={(e) => setSearchState(e.target.value)}
+              onChange={(e) => handleStateChange(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-dark-200 focus:outline-none min-h-[42px]"
             >
               <option value="">{t('market.all_states') || 'All States'}</option>
@@ -735,7 +842,7 @@ export const MarketDashboard: React.FC = () => {
             <input
               type="text"
               value={searchDistrict}
-              onChange={(e) => setSearchDistrict(e.target.value)}
+              onChange={(e) => handleDistrictChange(e.target.value)}
               placeholder="e.g. Rajkot, Nashik"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-dark-200 focus:outline-none min-h-[42px]"
             />

@@ -32,7 +32,8 @@ export class MarketPriceController {
         market: req.query.market as string | undefined,
         date: req.query.date as string | undefined,
         page: Number(req.query.page || 1),
-        limit: Number(req.query.limit || 20)
+        limit: Number(req.query.limit || 20),
+        allowNationalFallback: req.query.allowNationalFallback === 'true'
       });
 
       return res.json({
@@ -57,7 +58,8 @@ export class MarketPriceController {
         market: req.query.market as string | undefined,
         date: req.query.date as string | undefined,
         page: Number(req.query.page || 1),
-        limit: Number(req.query.limit || 20)
+        limit: Number(req.query.limit || 20),
+        allowNationalFallback: req.query.allowNationalFallback === 'true'
       });
 
       return res.json({ success: true, ...result });

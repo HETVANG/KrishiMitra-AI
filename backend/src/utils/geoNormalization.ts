@@ -109,13 +109,227 @@ export const DISTRICT_ALIAS_MAP: Record<string, string[]> = {
   'narmada': ['narmada', 'rajpipla', 'dediapada', 'tilakwada']
 };
 
+// Comprehensive District to Canonical State Mapping
+export const DISTRICT_TO_STATE_MAP: Record<string, string> = {
+  // Gujarat
+  'surat': 'Gujarat',
+  'bardoli': 'Gujarat',
+  'navsari': 'Gujarat',
+  'bilimora': 'Gujarat',
+  'chikli': 'Gujarat',
+  'chikhli': 'Gujarat',
+  'vyara': 'Gujarat',
+  'vyra': 'Gujarat',
+  'tapi': 'Gujarat',
+  'bharuch': 'Gujarat',
+  'ankleshwar': 'Gujarat',
+  'jhagadiya': 'Gujarat',
+  'valsad': 'Gujarat',
+  'rajkot': 'Gujarat',
+  'gondal': 'Gujarat',
+  'jetpur': 'Gujarat',
+  'upleta': 'Gujarat',
+  'morbi': 'Gujarat',
+  'vankaner': 'Gujarat',
+  'unjha': 'Gujarat',
+  'mehsana': 'Gujarat',
+  'deesa': 'Gujarat',
+  'diyodar': 'Gujarat',
+  'palanpur': 'Gujarat',
+  'dhanera': 'Gujarat',
+  'vadgam': 'Gujarat',
+  'himatnagar': 'Gujarat',
+  'dhansura': 'Gujarat',
+  'bayad': 'Gujarat',
+  'ahmedabad': 'Gujarat',
+  'ahmadabad': 'Gujarat',
+  'sanand': 'Gujarat',
+  'dholka': 'Gujarat',
+  'vadodara': 'Gujarat',
+  'baroda': 'Gujarat',
+  'savli': 'Gujarat',
+  'anand': 'Gujarat',
+  'khambhat': 'Gujarat',
+  'petlad': 'Gujarat',
+  'nadiad': 'Gujarat',
+  'dahod': 'Gujarat',
+  'godhra': 'Gujarat',
+  'jamnagar': 'Gujarat',
+  'jam jodhpur': 'Gujarat',
+  'dhrol': 'Gujarat',
+  'kalawad': 'Gujarat',
+  'junagadh': 'Gujarat',
+  'visavadar': 'Gujarat',
+  'amreli': 'Gujarat',
+  'savarkundla': 'Gujarat',
+  'rajula': 'Gujarat',
+  'dhari': 'Gujarat',
+  'chalala': 'Gujarat',
+  'bhavnagar': 'Gujarat',
+  'mahuva': 'Gujarat',
+  'palitana': 'Gujarat',
+  'porbandar': 'Gujarat',
+  'vadhvan': 'Gujarat',
+  'surendranagar': 'Gujarat',
+  'botad': 'Gujarat',
+  'veraval': 'Gujarat',
+  'gir somnath': 'Gujarat',
+  'patan': 'Gujarat',
+  'banaskantha': 'Gujarat',
+  'sabarkantha': 'Gujarat',
+  'kheda': 'Gujarat',
+  'narmada': 'Gujarat',
+  'dang': 'Gujarat',
+
+  // Madhya Pradesh
+  'indore': 'Madhya Pradesh',
+  'ujjain': 'Madhya Pradesh',
+  'tarana': 'Madhya Pradesh',
+  'ashoknagar': 'Madhya Pradesh',
+  'bhopal': 'Madhya Pradesh',
+  'mandsaur': 'Madhya Pradesh',
+  'neemuch': 'Madhya Pradesh',
+  'dewas': 'Madhya Pradesh',
+  'gwalior': 'Madhya Pradesh',
+  'jabalpur': 'Madhya Pradesh',
+  'sagar': 'Madhya Pradesh',
+  'ratlam': 'Madhya Pradesh',
+  'khargone': 'Madhya Pradesh',
+  'khandwa': 'Madhya Pradesh',
+  'vidisha': 'Madhya Pradesh',
+  'sehore': 'Madhya Pradesh',
+  'guna': 'Madhya Pradesh',
+  'shivpuri': 'Madhya Pradesh',
+  'satna': 'Madhya Pradesh',
+  'rewa': 'Madhya Pradesh',
+  'chhindwara': 'Madhya Pradesh',
+
+  // Maharashtra
+  'pune': 'Maharashtra',
+  'nashik': 'Maharashtra',
+  'lasalgaon': 'Maharashtra',
+  'malegaon': 'Maharashtra',
+  'jalgaon': 'Maharashtra',
+  'nagpur': 'Maharashtra',
+  'solapur': 'Maharashtra',
+  'karmala': 'Maharashtra',
+  'rahata': 'Maharashtra',
+  'vashi': 'Maharashtra',
+  'mumbai': 'Maharashtra',
+  'kolhapur': 'Maharashtra',
+  'ahmednagar': 'Maharashtra',
+  'ahilyanagar': 'Maharashtra',
+  'satara': 'Maharashtra',
+  'sangli': 'Maharashtra',
+  'amravati': 'Maharashtra',
+  'aurangabad': 'Maharashtra',
+  'chhatrapati sambhajinagar': 'Maharashtra',
+  'palghar': 'Maharashtra',
+  'thane': 'Maharashtra',
+  'latur': 'Maharashtra',
+  'akola': 'Maharashtra',
+  'nanded': 'Maharashtra',
+
+  // Rajasthan
+  'jaipur': 'Rajasthan',
+  'kota': 'Rajasthan',
+  'jodhpur': 'Rajasthan',
+  'bikaner': 'Rajasthan',
+  'ganganagar': 'Rajasthan',
+  'alwar': 'Rajasthan',
+  'bharatpur': 'Rajasthan',
+  'bhilwara': 'Rajasthan',
+  'chittorgarh': 'Rajasthan',
+  'sikar': 'Rajasthan',
+
+  // Punjab
+  'ludhiana': 'Punjab',
+  'amritsar': 'Punjab',
+  'jalandhar': 'Punjab',
+  'bathinda': 'Punjab',
+  'patiala': 'Punjab',
+  'sangrur': 'Punjab',
+  'moga': 'Punjab',
+  'firozpur': 'Punjab',
+
+  // Haryana
+  'karnal': 'Haryana',
+  'panipat': 'Haryana',
+  'ambala': 'Haryana',
+  'hisar': 'Haryana',
+  'rohtak': 'Haryana',
+  'sirsa': 'Haryana',
+  'kurukshetra': 'Haryana',
+  'sonipat': 'Haryana'
+};
+
+/**
+ * Resolves a district name to its canonical Indian state if known
+ */
+export function getCanonicalStateForDistrict(districtName?: string | null): string | null {
+  if (!districtName) return null;
+  const clean = districtName.toLowerCase().replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  if (DISTRICT_TO_STATE_MAP[clean]) {
+    return DISTRICT_TO_STATE_MAP[clean];
+  }
+
+  // Check alias map
+  for (const [canonical, aliases] of Object.entries(DISTRICT_ALIAS_MAP)) {
+    if (clean === canonical || aliases.includes(clean)) {
+      if (DISTRICT_TO_STATE_MAP[canonical]) {
+        return DISTRICT_TO_STATE_MAP[canonical];
+      }
+    }
+  }
+
+  // Substring check
+  for (const [key, state] of Object.entries(DISTRICT_TO_STATE_MAP)) {
+    if (clean.includes(key)) {
+      return state;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Normalizes user or API state name into canonical format
  */
 export function normalizeState(rawState?: string | null): string {
   if (!rawState) return '';
-  const clean = rawState.trim().toLowerCase();
-  return STATE_CANONICAL_MAP[clean] || (clean.charAt(0).toUpperCase() + clean.slice(1));
+  const trimmed = rawState.trim();
+  if (!trimmed) return '';
+  
+  const clean = trimmed.toLowerCase();
+  if (['all', 'all states', 'all_states', 'all-states', 'national', 'india', 'none', 'null', 'undefined'].includes(clean)) {
+    return '';
+  }
+
+  // Direct match in canonical map
+  if (STATE_CANONICAL_MAP[clean]) {
+    return STATE_CANONICAL_MAP[clean];
+  }
+
+  // If passed as "City, State" e.g. "Surat, Gujarat" or "Surat, GJ" or "Gujarat, India"
+  if (clean.includes(',')) {
+    const parts = clean.split(',').map(p => p.trim());
+    for (const part of parts) {
+      if (STATE_CANONICAL_MAP[part]) {
+        return STATE_CANONICAL_MAP[part];
+      }
+    }
+  }
+
+  // Check word boundary match for any canonical state
+  for (const [key, canonical] of Object.entries(STATE_CANONICAL_MAP)) {
+    const regex = new RegExp(`(^|\\b)${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\b|$)`, 'i');
+    if (regex.test(clean)) {
+      return canonical;
+    }
+  }
+
+  return clean.replace(/\b\w/g, c => c.toUpperCase());
 }
 
 /**

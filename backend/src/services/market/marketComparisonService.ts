@@ -5,7 +5,8 @@ import {
   normalizeState,
   getNeighboringStates,
   buildDistrictRegex,
-  calculateFreshness
+  calculateFreshness,
+  getCanonicalStateForDistrict
 } from '../../utils/geoNormalization';
 
 export interface MarketComparisonItem {
@@ -79,7 +80,15 @@ export class MarketComparisonService {
       crop: new RegExp(`^${safeCrop}$`, 'i')
     };
 
-    const canonicalState = normalizeState(options.state);
+    let canonicalState = normalizeState(options.state);
+    if (options.district) {
+      const inferred = getCanonicalStateForDistrict(options.district);
+      if (inferred) {
+        if (!canonicalState || (canonicalState !== inferred && !options.state?.toLowerCase().includes(inferred.toLowerCase()))) {
+          canonicalState = inferred;
+        }
+      }
+    }
     const districtRegex = buildDistrictRegex(options.district);
 
     try {
@@ -167,17 +176,24 @@ export class MarketComparisonService {
           }
         }
       } else {
-        // No state provided: Check if farmer requested national comparison or unconstrained search
-        const nationalDocs = await MarketPrice.find(cropFilter)
-          .sort({ date: -1, lastUpdated: -1 })
-          .limit(40)
-          .lean();
+        // No state provided: Check if farmer explicitly requested national comparison
+        if (options.allowNationalFallback) {
+          const nationalDocs = await MarketPrice.find(cropFilter)
+            .sort({ date: -1, lastUpdated: -1 })
+            .limit(40)
+            .lean();
 
-        for (const nat of nationalDocs) {
-          candidateRecords.push({ record: nat, scope: 'national' });
+          for (const nat of nationalDocs) {
+            candidateRecords.push({ record: nat, scope: 'national' });
+          }
+          activeScope = 'national';
+          isNationalFallback = true;
+        } else {
+          // Empty state without explicit national fallback must NOT silently become a national search
+          candidateRecords = [];
+          activeScope = 'state';
+          isNationalFallback = false;
         }
-        activeScope = 'national';
-        isNationalFallback = true;
       }
 
       // Deduplicate by market name to ensure one latest entry per mandi

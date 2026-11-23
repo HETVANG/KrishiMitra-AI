@@ -2,6 +2,7 @@ import { MarketPrice } from '../models/MarketPrice';
 import { MarketPriceHistory } from '../models/MarketPriceHistory';
 import type { MarketQueryOptions } from '../interfaces/market';
 import { buildMarketFilter, getPaginationMeta, normalizeMarketRecord } from '../utils/marketUtils';
+import { normalizeState } from '../utils/geoNormalization';
 import { marketSyncService } from './MarketSyncService';
 
 class MarketPriceService {
@@ -32,7 +33,11 @@ class MarketPriceService {
   }
 
   public async getPrices(query: MarketQueryOptions = {}) {
-    const cacheKey = `prices:${JSON.stringify(query)}`;
+    const rawState = typeof query.state === 'string' ? query.state.trim() : '';
+    const canonicalState = normalizeState(rawState);
+    const allowNational = query.allowNationalFallback === true;
+
+    const cacheKey = `prices:${(query.crop || 'Wheat').trim().toLowerCase()}:${canonicalState.toLowerCase()}:${(query.district || '').trim().toLowerCase()}:${query.page || 1}:${query.limit || 20}:${query.date || ''}:${allowNational ? 'nat' : 'loc'}`;
     const cachedResult = this.getCached<any>(cacheKey);
     if (cachedResult) {
       return cachedResult;
@@ -41,6 +46,21 @@ class MarketPriceService {
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
     let filter = buildMarketFilter(query);
+
+    // If no state could be resolved and national fallback is NOT explicitly permitted,
+    // prevent silent national leakage by matching nothing
+    if (!filter.state && !allowNational) {
+      console.info('[Market Price Service] No valid state provided and allowNationalFallback is false. Preventing silent national query.');
+      const emptyResult = {
+        prices: [],
+        analytics: this.buildAnalytics([], null),
+        pagination: getPaginationMeta(page, limit, 0),
+        lastUpdated: null,
+        fallbackSource: 'no-state-restricted'
+      };
+      this.setCache(cacheKey, emptyResult);
+      return emptyResult;
+    }
 
     let fallbackSource = 'exact-match';
     let total = await MarketPrice.countDocuments(filter);
@@ -58,7 +78,7 @@ class MarketPriceService {
       }
 
       // Level 3: latest-state (Drop location filters, keep crop & state only)
-      if (total === 0) {
+      if (total === 0 && filter.state) {
         console.info('[Market Price Service Fallback] Level 2 (latest-local) returned 0 records. Attempting Level 3 (latest-state) by keeping crop & state only...');
         delete filter.$or;
         delete filter.district;
@@ -69,9 +89,9 @@ class MarketPriceService {
         }
       }
 
-      // Level 4: latest-country (Drop state filter, keep crop only) - ONLY if state was not explicitly specified or national fallback requested
-      if (total === 0 && (!query.state || query.allowNationalFallback)) {
-        console.info('[Market Price Service Fallback] Level 3 (latest-state) returned 0 records. Attempting Level 4 (latest-country) by keeping crop only...');
+      // Level 4: latest-country (Drop state filter, keep crop only) - STRICTLY ONLY IF EXPLICITLY ALLOWED
+      if (total === 0 && allowNational) {
+        console.info('[Market Price Service Fallback] Level 3 (latest-state) returned 0 records. Attempting Level 4 (latest-country) as explicitly requested...');
         delete filter.state;
         total = await MarketPrice.countDocuments(filter);
         if (total > 0) {

@@ -97,6 +97,11 @@ export const MarketDashboard: React.FC = () => {
   const [pagination, setPagination] = useState<any>(null);
   const [allowNationalSearch, setAllowNationalSearch] = useState<boolean>(false);
 
+  // Crop Selector Search & Dropdown State
+  const [cropDropdownOpen, setCropDropdownOpen] = useState(false);
+  const [cropSearchQuery, setCropSearchQuery] = useState('');
+  const cropDropdownRef = useRef<HTMLDivElement>(null);
+
   // Location States
   const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(initialLoc.coords);
   const [locationName, setLocationName] = useState<string>(initialLoc.address);

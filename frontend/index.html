@@ -50,8 +50,8 @@
       }
     </script>
 
-    <!-- Razorpay Standard Web Checkout -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Razorpay Standard Web Checkout (Deferred to avoid blocking mobile WebView startup parsing) -->
+    <script defer src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </head>
   <body class="bg-gray-50 text-gray-900 dark:bg-dark-950 dark:text-dark-100 antialiased">
     <div id="root"></div>

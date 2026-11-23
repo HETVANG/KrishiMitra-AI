@@ -71,6 +71,14 @@ const Terms = React.lazy(() => import('./pages/Terms').then(m => ({ default: m.T
 const RefundPolicy = React.lazy(() => import('./pages/RefundPolicy').then(m => ({ default: m.RefundPolicy })));
 const Settings = React.lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Support = React.lazy(() => import('./pages/Support').then(m => ({ default: m.Support })));
+const CookiePolicy = React.lazy(() => import('./pages/CookiePolicy').then(m => ({ default: m.CookiePolicy })));
+const CookieSettings = React.lazy(() => import('./pages/CookieSettings').then(m => ({ default: m.CookieSettings })));
+const BusinessInformation = React.lazy(() => import('./pages/BusinessInformation').then(m => ({ default: m.BusinessInformation })));
+const Accessibility = React.lazy(() => import('./pages/Accessibility').then(m => ({ default: m.Accessibility })));
+const DataDeletion = React.lazy(() => import('./pages/DataDeletion').then(m => ({ default: m.DataDeletion })));
+const Unsubscribe = React.lazy(() => import('./pages/Unsubscribe').then(m => ({ default: m.Unsubscribe })));
+import { CookieConsentBanner } from './components/common/CookieConsentBanner';
+import { getStoredCookieConsent, applyAnalyticsGating } from './utils/cookieConsent';
 
 // Protected Route Guard
 const ProtectedRoute = () => {
@@ -227,45 +235,17 @@ export const AppContent = () => {
   console.log('[The Khedut Startup Log] Loading Routes & React Router');
 
   React.useEffect(() => {
-    const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-    const clarityId = import.meta.env.VITE_CLARITY_PROJECT_ID;
+    // DPDP Act 2023 / GDPR Compliant Cookie-Gated Analytics Initialization
+    const initialConsent = getStoredCookieConsent();
+    applyAnalyticsGating(initialConsent);
 
-    if (gaId) {
-      console.log('[Analytics] Google Analytics ID detected:', gaId);
-      const script1 = document.createElement('script');
-      script1.async = true;
-      script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-      document.head.appendChild(script1);
-
-      const script2 = document.createElement('script');
-      script2.innerHTML = `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '${gaId}');
-      `;
-      document.head.appendChild(script2);
-    } else {
-      console.info('[Analytics] Google Analytics ID is not configured (VITE_GA_MEASUREMENT_ID missing).');
-    }
-
-    if (clarityId) {
-      console.log('[Analytics] Microsoft Clarity ID detected:', clarityId);
-      const script3 = document.createElement('script');
-      script3.type = 'text/javascript';
-      script3.innerHTML = `
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window,document,"clarity","script","${clarityId}");
-      `;
-      document.head.appendChild(script3);
-    } else {
-      console.info('[Analytics] Microsoft Clarity ID is not configured (VITE_CLARITY_PROJECT_ID missing).');
-    }
+    const handleConsentChange = (e: any) => {
+      applyAnalyticsGating(e.detail || getStoredCookieConsent());
+    };
+    window.addEventListener('km_cookie_consent_updated', handleConsentChange);
 
     // Native Capacitor initialization
+    let cleanupLifecycle: (() => void) | undefined;
     if (Capacitor.isNativePlatform()) {
       try {
         StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
@@ -273,15 +253,18 @@ export const AppContent = () => {
         StatusBar.setBackgroundColor({ color: '#15803d' }).catch(() => {});
         SplashScreen.hide().catch(() => {});
 
-        const cleanupLifecycle = initNativeLifecycle();
-
-        return () => {
-          cleanupLifecycle();
-        };
+        cleanupLifecycle = initNativeLifecycle();
       } catch (nativeErr) {
         console.warn('[Capacitor Native Init Warning]', nativeErr);
       }
     }
+
+    return () => {
+      window.removeEventListener('km_cookie_consent_updated', handleConsentChange);
+      if (cleanupLifecycle) {
+        cleanupLifecycle();
+      }
+    };
   }, []);
 
   return (
@@ -313,8 +296,17 @@ export const AppContent = () => {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/privacy-policy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/terms-and-conditions" element={<Terms />} />
+          <Route path="/refund" element={<RefundPolicy />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/cookie-settings" element={<CookieSettings />} />
+          <Route path="/business-information" element={<BusinessInformation />} />
+          <Route path="/accessibility" element={<Accessibility />} />
+          <Route path="/data-deletion" element={<DataDeletion />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/support" element={<Support />} />
 
           {/* Public Report Authenticity Verification (QR code target) */}
@@ -379,6 +371,7 @@ export const AppContent = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </React.Suspense>
+      <CookieConsentBanner />
     </BrowserRouter>
   );
 };

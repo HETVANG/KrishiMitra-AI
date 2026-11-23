@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { ReferralWidget } from '../components/ReferralWidget';
@@ -12,7 +13,12 @@ import {
   ShieldCheck, 
   Users, 
   Sparkles,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Shield,
+  FileText,
+  Cookie,
+  BellOff,
+  Trash2
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
@@ -212,6 +218,85 @@ export const Settings: React.FC = () => {
             >
               Toggle to {currentTheme === 'dark' ? 'Light' : 'Dark'} Mode
             </button>
+          </div>
+
+          <hr className="border-gray-100 dark:border-dark-800" />
+
+          {/* Privacy, Data Protection & Legal Controls (DPDP Act 2023) */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
+                <Shield size={18} className="text-brand-600" /> Privacy, Data & Legal Rights
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-dark-400 mt-0.5">
+                Manage your personal data preferences, legal agreements, and account erasure requests under DPDP Act 2023.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <Link
+                to="/privacy"
+                className="p-3.5 rounded-2xl border border-gray-150 dark:border-dark-800 bg-gray-50/70 dark:bg-dark-850/60 hover:border-brand-500 flex items-center justify-between transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck size={16} className="text-brand-600" />
+                  <span className="font-bold text-gray-800 dark:text-dark-100">Privacy Policy</span>
+                </div>
+                <span className="text-[11px] text-brand-600 font-semibold">View &rarr;</span>
+              </Link>
+
+              <Link
+                to="/terms"
+                className="p-3.5 rounded-2xl border border-gray-150 dark:border-dark-800 bg-gray-50/70 dark:bg-dark-850/60 hover:border-brand-500 flex items-center justify-between transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <FileText size={16} className="text-brand-600" />
+                  <span className="font-bold text-gray-800 dark:text-dark-100">Terms of Service</span>
+                </div>
+                <span className="text-[11px] text-brand-600 font-semibold">View &rarr;</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('km_open_cookie_settings'))}
+                className="p-3.5 rounded-2xl border border-gray-150 dark:border-dark-800 bg-gray-50/70 dark:bg-dark-850/60 hover:border-brand-500 flex items-center justify-between transition-colors cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Cookie size={16} className="text-amber-600" />
+                  <span className="font-bold text-gray-800 dark:text-dark-100">Cookie & Storage Preferences</span>
+                </div>
+                <span className="text-[11px] text-brand-600 font-semibold">Manage &rarr;</span>
+              </button>
+
+              <Link
+                to="/unsubscribe"
+                className="p-3.5 rounded-2xl border border-gray-150 dark:border-dark-800 bg-gray-50/70 dark:bg-dark-850/60 hover:border-brand-500 flex items-center justify-between transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <BellOff size={16} className="text-purple-600" />
+                  <span className="font-bold text-gray-800 dark:text-dark-100">Marketing Unsubscribe</span>
+                </div>
+                <span className="text-[11px] text-brand-600 font-semibold">Opt Out &rarr;</span>
+              </Link>
+            </div>
+
+            {/* Permanent Account Deletion Action */}
+            <div className="p-4 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <span className="font-bold text-rose-900 dark:text-rose-200 text-xs flex items-center gap-1.5">
+                  <Trash2 size={14} className="text-rose-600" /> Account & Data Deletion
+                </span>
+                <p className="text-[11px] text-rose-800/80 dark:text-rose-300/80 mt-0.5">
+                  Permanently delete your profile, crop scans, and chat history under DPDP Act 2023 & Google Play policies.
+                </p>
+              </div>
+              <Link
+                to="/data-deletion"
+                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
+              >
+                Request Deletion
+              </Link>
+            </div>
           </div>
         </div>
       )}

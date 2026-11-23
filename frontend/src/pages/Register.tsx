@@ -52,6 +52,10 @@ export const Register: React.FC = () => {
   const [bio, setBio] = useState('');
   const [consultationFee, setConsultationFee] = useState('');
 
+  // Legal Consent & Marketing opt-in (DPDP Act 2023)
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [slowNotice, setSlowNotice] = useState(false);
@@ -76,6 +80,7 @@ export const Register: React.FC = () => {
       phone,
       role,
       referralCode: referralCode ? referralCode.trim() : undefined,
+      marketingConsent,
     };
 
     if (role === 'expert') {
@@ -355,10 +360,51 @@ export const Register: React.FC = () => {
               </div>
             </div>
 
+            {/* Legal & Privacy Consent Notices */}
+            <div className="space-y-2.5 pt-2 text-left">
+              <div className="flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  id="terms-consent"
+                  required
+                  checked={termsAgreed}
+                  onChange={(e) => setTermsAgreed(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-dark-700 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                />
+                <label htmlFor="terms-consent" className="text-xs text-slate-600 dark:text-dark-300 cursor-pointer select-none">
+                  I agree to the{' '}
+                  <Link to="/terms" target="_blank" className="text-brand-600 dark:text-brand-400 font-bold underline hover:text-brand-700">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" target="_blank" className="text-brand-600 dark:text-brand-400 font-bold underline hover:text-brand-700">
+                    Privacy Policy
+                  </Link>.*
+                </label>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  id="marketing-consent"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-dark-700 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                />
+                <label htmlFor="marketing-consent" className="text-xs text-slate-500 dark:text-dark-400 cursor-pointer select-none">
+                  (Optional) I agree to receive agricultural advisory updates and seasonal mandi alerts. You can withdraw consent anytime via{' '}
+                  <Link to="/unsubscribe" target="_blank" className="text-brand-600 dark:text-brand-400 underline">
+                    Unsubscribe
+                  </Link>{' '}
+                  or Settings.
+                </label>
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-3 mt-4 flex items-center justify-center gap-2"
+              disabled={loading || !termsAgreed}
+              className="btn-primary w-full py-3 mt-4 flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

@@ -80,6 +80,8 @@ export class AuthController {
         expertProfile: safeRole === 'expert' ? expertProfile : undefined,
         settings: settings || { language: 'en', theme: 'light' },
         farmLocation,
+        marketingConsent: Boolean(req.body.marketingConsent),
+        marketingConsentTimestamp: req.body.marketingConsent ? new Date() : undefined,
         plan: 'free',
         subscriptionStatus: 'trialing',
         subscriptionType: 'trial',
@@ -223,6 +225,82 @@ export class AuthController {
       return res.json({
         success: true,
         user: mapUserPayload(user),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async requestDataDeletion(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email, phone, reason } = req.body;
+      let targetUser = null;
+
+      const authUser = (req as AuthRequest).user;
+      if (authUser) {
+        targetUser = await User.findById(authUser._id);
+      } else if (email || phone) {
+        const query: any = {};
+        if (email) query.email = String(email).trim().toLowerCase();
+        if (phone) query.phone = String(phone).trim();
+        targetUser = await User.findOne(query);
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide registered email or phone number to submit deletion request.'
+        });
+      }
+
+      if (!targetUser) {
+        return res.json({
+          success: true,
+          message: 'If an account matches your details, your data deletion request has been registered and will be processed within 30 days.'
+        });
+      }
+
+      targetUser.deletionRequested = true;
+      targetUser.deletionRequestedAt = new Date();
+      targetUser.deletionReason = reason ? String(reason).slice(0, 500) : 'User requested account closure';
+      targetUser.deletionScheduledFor = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      targetUser.isBlocked = true;
+      await targetUser.save();
+
+      return res.json({
+        success: true,
+        message: 'Your account deletion request has been registered. Account access has been deactivated, and all diagnostic, chat, and agronomic personal data will be completely purged within 30 days in accordance with the DPDP Act 2023 and Google Play Store policies. Statutory tax records will be retained for 7 years as mandated by Indian GST law.',
+        scheduledDate: targetUser.deletionScheduledFor
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async unsubscribe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { emailOrPhone, channels } = req.body;
+      if (!emailOrPhone) {
+        return res.status(400).json({ success: false, message: 'Email or phone number is required.' });
+      }
+
+      const cleanInput = String(emailOrPhone).trim().toLowerCase();
+      const user = await User.findOne({
+        $or: [{ email: cleanInput }, { phone: cleanInput }]
+      });
+
+      if (user) {
+        user.marketingConsent = false;
+        user.unsubscribedAt = new Date();
+        user.unsubscribePreferences = {
+          marketingEmails: channels?.marketingEmails ?? true,
+          promotionalWhatsapp: channels?.promotionalWhatsapp ?? true,
+          promotionalPush: channels?.promotionalPush ?? true
+        };
+        await user.save();
+      }
+
+      return res.json({
+        success: true,
+        message: 'You have been successfully unsubscribed from promotional marketing communications. Essential transactional notifications (such as OTPs, security alerts, and payment receipts) will remain active to safeguard your account.'
       });
     } catch (error) {
       next(error);

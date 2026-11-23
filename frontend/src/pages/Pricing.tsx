@@ -274,6 +274,22 @@ export const Pricing: React.FC = () => {
               </div>
             )}
 
+            {/* Trust, Tax & Refund Policy Transparency Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 flex items-center gap-2.5 text-xs text-slate-600 dark:text-dark-300">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                <span><strong>Inclusive of GST:</strong> All prices in INR are fully inclusive of 18% GST.</span>
+              </div>
+              <div className="p-3.5 bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 flex items-center gap-2.5 text-xs text-slate-600 dark:text-dark-300">
+                <ShieldCheck size={16} className="text-blue-600 shrink-0" />
+                <span><strong>7-Day Guarantee:</strong> Full refund under our <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 font-bold underline">Refund Policy</a>.</span>
+              </div>
+              <div className="p-3.5 bg-white dark:bg-dark-900 rounded-2xl border border-slate-200/80 dark:border-dark-800 flex items-center gap-2.5 text-xs text-slate-600 dark:text-dark-300">
+                <CreditCard size={16} className="text-brand-600 shrink-0" />
+                <span><strong>No Auto-Debits:</strong> Non-recurring manual renewal with zero surprise deductions.</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Free Plan Card */}
@@ -524,10 +540,20 @@ export const Pricing: React.FC = () => {
               </div>
 
               {/* Summary */}
-              <div className="bg-gray-50 dark:bg-dark-950 p-4 rounded-2xl border space-y-2.5 text-xs text-gray-600 dark:text-dark-400">
+              <div className="bg-gray-50 dark:bg-dark-950 p-4 rounded-2xl border border-slate-200/80 dark:border-dark-800 space-y-2.5 text-xs text-gray-600 dark:text-dark-400">
                 <div className="flex justify-between">
-                  <span>Base Premium plan price:</span>
+                  <span>Base Plan Price:</span>
                   <span className="font-semibold text-gray-800 dark:text-dark-200">₹{basePrice}</span>
+                </div>
+
+                <div className="flex justify-between text-[11px] text-slate-500 dark:text-dark-400">
+                  <span>Applicable Taxes:</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Inclusive of 18% GST</span>
+                </div>
+
+                <div className="flex justify-between text-[11px] text-slate-500 dark:text-dark-400">
+                  <span>Renewal Type:</span>
+                  <span className="font-semibold text-slate-700 dark:text-dark-300">Manual Renewal (Non-recurring)</span>
                 </div>
                 
                 {discountMessage && (
@@ -536,12 +562,25 @@ export const Pricing: React.FC = () => {
                   </div>
                 )}
 
-                <hr className="border-dashed" />
+                <hr className="border-dashed border-slate-200 dark:border-dark-800" />
 
                 <div className="flex justify-between text-sm font-bold">
-                  <span className="text-gray-800 dark:text-dark-100">Calculated Final Due:</span>
-                  <span className="text-brand-700 dark:text-brand-405 font-extrabold text-base">₹{finalPrice}</span>
+                  <span className="text-gray-800 dark:text-dark-100">Total Payable Amount:</span>
+                  <span className="text-brand-700 dark:text-brand-400 font-extrabold text-base">₹{finalPrice}</span>
                 </div>
+              </div>
+
+              {/* Legal & Refund Notice */}
+              <div className="text-[11px] text-slate-500 dark:text-dark-400 leading-relaxed bg-brand-50/50 dark:bg-brand-950/20 p-3 rounded-xl border border-brand-100 dark:border-brand-900/30">
+                By clicking &ldquo;Activate Premium&rdquo;, you acknowledge that prices include GST and agree to our{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 font-bold underline hover:text-brand-700">
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 font-bold underline hover:text-brand-700">
+                  Cancellation & Refund Policy
+                </a>{' '}
+                (7-day money-back guarantee).
               </div>
 
               <button

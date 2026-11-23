@@ -100,7 +100,21 @@ const UserSchema = new Schema(
     // Daily usage caps (resets daily via subscription middleware)
     scansUsedToday: { type: Number, default: 0 },
     chatMessagesToday: { type: Number, default: 0 },
-    lastLimitResetDate: { type: Date, default: Date.now }
+    lastLimitResetDate: { type: Date, default: Date.now },
+
+    // Legal, Privacy & User Preferences Compliance fields
+    marketingConsent: { type: Boolean, default: false },
+    marketingConsentTimestamp: { type: Date },
+    unsubscribedAt: { type: Date },
+    unsubscribePreferences: {
+      marketingEmails: { type: Boolean, default: false },
+      promotionalWhatsapp: { type: Boolean, default: false },
+      promotionalPush: { type: Boolean, default: false },
+    },
+    deletionRequested: { type: Boolean, default: false },
+    deletionRequestedAt: { type: Date },
+    deletionReason: { type: String },
+    deletionScheduledFor: { type: Date }
   },
   { timestamps: true }
 );

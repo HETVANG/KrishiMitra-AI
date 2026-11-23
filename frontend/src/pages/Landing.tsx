@@ -384,12 +384,15 @@ export const Landing: React.FC = () => {
 
       {/* 5. Footer */}
       <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 px-4 md:px-8 py-12 mt-auto text-xs">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="space-y-3">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="space-y-3 col-span-2 md:col-span-1">
             <BrandLogo variant="full" size="sm" showTagline={false} className="text-white" />
             <p className="text-[10px] text-slate-500 leading-relaxed max-w-[200px]">
               Empowering farmers across India with AI agronomy, Mandi indices, and scientific crop care.
             </p>
+            <div className="text-[10px] text-slate-600 font-mono">
+              Entity: [TO BE PROVIDED]
+            </div>
           </div>
 
           <div className="space-y-2.5">
@@ -398,29 +401,48 @@ export const Landing: React.FC = () => {
               <NavLink to="/about" className="hover:text-white transition-colors">About Us</NavLink>
               <NavLink to="/contact" className="hover:text-white transition-colors">Contact</NavLink>
               <NavLink to="/support" className="hover:text-white transition-colors">Support FAQ</NavLink>
+              <NavLink to="/business-information" className="hover:text-white transition-colors">Business Information</NavLink>
+              <NavLink to="/accessibility" className="hover:text-white transition-colors">Accessibility Statement</NavLink>
             </div>
           </div>
 
           <div className="space-y-2.5">
-            <h4 className="font-bold text-white text-[10px] uppercase tracking-wider">Legal</h4>
+            <h4 className="font-bold text-white text-[10px] uppercase tracking-wider">Legal & Compliance</h4>
             <div className="flex flex-col gap-1.5">
               <NavLink to="/privacy" className="hover:text-white transition-colors">Privacy Policy</NavLink>
               <NavLink to="/terms" className="hover:text-white transition-colors">Terms of Service</NavLink>
               <NavLink to="/refund-policy" className="hover:text-white transition-colors">Refund Policy</NavLink>
+              <NavLink to="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</NavLink>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('km_open_cookie_settings'))}
+                className="text-left hover:text-white transition-colors cursor-pointer"
+              >
+                Cookie Settings
+              </button>
             </div>
           </div>
 
           <div className="space-y-2.5">
+            <h4 className="font-bold text-white text-[10px] uppercase tracking-wider">User Rights</h4>
+            <div className="flex flex-col gap-1.5">
+              <NavLink to="/data-deletion" className="hover:text-white transition-colors">Account & Data Deletion</NavLink>
+              <NavLink to="/unsubscribe" className="hover:text-white transition-colors">Unsubscribe Alerts</NavLink>
+              <NavLink to="/cookie-settings" className="hover:text-white transition-colors">Storage Preferences</NavLink>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 col-span-2 md:col-span-1">
             <h4 className="font-bold text-white text-[10px] uppercase tracking-wider">Farmer Support</h4>
             <div className="flex flex-col gap-1.5">
               <a href={`mailto:${BRAND.supportEmail}`} className="flex items-center gap-1.5 font-medium hover:text-white transition-colors"><Mail size={12} /> {BRAND.supportEmail}</a>
-              <span className="text-[10px] text-slate-500 leading-normal">Our typical response window is under 24 hours.</span>
+              <span className="text-[10px] text-slate-500 leading-normal">Helpline response window under 24 hours.</span>
             </div>
           </div>
         </div>
 
         <div className="max-w-6xl mx-auto border-t border-slate-800 mt-10 pt-6 text-center text-[10px] text-slate-500 flex flex-col md:flex-row items-center justify-between gap-4">
-          <span>{BRAND.copyright}</span>
+          <span>{BRAND.copyright} | Entity Name: [TO BE PROVIDED]</span>
           <span>Engineered with care for the Indian Farming Community.</span>
         </div>
       </footer>

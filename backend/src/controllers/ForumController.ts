@@ -83,10 +83,11 @@ export class ForumController {
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
 
-      const isLiked = post.likes.includes(req.user._id);
+      const userIdStr = req.user._id.toString();
+      const isLiked = post.likes.some((uid: any) => uid?.toString() === userIdStr);
 
       if (isLiked) {
-        post.likes = post.likes.filter(userId => userId.toString() !== req.user._id.toString());
+        post.likes = post.likes.filter((userId: any) => userId?.toString() !== userIdStr);
       } else {
         post.likes.push(req.user._id);
       }

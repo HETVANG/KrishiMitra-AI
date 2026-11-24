@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import { Disease } from '../models/Disease';
 import { DiseaseHistory } from '../models/DiseaseHistory';
 import { DiseaseIntelligenceService } from '../services/disease/diseaseIntelligenceService';
+import { escapeRegex } from '../utils/marketUtils';
 
 export class DiseaseController {
   /**
@@ -106,7 +107,7 @@ export class DiseaseController {
       const query: any = { user: req.user._id };
 
       if (farmId) query.farm = farmId;
-      if (crop) query.crop = new RegExp(crop as string, 'i');
+      if (crop) query.crop = new RegExp(escapeRegex(crop as string), 'i');
 
       const skip = (Number(page) - 1) * Number(limit);
 

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Partner } from '../models/Partner';
+import { escapeRegex } from '../utils/marketUtils';
 
 export interface PartnerDiscoveryQuery {
   capability?: string;
@@ -63,12 +64,13 @@ export class PartnerDiscoveryService {
 
     if (query.partnerType) filter.partnerType = query.partnerType;
     if (query.capability) filter.capabilities = query.capability;
-    if (query.region) filter.regions = { $in: [query.region, new RegExp(query.region, 'i')] };
+    if (query.region) filter.regions = { $in: [query.region, new RegExp(escapeRegex(query.region), 'i')] };
     if (query.language) filter.languages = query.language;
     if (query.search) {
+      const escapedSearch = escapeRegex(query.search.trim());
       filter.$or = [
-        { organizationName: new RegExp(query.search, 'i') },
-        { description: new RegExp(query.search, 'i') }
+        { organizationName: new RegExp(escapedSearch, 'i') },
+        { description: new RegExp(escapedSearch, 'i') }
       ];
     }
 

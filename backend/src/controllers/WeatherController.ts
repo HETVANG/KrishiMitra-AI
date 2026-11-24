@@ -17,17 +17,24 @@ export class WeatherController {
         return res.status(400).json({ success: false, message: 'Latitude and Longitude query parameters are required.' });
       }
 
+      const numLat = Number(lat);
+      const numLon = Number(lon);
+
+      if (isNaN(numLat) || isNaN(numLon) || numLat < -90 || numLat > 90 || numLon < -180 || numLon > 180) {
+        return res.status(400).json({ success: false, message: 'Latitude must be between -90 and 90 and Longitude between -180 and 180.' });
+      }
+
       const weather = await WeatherService.getWeatherData(
-        Number(lat),
-        Number(lon),
+        numLat,
+        numLon,
         lang as string
       );
 
       // Save weather history logs to MongoDB
       try {
         await WeatherHistory.create({
-          latitude: Number(lat),
-          longitude: Number(lon),
+          latitude: numLat,
+          longitude: numLon,
           temp: weather.current?.temp || 0,
           humidity: weather.current?.humidity || 0,
           description: weather.current?.description || ''
@@ -52,10 +59,17 @@ export class WeatherController {
         return res.status(400).json({ success: false, message: 'Latitude and Longitude are required.' });
       }
 
+      const numLat = Number(lat);
+      const numLon = Number(lon);
+
+      if (isNaN(numLat) || isNaN(numLon) || numLat < -90 || numLat > 90 || numLon < -180 || numLon > 180) {
+        return res.status(400).json({ success: false, message: 'Invalid latitude or longitude coordinate values.' });
+      }
+
       const apiKey = process.env.OPENWEATHER_API_KEY;
       if (apiKey) {
         try {
-          const url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+          const url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${numLat}&lon=${numLon}&limit=1&appid=${apiKey}`;
           const geoRes = await axios.get(url);
           if (geoRes.data && geoRes.data.length > 0) {
             const { name, state, country } = geoRes.data[0];

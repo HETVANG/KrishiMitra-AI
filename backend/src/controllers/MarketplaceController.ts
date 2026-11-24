@@ -95,7 +95,7 @@ export class MarketplaceController {
    */
   static async getRecommendations(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const farmId = req.query.farmId as string;
 
       const graph = await FarmKnowledgeGraphService.getFarmGraph(userId, farmId);
@@ -116,7 +116,7 @@ export class MarketplaceController {
    */
   static async createInquiry(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { farmId, listingId, message, subject } = req.body;
 
       if (!listingId || !message) {
@@ -141,7 +141,7 @@ export class MarketplaceController {
    */
   static async getUserInquiries(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const inquiries = await MarketplaceService.getUserInquiries(userId);
 
       res.json({
@@ -159,7 +159,7 @@ export class MarketplaceController {
    */
   static async toggleFavorite(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { farmId, listingId } = req.body;
 
       if (!listingId) {
@@ -184,7 +184,7 @@ export class MarketplaceController {
    */
   static async getUserFavorites(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const favorites = await MarketplaceService.getUserFavorites(userId);
 
       res.json({
@@ -202,7 +202,7 @@ export class MarketplaceController {
    */
   static async createReview(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { providerId, listingId, rating, comment } = req.body;
 
       if (!providerId || !rating || !comment) {

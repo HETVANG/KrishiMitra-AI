@@ -11,7 +11,7 @@ export class CopilotController {
    */
   static async chat(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { question, farmId, conversationId, language } = req.body;
 
       if (!question || typeof question !== 'string' || !question.trim()) {
@@ -43,7 +43,7 @@ export class CopilotController {
    */
   static async getContext(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const farmId = req.params.farmId !== 'undefined' ? req.params.farmId : undefined;
 
       const context = await CopilotContextService.getFarmContext(userId, farmId);
@@ -59,7 +59,7 @@ export class CopilotController {
    */
   static async getInsights(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const farmId = req.params.farmId !== 'undefined' ? req.params.farmId : undefined;
 
       const insights = await CopilotService.getProactiveInsights(userId, farmId);
@@ -75,7 +75,7 @@ export class CopilotController {
    */
   static async getDailyPlan(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const farmId = req.params.farmId !== 'undefined' ? req.params.farmId : undefined;
 
       const tasks = await CopilotService.getDailyFarmPlan(userId, farmId);
@@ -91,7 +91,7 @@ export class CopilotController {
    */
   static async getWeeklyPlan(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const farmId = req.params.farmId !== 'undefined' ? req.params.farmId : undefined;
 
       const schedule = await CopilotService.getWeeklyFarmPlan(userId, farmId);
@@ -107,7 +107,7 @@ export class CopilotController {
    */
   static async toggleTask(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { taskId } = req.params;
 
       const task = await FarmTask.findOne({ _id: taskId, user: userId });
@@ -129,7 +129,7 @@ export class CopilotController {
    */
   static async listConversations(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const conversations = await CopilotConversation.find({ user: userId })
         .select('_id title farm lastUpdated createdAt')
         .sort({ lastUpdated: -1 })
@@ -146,7 +146,7 @@ export class CopilotController {
    */
   static async getConversation(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { id } = req.params;
 
       const conversation = await CopilotConversation.findOne({ _id: id, user: userId }).lean();
@@ -165,7 +165,7 @@ export class CopilotController {
    */
   static async deleteConversation(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any).user.id;
+      const userId = (req as any).user?.id || (req as any).user?._id?.toString();
       const { id } = req.params;
 
       await CopilotConversation.deleteOne({ _id: id, user: userId });

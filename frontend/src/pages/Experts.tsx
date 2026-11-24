@@ -210,10 +210,13 @@ export const Experts: React.FC = () => {
 
       if (res.data && res.data.success) {
         loadAppointments();
-        alert(`Request status updated to ${newStatus.toUpperCase()} successfully!`);
+        setInfo(`Request status updated to ${newStatus.toUpperCase()} successfully.`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update status:', err);
+      const errMsg = err?.response?.data?.message || 'Failed to update consultation status.';
+      setError(errMsg);
+      alert(errMsg);
     }
   };
 
@@ -610,7 +613,7 @@ export const Experts: React.FC = () => {
                       )}
 
                       {/* Expert Claim/Approval buttons */}
-                      {isExpert && (
+                      {isExpert ? (
                         <div className="flex gap-1.5 pt-2 border-t border-gray-100/50">
                           {item.status === 'pending' && (
                             <button
@@ -637,6 +640,21 @@ export const Experts: React.FC = () => {
                             </button>
                           )}
                         </div>
+                      ) : (
+                        item.status !== 'cancelled' && item.status !== 'completed' && (
+                          <div className="pt-2 border-t border-gray-100/50">
+                            <button
+                              onClick={() => {
+                                if (window.confirm(t('experts.cancel_confirm', 'Are you sure you want to cancel this consultation?'))) {
+                                  handleUpdateStatus(item._id, 'cancelled');
+                                }
+                              }}
+                              className="w-full py-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-955/20 border border-red-200/50 font-bold text-[9px] uppercase rounded-lg transition-colors"
+                            >
+                              {t('common.cancel', 'Cancel Consultation')}
+                            </button>
+                          </div>
+                        )
                       )}
                     </div>
                   );

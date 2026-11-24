@@ -224,6 +224,14 @@ app.get('/health/ready', (req, res) => {
   res.status(200).json({ status: 'ready', telemetry });
 });
 
+// 404 handler for unrecognized routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Cannot ${req.method} ${req.originalUrl}`
+  });
+});
+
 // Centralized error handler
 app.use(errorHandler);
 

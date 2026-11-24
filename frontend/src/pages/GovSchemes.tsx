@@ -15,7 +15,11 @@ export const GovSchemes: React.FC = () => {
   const fetchSchemes = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/schemes/list?search=${search}&category=${category}`);
+      const params: any = {};
+      if (search.trim()) params.search = search.trim();
+      if (category.trim()) params.category = category.trim();
+
+      const res = await api.get('/schemes/list', { params });
       if (res.data && res.data.success) {
         setSchemes(res.data.schemes);
       }

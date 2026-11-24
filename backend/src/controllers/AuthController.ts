@@ -65,6 +65,13 @@ export class AuthController {
       const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
       const safeRole = (req.body.role === 'farmer' || req.body.role === 'expert') ? req.body.role : 'user';
 
+      if (!password || typeof password !== 'string' || password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        });
+      }
+
       // Live MongoDB Mode
       const userExists = await User.findOne({ email: normalizedEmail });
       if (userExists) {

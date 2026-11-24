@@ -64,6 +64,11 @@ export const Register: React.FC = () => {
     e.preventDefault();
     if (loading) return;
 
+    if (password.length < 6) {
+      setError(t('auth.passwordTooShort') || 'Password must be at least 6 characters long');
+      return;
+    }
+
     setError('');
     setLoading(true);
     setSlowNotice(false);
@@ -237,6 +242,7 @@ export const Register: React.FC = () => {
                 <input
                   type="password"
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

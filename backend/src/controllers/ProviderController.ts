@@ -4,6 +4,7 @@ import { ProviderHealthService } from '../services/providers/ProviderHealthServi
 import { ProviderConfigService } from '../services/providers/ProviderConfigService';
 import { Provider } from '../models/Provider';
 import { ProviderLog } from '../models/ProviderLog';
+import { escapeRegex } from '../utils/marketUtils';
 
 export class ProviderController {
   /**
@@ -294,8 +295,9 @@ export class ProviderController {
   static async getLogs(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const safeId = escapeRegex(id);
       const logs = await ProviderLog.find({
-        $or: [{ providerId: id }, { providerName: new RegExp(id, 'i') }]
+        $or: [{ providerId: id }, { providerName: new RegExp(safeId, 'i') }]
       }).sort({ timestamp: -1 }).limit(50).lean();
 
       res.status(200).json({
@@ -314,8 +316,9 @@ export class ProviderController {
   static async getHealthHistory(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const safeId = escapeRegex(id);
       const history = await ProviderLog.find({
-        $or: [{ providerId: id }, { providerName: new RegExp(id, 'i') }],
+        $or: [{ providerId: id }, { providerName: new RegExp(safeId, 'i') }],
         action: 'TEST_CONNECTION'
       }).sort({ timestamp: -1 }).limit(30).lean();
 

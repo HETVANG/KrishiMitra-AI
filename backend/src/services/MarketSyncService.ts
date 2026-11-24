@@ -21,6 +21,18 @@ class MarketSyncService {
   }
 
   private scheduled = false;
+  private isSyncing = false;
+  private lastSyncTime: Date | null = null;
+  private lastSyncResult: MarketSyncResult | null = null;
+
+  public getSyncStatus() {
+    return {
+      isSyncing: this.isSyncing,
+      scheduled: this.scheduled,
+      lastSyncTime: this.lastSyncTime,
+      lastSyncResult: this.lastSyncResult
+    };
+  }
 
   public async scheduleDailySync() {
     if (this.scheduled) {
@@ -39,6 +51,29 @@ class MarketSyncService {
   }
 
   public async syncLatestPrices(): Promise<MarketSyncResult> {
+    if (this.isSyncing) {
+      console.info('[Market Sync] Synchronization already in progress. Skipping duplicate execution.');
+      return {
+        success: true,
+        message: 'Synchronization already in progress',
+        recordsInserted: 0,
+        recordsUpdated: 0,
+        warnings: ['Concurrent sync request skipped']
+      };
+    }
+    this.isSyncing = true;
+
+    try {
+      const result = await this.executeSyncLatestPrices();
+      this.lastSyncTime = new Date();
+      this.lastSyncResult = result;
+      return result;
+    } finally {
+      this.isSyncing = false;
+    }
+  }
+
+  private async executeSyncLatestPrices(): Promise<MarketSyncResult> {
     const warnings: string[] = [];
     const apiKey = process.env.MANDI_API_KEY;
     let apiUrl = process.env.MANDI_API_URL;

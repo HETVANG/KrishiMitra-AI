@@ -163,17 +163,23 @@ export class AppointmentController {
         return res.status(404).json({ success: false, message: 'Appointment not found' });
       }
 
-      const isExpert = req.user.role === 'expert';
       const isFarmer = appointment.farmer.toString() === req.user._id.toString();
+      const isAdmin = req.user.role === 'admin';
+      const isAssignedExpert = !!(appointment.expert && appointment.expert.toString() === req.user._id.toString());
+      const isUnassignedExpert = !appointment.expert && req.user.role === 'expert';
 
-      if (!isExpert && !isFarmer) {
+      if (!isAdmin && !isAssignedExpert && !isUnassignedExpert && !isFarmer) {
         return res.status(403).json({ success: false, message: 'Forbidden: Access denied' });
+      }
+
+      if (isFarmer && !isAdmin && !isAssignedExpert && status !== 'cancelled') {
+        return res.status(403).json({ success: false, message: 'Farmers are only authorized to cancel appointments' });
       }
 
       appointment.status = status;
       
       // If expert accepts/schedules a pending request
-      if (['accepted', 'scheduled'].includes(status) && isExpert) {
+      if (['accepted', 'scheduled'].includes(status) && (isAssignedExpert || isUnassignedExpert || isAdmin)) {
         if (!appointment.expert) {
           appointment.expert = req.user._id; // Assign themselves to general booking request
         }

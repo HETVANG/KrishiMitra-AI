@@ -82,12 +82,13 @@ export const Forum: React.FC = () => {
     try {
       const res = await api.post(`/forum/like/${postId}`);
       if (res.data && res.data.success) {
+        const myId = user?.id || (user as any)?._id?.toString();
         setPosts(prev => prev.map(p => {
           if (p._id === postId) {
             const isLiked = res.data.isLiked;
             const updatedLikes = isLiked 
-              ? [...p.likes, user?.id] 
-              : p.likes.filter((uid: string) => uid !== user?.id);
+              ? [...p.likes.filter((uid: any) => (typeof uid === 'object' ? uid?._id?.toString() : uid?.toString()) !== myId), myId] 
+              : p.likes.filter((uid: any) => (typeof uid === 'object' ? uid?._id?.toString() : uid?.toString()) !== myId);
             return {
               ...p,
               likes: updatedLikes
@@ -95,6 +96,20 @@ export const Forum: React.FC = () => {
           }
           return p;
         }));
+
+        setActivePost((prev: any) => {
+          if (prev && prev._id === postId) {
+            const isLiked = res.data.isLiked;
+            const updatedLikes = isLiked 
+              ? [...(prev.likes || []).filter((uid: any) => (typeof uid === 'object' ? uid?._id?.toString() : uid?.toString()) !== myId), myId] 
+              : (prev.likes || []).filter((uid: any) => (typeof uid === 'object' ? uid?._id?.toString() : uid?.toString()) !== myId);
+            return {
+              ...prev,
+              likes: updatedLikes
+            };
+          }
+          return prev;
+        });
       }
     } catch (err) {
       console.error('Failed to like post:', err);

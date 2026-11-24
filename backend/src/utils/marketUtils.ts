@@ -14,8 +14,8 @@ const toNumberOrNull = (value: unknown): number | null => {
   return null;
 };
 
-export const escapeRegex = (str: string): string => {
-  return str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+export const escapeRegex = (str?: string | null): string => {
+  return typeof str === 'string' ? str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&') : '';
 };
 
 export const normalizeMarketRecord = (record: any, fallbackDate: Date = new Date()) => {

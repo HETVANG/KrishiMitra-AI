@@ -13,6 +13,7 @@ import { CloudinaryService } from './CloudinaryService';
 import { WatermarkAssets } from './pdf/watermarkAssets';
 import { WeatherService } from './WeatherService';
 import { GeminiService, getLocalizedMockData } from './GeminiService';
+import { escapeRegex } from '../utils/marketUtils';
 
 export interface GenerateReportInput {
   userId: string;
@@ -123,7 +124,7 @@ export class ReportService {
         } else if (diseaseName) {
           scanRecord = await DiseaseHistory.findOne({
             user: user._id,
-            diseaseName: new RegExp(diseaseName, 'i')
+            diseaseName: new RegExp(escapeRegex(diseaseName), 'i')
           }).sort({ createdAt: -1 });
         }
 
@@ -303,7 +304,7 @@ export class ReportService {
     }
 
     if (query.search && query.search.trim()) {
-      const q = query.search.trim();
+      const q = escapeRegex(query.search.trim());
       filter.$or = [
         { reportId: new RegExp(q, 'i') },
         { cropName: new RegExp(q, 'i') },
@@ -585,7 +586,7 @@ export class ReportService {
     }
 
     if (query.search && query.search.trim()) {
-      const q = query.search.trim();
+      const q = escapeRegex(query.search.trim());
       filter.$or = [
         { reportId: new RegExp(q, 'i') },
         { farmerName: new RegExp(q, 'i') },

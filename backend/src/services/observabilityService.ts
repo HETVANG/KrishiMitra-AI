@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { ProviderHealthService } from './providers/ProviderHealthService';
+import { marketSyncService } from './MarketSyncService';
 
 export interface ApplicationTelemetry {
   status: 'HEALTHY' | 'DEGRADED' | 'UNAVAILABLE';
@@ -13,6 +14,11 @@ export interface ApplicationTelemetry {
     connected: boolean;
     readyState: number;
     readyStateText: string;
+  };
+  marketSync?: {
+    isSyncing: boolean;
+    scheduled: boolean;
+    lastSyncTime: Date | null;
   };
   providers: {
     totalMonitored: number;
@@ -70,6 +76,7 @@ export class ObservabilityService {
         degradedCount,
         unavailableCount
       },
+      marketSync: marketSyncService.getSyncStatus(),
       timestamp: new Date()
     };
   }

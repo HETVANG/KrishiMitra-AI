@@ -24,17 +24,19 @@ const startServer = async () => {
 
     await connectDB();
 
-    try {
-      marketSyncService.scheduleDailySync();
-      await marketSyncService.syncLatestPrices();
-    } catch (syncErr) {
-      console.warn('[Server] Market sync initialization failed. The app will continue running.', syncErr);
-    }
-
     const server = app.listen(PORT, () => {
       console.log(`[Server] THE KHEDUT Server listening on port ${PORT}`);
       console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+
+    try {
+      marketSyncService.scheduleDailySync();
+      marketSyncService.syncLatestPrices().catch(syncErr => {
+        console.warn('[Server] Initial background market sync failed:', syncErr);
+      });
+    } catch (syncErr) {
+      console.warn('[Server] Market sync initialization failed. The app will continue running.', syncErr);
+    }
 
     process.on('SIGTERM', () => {
       console.log('[Server] SIGTERM received. Shutting down server gracefully...');

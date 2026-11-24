@@ -12,6 +12,7 @@ import { AuditLog } from '../models/AuditLog';
 import { Notification } from '../models/Notification';
 import os from 'os';
 import mongoose from 'mongoose';
+import { escapeRegex } from '../utils/marketUtils';
 
 export class AdminController {
   /**
@@ -254,7 +255,7 @@ export class AdminController {
       const query: any = {};
 
       if (req.query.search) {
-        const searchStr = req.query.search as string;
+        const searchStr = escapeRegex((req.query.search as string).trim());
         query.$or = [
           { name: { $regex: searchStr, $options: 'i' } },
           { email: { $regex: searchStr, $options: 'i' } }

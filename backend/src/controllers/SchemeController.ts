@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { GovernmentScheme } from '../models/GovernmentScheme';
+import { escapeRegex } from '../utils/marketUtils';
 
 export class SchemeController {
   /**
@@ -50,14 +51,16 @@ export class SchemeController {
       const query: any = {};
       
       if (search) {
+        const safeSearch = escapeRegex(String(search).trim());
         query.$or = [
-          { title: new RegExp(search as string, 'i') },
-          { description: new RegExp(search as string, 'i') }
+          { title: new RegExp(safeSearch, 'i') },
+          { description: new RegExp(safeSearch, 'i') }
         ];
       }
 
       if (category) {
-        query.category = new RegExp(category as string, 'i');
+        const safeCategory = escapeRegex(String(category).trim());
+        query.category = new RegExp(safeCategory, 'i');
       }
 
       const schemes = await GovernmentScheme.find(query).sort({ deadline: 1 });

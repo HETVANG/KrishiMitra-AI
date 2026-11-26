@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,7 +19,7 @@ import { BRAND } from './config/brand';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { initNativeLifecycle } from './services/native';
+import { initNativeLifecycle, initPushNotifications } from './services/native';
 
 // Lazy Loaded Pages for performance route splitting
 const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -231,6 +231,23 @@ const HomeRoute = () => {
   return token ? <Navigate to="/dashboard" replace /> : <Landing />;
 };
 
+const NativePushNotifier: React.FC = () => {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const cleanupPush = initPushNotifications((path) => {
+        navigate(path);
+      });
+      return () => {
+        cleanupPush();
+      };
+    }
+  }, [navigate]);
+
+  return null;
+};
+
 export const AppContent = () => {
   console.log('[The Khedut Startup Log] Loading Routes & React Router');
 
@@ -269,6 +286,9 @@ export const AppContent = () => {
 
   return (
     <BrowserRouter>
+      {/* Native Push Notification Lifecycle & Router Navigation Integration */}
+      <NativePushNotifier />
+
       {/* Toast Notification Container for react-toastify alerts */}
       <ToastContainer
         position="top-right"

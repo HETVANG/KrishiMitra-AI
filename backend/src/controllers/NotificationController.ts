@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { Notification } from '../models/Notification';
 import { NotificationPreference } from '../models/NotificationPreference';
+import { DeviceToken } from '../models/DeviceToken';
+import { FCMService } from '../services/fcmService';
 
 export class NotificationController {
   /**
@@ -184,6 +186,124 @@ export class NotificationController {
       );
 
       res.json({ success: true, data: pref });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  /**
+   * POST /api/notifications/devices/register
+   * Securely register or refresh an FCM device token for the authenticated user.
+   * Prevents duplicates and associates token with current user.
+   */
+  static async registerDeviceToken(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user.id;
+      const { token, platform = 'android', deviceModel, appVersion } = req.body;
+
+      if (!token || typeof token !== 'string' || token.trim().length === 0) {
+        res.status(400).json({ success: false, error: 'Valid FCM registration token is required' });
+        return;
+      }
+
+      const cleanToken = token.trim();
+      const validPlatform = platform === 'ios' ? 'ios' : platform === 'web' ? 'web' : 'android';
+
+      // Upsert: associates token uniquely with this user, reactivates it if previously inactive
+      const device = await DeviceToken.findOneAndUpdate(
+        { token: cleanToken },
+        {
+          $set: {
+            user: userId,
+            token: cleanToken,
+            platform: validPlatform,
+            deviceModel: deviceModel ? String(deviceModel).trim() : undefined,
+            appVersion: appVersion ? String(appVersion).trim() : undefined,
+            isActive: true,
+            lastUsedAt: new Date()
+          }
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Device token registered successfully',
+        data: {
+          id: device._id,
+          platform: device.platform,
+          lastUsedAt: device.lastUsedAt
+        }
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  /**
+   * POST /api/notifications/devices/unregister
+   * Remove or deactivate an FCM device token upon logout or permission revoke.
+   */
+  static async unregisterDeviceToken(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user.id;
+      const { token } = req.body;
+
+      if (!token || typeof token !== 'string') {
+        res.status(400).json({ success: false, error: 'FCM token is required' });
+        return;
+      }
+
+      const cleanToken = token.trim();
+
+      // Only remove if it belongs to the authenticated user
+      await DeviceToken.findOneAndDelete({ token: cleanToken, user: userId });
+
+      res.status(200).json({
+        success: true,
+        message: 'Device token unregistered successfully'
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  /**
+   * POST /api/notifications/test-fcm
+   * Authenticated test-only endpoint to send a single push notification to the requesting user's registered device.
+   * Strictly gated: only targets req.user.id, never sends to other users, requires authentication.
+   */
+  static async sendTestPush(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        res.status(401).json({ success: false, error: 'Authentication required' });
+        return;
+      }
+
+      if (!FCMService.isConfigured()) {
+        res.status(503).json({
+          success: false,
+          error: 'Firebase Admin credentials not configured on backend',
+          code: 'FCM_UNCONFIGURED'
+        });
+        return;
+      }
+
+      const result = await FCMService.sendToUser(userId, {
+        title: '🌾 The Khedut: Test Push Notification',
+        body: 'Your Firebase Cloud Messaging push notification integration is verified and working!',
+        data: {
+          type: 'weather',
+          actionUrl: '/dashboard'
+        }
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Test notification dispatched',
+        data: result
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

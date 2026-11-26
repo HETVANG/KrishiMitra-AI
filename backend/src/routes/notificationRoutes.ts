@@ -13,4 +13,9 @@ router.post('/:id/dismiss', authenticate, NotificationController.dismissNotifica
 router.get('/preferences', authenticate, NotificationController.getPreferences);
 router.put('/preferences', authenticate, NotificationController.updatePreferences);
 
+// Device Token Registration & Management (FCM)
+router.post('/devices/register', authenticate, NotificationController.registerDeviceToken);
+router.post('/devices/unregister', authenticate, NotificationController.unregisterDeviceToken);
+router.post('/test-fcm', authenticate, NotificationController.sendTestPush);
+
 export default router;

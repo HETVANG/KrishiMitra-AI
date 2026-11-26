@@ -18,8 +18,11 @@ import {
   FileText,
   Cookie,
   BellOff,
+  Bell,
   Trash2
 } from 'lucide-react';
+import { requestNotificationPermission } from '../services/native';
+import { toast } from 'react-toastify';
 
 export const Settings: React.FC = () => {
   const { user, updateSettings } = useAuth();
@@ -54,6 +57,15 @@ export const Settings: React.FC = () => {
       console.error('Failed to toggle theme setting:', err);
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleEnableNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    if (granted) {
+      toast.success('Push notifications enabled! You will now receive important agricultural and market alerts.');
+    } else {
+      toast.info('Notification permission was not granted. Please check your Android device notification settings for The Khedut.');
     }
   };
 
@@ -217,6 +229,27 @@ export const Settings: React.FC = () => {
               className="px-5 py-2.5 rounded-2xl bg-gray-100 dark:bg-dark-800 text-gray-800 dark:text-dark-100 font-extrabold text-xs hover:bg-gray-200 dark:hover:bg-dark-750 transition-colors self-start sm:self-auto min-h-[40px]"
             >
               Toggle to {currentTheme === 'dark' ? 'Light' : 'Dark'} Mode
+            </button>
+          </div>
+
+          <hr className="border-gray-100 dark:border-dark-800" />
+
+          {/* Push Notifications Configuration */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-extrabold text-base text-gray-800 dark:text-dark-100 flex items-center gap-2">
+                <Bell size={18} className="text-brand-600" /> Push Notifications
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-dark-400 mt-0.5">
+                Receive real-time alerts for Mandi price changes, weather warnings, and crop health advisories.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleEnableNotifications}
+              className="px-5 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs transition-colors self-start sm:self-auto min-h-[40px] shadow-sm flex items-center gap-2"
+            >
+              <Bell size={14} /> Enable Notifications
             </button>
           </div>
 

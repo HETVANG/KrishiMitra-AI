@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import i18n from '../i18n';
+import { registerTokenWithBackend, unregisterTokenFromBackend } from '../services/native';
 
 interface User {
   id: string;
@@ -155,6 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         i18n.changeLanguage(userLang);
         localStorage.setItem('km-lang', userLang);
       }
+      registerTokenWithBackend().catch(() => {});
     }
   };
 
@@ -173,12 +175,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         i18n.changeLanguage(userLang);
         localStorage.setItem('km-lang', userLang);
       }
+      registerTokenWithBackend().catch(() => {});
     }
   };
 
 
 
   const logout = () => {
+    unregisterTokenFromBackend().catch(() => {});
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');

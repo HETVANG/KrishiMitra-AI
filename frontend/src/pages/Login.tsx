@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, AlertCircle, Loader2 } from 'lucide-react';
+import { Phone, Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from '../components/BrandLogo';
 
@@ -28,8 +28,9 @@ export const Login: React.FC = () => {
     }
   }, [token, redirectParam, navigate]);
 
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [slowNotice, setSlowNotice] = useState(false);
@@ -39,6 +40,35 @@ export const Login: React.FC = () => {
     if (loading) return; // Prevent duplicate submit
 
     setError('');
+
+    const cleanPhone = phone.trim().replace(/[\s\-\(\)]/g, '');
+
+    if (!cleanPhone) {
+      setError(t('auth.mobile_required') || 'Please enter your mobile number.');
+      return;
+    }
+
+    // Indian mobile number validation (+91 support, 10 digits starting with 6, 7, 8, or 9)
+    const indianMobileRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+    if (!indianMobileRegex.test(cleanPhone)) {
+      setError(t('auth.invalid_mobile') || 'Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      return;
+    }
+
+    if (!password) {
+      setError(t('auth.password_required') || 'Please enter your password.');
+      return;
+    }
+
+    // Extract core 10 digits for clean delivery to authentication service
+    const normalizedPhone = cleanPhone.startsWith('+91')
+      ? cleanPhone.slice(3)
+      : (cleanPhone.startsWith('91') && cleanPhone.length === 12)
+      ? cleanPhone.slice(2)
+      : (cleanPhone.startsWith('0') && cleanPhone.length === 11)
+      ? cleanPhone.slice(1)
+      : cleanPhone;
+
     setLoading(true);
     setSlowNotice(false);
 
@@ -48,7 +78,7 @@ export const Login: React.FC = () => {
     }, 2500);
 
     try {
-      await login(email, password);
+      await login(normalizedPhone, password);
       navigate(getSafeRedirectPath(redirectParam), { replace: true });
     } catch (err: any) {
       if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
@@ -56,7 +86,7 @@ export const Login: React.FC = () => {
       } else if (!err.response) {
         setError(t('auth.network_error') || 'Unable to connect to server. Please verify your internet connection or try again in a few moments.');
       } else {
-        setError(err.response?.data?.message || t('auth.invalid_credentials') || 'Invalid email or password.');
+        setError(err.response?.data?.message || t('auth.invalid_credentials') || 'Invalid mobile number or password.');
       }
     } finally {
       clearTimeout(slowTimer);
@@ -123,7 +153,7 @@ export const Login: React.FC = () => {
               {t('auth.login_title') || 'Sign In to The Khedut'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-dark-400 mt-1.5 font-medium">
-              {t('auth.login_subtitle') || 'Please enter your credentials to access your farm'}
+              {t('auth.login_subtitle') || 'Please enter your mobile number and password to access your farm'}
             </p>
           </div>
 
@@ -137,28 +167,46 @@ export const Login: React.FC = () => {
 
           {/* 6-8. Authentication Form */}
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-            {/* 6. Email Field */}
+            {/* Mobile Number Field */}
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
-                {t('auth.email') || 'Email Address'}
+                {t('auth.phone') || 'Mobile Number'}
               </label>
               <div className="flex h-12 w-full items-center rounded-xl border border-gray-200 bg-white/70 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400 dark:text-dark-500">
-                  <Mail size={16} />
+                  <Phone size={16} />
+                </div>
+                <div className="flex items-center gap-1.5 pl-0.5 pr-2.5 mr-1 border-r border-gray-200 dark:border-dark-700 text-xs font-bold text-slate-600 dark:text-dark-300 select-none">
+                  <span>🇮🇳</span>
+                  <span>+91</span>
                 </div>
                 <input
-                  type="email"
+                  type="tel"
                   required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@farm.com"
-                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    // Auto-strip leading +91, 91, or 0 if pasted
+                    if (val.startsWith('+91')) {
+                      val = val.slice(3).trim();
+                    } else if (val.startsWith('91') && val.length > 10) {
+                      val = val.slice(2).trim();
+                    } else if (val.startsWith('0') && val.length > 10) {
+                      val = val.slice(1).trim();
+                    }
+                    val = val.replace(/\D/g, '');
+                    if (val.length <= 10) {
+                      setPhone(val);
+                    }
+                  }}
+                  placeholder="Enter your 10-digit mobile number"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600 font-medium"
                 />
               </div>
             </div>
 
-            {/* 7. Password Field */}
+            {/* Password Field */}
             <div>
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
                 {t('auth.password') || 'Password'}
@@ -168,18 +216,26 @@ export const Login: React.FC = () => {
                   <Lock size={16} />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
+                  placeholder="Enter your password"
+                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-2 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 dark:text-dark-500 dark:hover:text-dark-300 focus:outline-none transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
-            {/* 8. Sign In Button with loading spinner & disabled state */}
+            {/* Sign In Button with loading spinner & disabled state */}
             <button
               type="submit"
               disabled={loading}
@@ -203,7 +259,7 @@ export const Login: React.FC = () => {
             )}
           </form>
 
-          {/* 9. Registration Link */}
+          {/* Registration Link */}
           <div className="mt-8 text-center text-xs md:text-sm text-gray-500 dark:text-dark-400 border-t border-gray-100 dark:border-dark-800/50 pt-5">
             <Link to="/register" className="font-bold text-brand-600 dark:text-brand-400 hover:underline">
               {t('auth.dont_have_account') || "Don't have an account? Register now"}

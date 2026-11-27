@@ -145,18 +145,50 @@ export class AuthController {
 
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
-      const normalizedEmail = email ? String(email).trim().toLowerCase() : '';
+      const { email, phone, mobile, phoneNumber, password } = req.body;
+      const rawIdentifier = (phone || mobile || phoneNumber || email || '').toString().trim();
 
-      // Live Mode - Explicitly select password field to guarantee availability
-      const user = await User.findOne({ email: normalizedEmail }).select('+password');
+      if (!rawIdentifier || !password) {
+        return res.status(400).json({ success: false, message: 'Mobile number and password are required' });
+      }
+
+      let user = null;
+
+      // 1. If identifier contains '@', try email lookup first
+      if (rawIdentifier.includes('@')) {
+        const normalizedEmail = rawIdentifier.toLowerCase();
+        user = await User.findOne({ email: normalizedEmail }).select('+password');
+      } else {
+        // 2. Mobile number lookup: normalize digits
+        const cleanDigits = rawIdentifier.replace(/\D/g, '');
+        const tenDigits = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+
+        // Build search variants matching various phone formats stored in database
+        const searchVariants = Array.from(new Set([
+          rawIdentifier,
+          cleanDigits,
+          tenDigits,
+          `+91${tenDigits}`,
+          `+91 ${tenDigits}`,
+          `0${tenDigits}`,
+          `91${tenDigits}`,
+        ])).filter(Boolean);
+
+        user = await User.findOne({
+          $or: [
+            { phone: { $in: searchVariants } },
+            { email: rawIdentifier.toLowerCase() }
+          ]
+        }).select('+password');
+      }
+
       if (!user) {
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        return res.status(401).json({ success: false, message: 'Invalid mobile number or password' });
       }
 
       const isMatch = await (user as any).comparePassword(password);
       if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        return res.status(401).json({ success: false, message: 'Invalid mobile number or password' });
       }
 
       if (user.isBlocked) {

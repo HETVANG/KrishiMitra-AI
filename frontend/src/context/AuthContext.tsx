@@ -41,7 +41,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (phoneOrEmail: string, password: string) => Promise<void>;
   register: (payload: any) => Promise<void>;
 
   farmLocation: any;
@@ -141,8 +141,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token]);
 
-  const login = async (email: string, password: string) => {
-    const res = await api.post('/auth/login', { email, password });
+  const login = async (phoneOrEmail: string, password: string) => {
+    const trimmed = (phoneOrEmail || '').trim();
+    const isEmail = trimmed.includes('@');
+    const payload = isEmail
+      ? { email: trimmed, password }
+      : { phone: trimmed, mobile: trimmed, password };
+    const res = await api.post('/auth/login', payload);
     if (res.data && res.data.success) {
       const { token: userToken, user: userData } = res.data;
       skipProfileFetchRef.current = true;

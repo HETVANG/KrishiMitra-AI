@@ -85,6 +85,8 @@ export const Login: React.FC = () => {
         setError(t('auth.timeout_error') || 'Server connection timed out. The server may be waking up from sleep. Please wait a moment and try again.');
       } else if (!err.response) {
         setError(t('auth.network_error') || 'Unable to connect to server. Please verify your internet connection or try again in a few moments.');
+      } else if (err.response?.status === 400 && (err.response?.data?.code === 'INVALID_RESOURCE_IDENTIFIER' || err.response?.data?.message?.includes('resource identifier'))) {
+        setError(t('auth.invalid_credentials') || 'Invalid mobile number or password.');
       } else {
         setError(err.response?.data?.message || t('auth.invalid_credentials') || 'Invalid mobile number or password.');
       }
@@ -172,11 +174,9 @@ export const Login: React.FC = () => {
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
                 {t('auth.phone') || 'Mobile Number'}
               </label>
-              <div className="flex h-12 w-full items-center rounded-xl border border-gray-200 bg-white/70 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400 dark:text-dark-500">
-                  <Phone size={16} />
-                </div>
-                <div className="flex items-center gap-1.5 pl-0.5 pr-2.5 mr-1 border-r border-gray-200 dark:border-dark-700 text-xs font-bold text-slate-600 dark:text-dark-300 select-none">
+              <div className="flex h-12 w-full items-center rounded-xl border border-gray-200 bg-white/70 px-3 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
+                <div className="flex items-center gap-1.5 pr-2.5 mr-1 border-r border-gray-200 dark:border-dark-700 text-xs font-bold text-slate-700 dark:text-dark-300 select-none shrink-0">
+                  <Phone size={15} className="text-gray-400 dark:text-dark-500 shrink-0" />
                   <span>🇮🇳</span>
                   <span>+91</span>
                 </div>
@@ -200,8 +200,8 @@ export const Login: React.FC = () => {
                       setPhone(val);
                     }
                   }}
-                  placeholder="Enter your 10-digit mobile number"
-                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-3 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600 font-medium"
+                  placeholder="10-digit mobile number"
+                  className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 px-2 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600 font-medium tracking-wide"
                 />
               </div>
             </div>
@@ -211,9 +211,9 @@ export const Login: React.FC = () => {
               <label className="block text-xs font-bold text-gray-500 dark:text-dark-400 uppercase tracking-wider mb-1.5">
                 {t('auth.password') || 'Password'}
               </label>
-              <div className="flex h-12 w-full items-center rounded-xl border border-gray-200 bg-white/70 px-4 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400 dark:text-dark-500">
-                  <Lock size={16} />
+              <div className="flex h-12 w-full items-center rounded-xl border border-gray-200 bg-white/70 px-3 transition-all duration-200 dark:border-dark-800 dark:bg-dark-900/50 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
+                <div className="flex h-10 w-7 shrink-0 items-center justify-center text-gray-400 dark:text-dark-500">
+                  <Lock size={15} />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -222,13 +222,13 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="h-full flex-1 border-0 bg-transparent py-0 pl-2 pr-2 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
+                  className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 px-2 text-sm leading-6 text-gray-800 outline-none placeholder:text-gray-400 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:ring-0 dark:text-dark-50 dark:placeholder:text-dark-600"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 dark:text-dark-500 dark:hover:text-dark-300 focus:outline-none transition-colors"
+                  className="flex h-10 w-8 shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 dark:text-dark-500 dark:hover:text-dark-300 focus:outline-none transition-colors"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>

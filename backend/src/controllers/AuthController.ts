@@ -154,32 +154,38 @@ export class AuthController {
 
       let user = null;
 
-      // 1. If identifier contains '@', try email lookup first
-      if (rawIdentifier.includes('@')) {
-        const normalizedEmail = rawIdentifier.toLowerCase();
-        user = await User.findOne({ email: normalizedEmail }).select('+password');
-      } else {
-        // 2. Mobile number lookup: normalize digits
-        const cleanDigits = rawIdentifier.replace(/\D/g, '');
-        const tenDigits = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+      try {
+        // 1. If identifier contains '@', try email lookup first
+        if (rawIdentifier.includes('@')) {
+          const normalizedEmail = rawIdentifier.toLowerCase();
+          user = await User.findOne({ email: normalizedEmail }).select('+password');
+        } else {
+          // 2. Mobile number lookup: normalize digits
+          const cleanDigits = rawIdentifier.replace(/\D/g, '');
+          const tenDigits = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
 
-        // Build search variants matching various phone formats stored in database
-        const searchVariants = Array.from(new Set([
-          rawIdentifier,
-          cleanDigits,
-          tenDigits,
-          `+91${tenDigits}`,
-          `+91 ${tenDigits}`,
-          `0${tenDigits}`,
-          `91${tenDigits}`,
-        ])).filter(Boolean);
+          // Build search variants matching various phone formats stored in database
+          const searchVariants = Array.from(new Set([
+            rawIdentifier,
+            cleanDigits,
+            tenDigits,
+            `+91${tenDigits}`,
+            `+91 ${tenDigits}`,
+            `0${tenDigits}`,
+            `91${tenDigits}`,
+          ])).filter(Boolean);
 
-        user = await User.findOne({
-          $or: [
-            { phone: { $in: searchVariants } },
-            { email: rawIdentifier.toLowerCase() }
-          ]
-        }).select('+password');
+          // 2a. Query directly by phone field first
+          user = await User.findOne({ phone: { $in: searchVariants } }).select('+password');
+
+          // 2b. Fallback to email identifier if no phone matched
+          if (!user) {
+            user = await User.findOne({ email: rawIdentifier.toLowerCase() }).select('+password');
+          }
+        }
+      } catch (findErr: any) {
+        console.warn('[AuthController.login] User query lookup caught error:', findErr?.message);
+        user = null;
       }
 
       if (!user) {

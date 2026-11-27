@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import dns from 'dns';
+try {
+  dns.setServers(['1.1.1.1', '8.8.8.8']);
+} catch {}
+
 import express from 'express';
 import http from 'http';
 import mongoose from 'mongoose';
